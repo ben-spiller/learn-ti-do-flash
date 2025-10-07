@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Music } from "lucide-react";
+import {
+  setInstrument,
+  preloadInstrumentWithGesture,
+} from "@/utils/audio";
 
 const SOLFEGE_NOTES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Ti"];
 
@@ -12,6 +16,16 @@ const Settings = () => {
   const navigate = useNavigate();
   const [selectedNotes, setSelectedNotes] = useState<string[]>(["Do", "Re", "Mi"]);
   const [numberOfNotes, setNumberOfNotes] = useState(5);
+  const [selectedInstrument, setSelectedInstrument] = useState<string>(
+    () => localStorage.getItem('learn-ti-do.instrument') || 'acoustic_grand_piano'
+  );
+
+  const INSTRUMENT_OPTIONS = [
+    { slug: 'acoustic_grand_piano', label: 'Grand Piano' },
+    { slug: 'electric_piano', label: 'Electric Piano' },
+    { slug: 'violin', label: 'Violin' },
+    { slug: 'saxophone', label: 'Saxophone' },
+  ];
 
   const handleNoteToggle = (note: string) => {
     setSelectedNotes((prev) =>
@@ -24,10 +38,30 @@ const Settings = () => {
       alert("Please select at least 2 notes to practice");
       return;
     }
-    navigate("/practice", {
-      state: { selectedNotes, numberOfNotes },
-    });
+    // Preload the selected instrument (this will prompt the user to allow audio)
+    // and then navigate to the practice page. The preload helper shows a
+    // confirmation dialog and will only proceed if the user accepts.
+    (async () => {
+      try {
+        await preloadInstrumentWithGesture(selectedInstrument);
+      } catch (e) {
+        // errors are already alerted inside the helper; fall through
+      }
+      navigate("/practice", {
+        state: { selectedNotes, numberOfNotes },
+      });
+    })();
   };
+
+  useEffect(() => {
+    // Ensure we propagate the saved selection to the audio module
+    (async () => {
+      try {
+        await setInstrument(selectedInstrument);
+      } catch (_) {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -82,6 +116,36 @@ const Settings = () => {
                 onClick={() => setNumberOfNotes(Math.min(10, numberOfNotes + 1))}
               >
                 +
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Instrument</Label>
+            <select
+              value={selectedInstrument}
+              onChange={async (e) => {
+                const v = e.target.value;
+                setSelectedInstrument(v);
+                try {
+                  localStorage.setItem('learn-ti-do.instrument', v);
+                } catch (_) {}
+                // try to set the instrument in the audio module (non-blocking)
+                try {
+                  await setInstrument(v);
+                } catch (_) {
+                  // ignore; user can press Enable Audio to trigger preload and see errors
+                }
+              }}
+              className="w-full rounded border p-2"
+            >
+              {INSTRUMENT_OPTIONS.map((opt) => (
+                <option key={opt.slug} value={opt.slug}>{opt.label}</option>
+              ))}
+            </select>
+            <div>
+              <Button onClick={() => preloadInstrumentWithGesture(selectedInstrument)} className="mt-2">
+                Enable Audio / Preload Instrument
               </Button>
             </div>
           </div>
