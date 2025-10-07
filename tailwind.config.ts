@@ -57,6 +57,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        solfege: {
+          do: "hsl(var(--solfege-do))",
+          re: "hsl(var(--solfege-re))",
+          mi: "hsl(var(--solfege-mi))",
+          fa: "hsl(var(--solfege-fa))",
+          sol: "hsl(var(--solfege-sol))",
+          la: "hsl(var(--solfege-la))",
+          ti: "hsl(var(--solfege-ti))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
