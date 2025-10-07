@@ -6,7 +6,6 @@ import { ArrowLeft, Play, Volume2, X } from "lucide-react";
 import { playNote, playSequence, generateRandomSequence } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
 
-const SOLFEGE_NOTES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Ti"];
 const ALL_NOTES_DISPLAY = ["Ti", "La", "Sol", "Fa", "Mi", "Re", "Do"];
 
 const Practice = () => {
