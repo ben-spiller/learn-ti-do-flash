@@ -21,10 +21,32 @@ const Practice = () => {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [correctAttempts, setCorrectAttempts] = useState(0);
+  const [totalAttempts, setTotalAttempts] = useState(0);
+  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [elapsedMinutes, setElapsedMinutes] = useState(0);
 
   useEffect(() => {
     startNewRound();
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 60000);
+      setElapsedMinutes(elapsed);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'n' && currentPosition === numberOfNotes) {
+        startNewRound();
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentPosition, numberOfNotes]);
 
   const startNewRound = () => {
     const newSequence = generateRandomSequence(selectedNotes, numberOfNotes);
@@ -46,7 +68,10 @@ const Practice = () => {
     if (currentPosition >= numberOfNotes) return;
     
     const correctNote = sequence[currentPosition];
+    setTotalAttempts(totalAttempts + 1);
+    
     if (note === correctNote) {
+      setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
     } else {
       setShowError(true);
@@ -85,11 +110,23 @@ const Practice = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-4">
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" size="icon" onClick={handleFinish}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold ml-2">Practice</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" onClick={handleFinish}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold ml-2">Practice</h1>
+        </div>
+        <div className="flex gap-4 text-sm">
+          <div className="text-center">
+            <div className="font-bold text-lg">{totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%</div>
+            <div className="text-muted-foreground">Score</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg">{elapsedMinutes}</div>
+            <div className="text-muted-foreground">Min</div>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col gap-6 max-w-md mx-auto w-full">
@@ -128,8 +165,11 @@ const Practice = () => {
               ))}
             </div>
             {currentPosition === numberOfNotes && (
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center space-y-2">
                 <p className="text-lg font-semibold text-success">Complete! 🎉</p>
+                <Button onClick={startNewRound} className="w-full">
+                  Next (press N)
+                </Button>
               </div>
             )}
           </CardContent>
