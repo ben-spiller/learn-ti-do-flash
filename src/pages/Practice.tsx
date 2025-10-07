@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Volume2, X } from "lucide-react";
 import { playNote, playSequence, generateRandomSequence } from "@/utils/audio";
+import { preloadInstrumentWithGesture } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 const ALL_NOTES_DISPLAY = ["Ti", "La", "Sol", "Fa", "Mi", "Re", "Do"];
 
@@ -24,10 +26,29 @@ const Practice = () => {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [preloadProgress, setPreloadProgress] = useState<{ decoded: number; total: number } | null>(null);
+  const [started, setStarted] = useState(false);
 
+  // don't auto-start; wait for explicit Start button so the initial action can be
+  // a user gesture that enables audio autoplay permissions.
   useEffect(() => {
-    startNewRound();
-  }, []);
+    if (started) startNewRound();
+  }, [started]);
+
+  const handleStart = async () => {
+    if (started) return;
+    setIsPreloading(true);
+    const ok = await preloadInstrumentWithGesture(undefined, undefined, (decoded, total) => {
+      setPreloadProgress({ decoded, total });
+    });
+    setIsPreloading(false);
+    // small delay so the user can see completion
+    setTimeout(() => setPreloadProgress(null), 400);
+    if (ok) {
+      setStarted(true);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -51,12 +72,25 @@ const Practice = () => {
     const newSequence = generateRandomSequence(selectedNotes, numberOfNotes);
     setSequence(newSequence);
     setCurrentPosition(0);
-    playSequenceWithDelay(newSequence);
+    playSequenceWithDelay(newSequence, false);
   };
 
-  const playSequenceWithDelay = async (seq: string[]) => {
+  const playSequenceWithDelay = async (seq: string[], allowPreload: boolean = false) => {
     setIsPlaying(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
+    // ensure instrument preloaded on first play (only when allowed)
+    if (allowPreload && !isPreloading && !preloadProgress) {
+      setIsPreloading(true);
+      const ok = await preloadInstrumentWithGesture(undefined, undefined, (decoded, total) => {
+        setPreloadProgress({ decoded, total });
+      });
+      setIsPreloading(false);
+      if (!ok) {
+        // user declined or preload failed; allow still trying to play which may prompt again
+      }
+      // clear progress after a short delay
+      setTimeout(() => setPreloadProgress(null), 400);
+    }
     await playSequence(seq);
     setIsPlaying(false);
   };
@@ -79,11 +113,11 @@ const Practice = () => {
   };
 
   const handlePlayAgain = () => {
-    playSequenceWithDelay(sequence);
+    playSequenceWithDelay(sequence, true);
   };
 
   const handlePlayReference = () => {
-    playSequenceWithDelay(selectedNotes);
+    playSequenceWithDelay(selectedNotes, true);
   };
 
   const handleFinish = () => {
@@ -129,86 +163,107 @@ const Practice = () => {
       </div>
 
       <div className="flex-1 flex flex-col gap-6 max-w-md mx-auto w-full">
-        {/* Solfege buttons at the top */}
-        <div className="grid gap-3">
-          {ALL_NOTES_DISPLAY.map((note) => (
-            <Button
-              key={note}
-              onClick={() => handleNotePress(note)}
-              className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(note)}`}
-              disabled={isPlaying || currentPosition >= numberOfNotes || !isNoteEnabled(note)}
-            >
-              {note}
-            </Button>
-          ))}
-        </div>
-
-        {/* Progress card */}
-        <Card className="relative">
-          <CardHeader>
-            <CardTitle className="text-center">Your Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 justify-center flex-wrap">
-              {Array.from({ length: numberOfNotes }).map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
-                    index < currentPosition
-                      ? "bg-success text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+        {/* Preload progress indicator */}
+        {(isPreloading || preloadProgress) && (
+          <div className="w-full max-w-md mx-auto p-2">
+            <div className="text-sm mb-2 text-center">Loading audio samples...</div>
+            <Progress value={preloadProgress ? Math.round((preloadProgress.decoded / preloadProgress.total) * 100) : 0} />
+            {preloadProgress && (
+              <div className="text-xs text-muted-foreground mt-1 text-center">{preloadProgress.decoded}/{preloadProgress.total}</div>
+            )}
+          </div>
+        )}
+        {started ? (
+          <>
+            {/* Solfege buttons at the top */}
+            <div className="grid gap-3">
+              {ALL_NOTES_DISPLAY.map((note) => (
+                <Button
+                  key={note}
+                  onClick={() => handleNotePress(note)}
+                  className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(note)}`}
+                  disabled={isPlaying || currentPosition >= numberOfNotes || !isNoteEnabled(note)}
                 >
-                  {index < currentPosition ? sequence[index] : "?"}
-                </div>
+                  {note}
+                </Button>
               ))}
             </div>
-            {currentPosition === numberOfNotes && (
-              <div className="mt-4 text-center space-y-2">
-                <p className="text-lg font-semibold text-success">Complete! 🎉</p>
-                <Button onClick={startNewRound} className="w-full">
-                  Next (press N)
-                </Button>
-              </div>
-            )}
-          </CardContent>
-          
-          {/* Error flash overlay */}
-          {showError && (
-            <div className="absolute inset-0 bg-destructive/20 rounded-lg flex items-center justify-center animate-pulse">
-              <X className="w-20 h-20 text-destructive" strokeWidth={3} />
-            </div>
-          )}
-        </Card>
 
-        {/* Control buttons */}
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant="outline"
-            onClick={handlePlayAgain}
-            disabled={isPlaying}
-            className="h-14"
-          >
-            <Play className="h-5 w-5 mr-2" />
-            Play Again
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handlePlayReference}
-            disabled={isPlaying}
-            className="h-14"
-          >
-            <Volume2 className="h-5 w-5 mr-2" />
-            Reference
-          </Button>
-          <Button
-            onClick={handleFinish}
-            variant="secondary"
-            className="h-14"
-          >
-            Finish
-          </Button>
-        </div>
+            {/* Progress card */}
+            <Card className="relative">
+              <CardHeader>
+                <CardTitle className="text-center">Your Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  {Array.from({ length: numberOfNotes }).map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
+                        index < currentPosition
+                          ? "bg-success text-white"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index < currentPosition ? sequence[index] : "?"}
+                    </div>
+                  ))}
+                </div>
+                {currentPosition === numberOfNotes && (
+                  <div className="mt-4 text-center space-y-2">
+                    <p className="text-lg font-semibold text-success">Complete! 🎉</p>
+                    <Button onClick={startNewRound} className="w-full">
+                      Next (press N)
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+              
+              {/* Error flash overlay */}
+              {showError && (
+                <div className="absolute inset-0 bg-destructive/20 rounded-lg flex items-center justify-center animate-pulse">
+                  <X className="w-20 h-20 text-destructive" strokeWidth={3} />
+                </div>
+              )}
+            </Card>
+
+            {/* Control buttons */}
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                onClick={handlePlayAgain}
+                disabled={isPlaying}
+                className="h-14"
+              >
+                <Play className="h-5 w-5 mr-2" />
+                Play Again
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handlePlayReference}
+                disabled={isPlaying}
+                className="h-14"
+              >
+                <Volume2 className="h-5 w-5 mr-2" />
+                Reference
+              </Button>
+              <Button
+                onClick={handleFinish}
+                variant="secondary"
+                className="h-14"
+              >
+                Finish
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-4 py-8">
+            <p className="text-center text-lg">When you're ready, press Start to enable audio and begin.</p>
+            <Button onClick={handleStart} className="w-40 h-14 text-lg">
+              Start
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -345,17 +345,19 @@ const getNotesBetween = (from: string, to: string) => {
  */
 export const preloadInstrumentWithGesture = async (
   instrumentName?: string,
-  predecodeNotes?: string[] | NoteRange
-) => {
-  const ok = window.confirm('Enable audio for this exercise? Click OK to initialize instrument.');
-  if (!ok) return;
+  predecodeNotes?: string[] | NoteRange,
+  progressCallback?: (decoded: number, total: number) => void
+): Promise<boolean> => {
+  // NOTE: this function assumes the caller invoked it from a user gesture
+  // (for example, a Start button). Earlier versions used window.confirm()
+  // here; we removed that so the gesture is the caller's responsibility.
 
   try {
     await ensureContextRunning();
     if (instrumentName) currentInstrument = instrumentName;
     await createToneInstrument();
 
-    // Determine whether we should pre-decode samples (only applicable for midi-js path)
+  // Determine whether we should pre-decode samples (only applicable for midi-js path)
     const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
     const shouldUseMidiJs = !(catalogEntry && catalogEntry.urls && Object.keys(catalogEntry.urls).length > 0);
 
@@ -379,18 +381,28 @@ export const preloadInstrumentWithGesture = async (
         const Tone = (window as any).Tone;
         const toneRawCtx: BaseAudioContext | null = Tone && (Tone.getContext ? Tone.getContext().rawContext : Tone.context && Tone.context.rawContext) || null;
         const audioCtx = (toneRawCtx as any) || getAudioContext();
-
-        for (const noteName of notesToDecode) {
+        const total = notesToDecode.length;
+        for (let i = 0; i < notesToDecode.length; i++) {
+          const noteName = notesToDecode[i];
           const midi = noteNameToMidi(noteName);
-          if (midi == null) continue;
+          if (midi == null) {
+            progressCallback?.(i + 1, total);
+            continue;
+          }
           let sampleKey = noteName;
           if (!sf[sampleKey]) {
             const closest = findClosestSampleKey(sf, midi);
-            if (!closest) continue;
+            if (!closest) {
+              progressCallback?.(i + 1, total);
+              continue;
+            }
             sampleKey = closest;
           }
           const dataUri = sf[sampleKey];
-          if (!dataUri) continue;
+          if (!dataUri) {
+            progressCallback?.(i + 1, total);
+            continue;
+          }
           // decode and cache
           try {
             // decodeSoundfontSample will cache decoded buffers
@@ -400,16 +412,21 @@ export const preloadInstrumentWithGesture = async (
             // continue on decode error
             console.warn('Failed to decode sample', currentInstrument, sampleKey, err);
           }
+          progressCallback?.(i + 1, total);
         }
       } catch (err) {
         console.warn('Pre-decode (midi-js) failed', err);
       }
     }
+    // Signal completion if using catalog or midi-js path finished
+    progressCallback?.(1, 1);
+    return true;
   } catch (err) {
     console.error('Preload failed', err);
     try {
       window.alert('Unable to initialize audio. Audio will not be available.');
     } catch (_) {}
+    return false;
   }
 };
 
