@@ -9,12 +9,35 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+// Derive router basename from Vite's BASE_URL when it's an absolute path
+// (e.g. '/learn-ti-do-flash/'). If BASE_URL is relative (like './') or '/'
+// we leave basename undefined so BrowserRouter behaves normally in dev.
+const App = () => {
+  const base = import.meta.env.BASE_URL as string;
+  // If BASE_URL is an absolute path like '/repo/', use that (trim trailing slash).
+  // If it's './' (relative), try to infer the repo prefix from the current
+  // location (e.g. '/<repo>/...') so routes still match when deployed under a
+  // project site. If we can't infer, leave basename undefined.
+  let basename: string | undefined;
+  if (base && base.startsWith('/') && base !== '/') {
+    basename = base.replace(/\/$/, '');
+  } else if (base === './') {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    if (parts.length > 0) {
+      basename = `/${parts[0]}`;
+    } else {
+      basename = undefined;
+    }
+  } else {
+    basename = undefined;
+  }
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Settings />} />
           <Route path="/practice" element={<Practice />} />
@@ -24,6 +47,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

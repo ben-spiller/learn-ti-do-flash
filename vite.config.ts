@@ -8,7 +8,11 @@ import { componentTagger } from "lovable-tagger";
 // built assets are requested from /<repo>/assets/... instead of /. For local
 // dev we keep base as '/'. Hardcoding the GitHub repo name is gross but for now let's keep it simple
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/learn-ti-do-flash/' : '/',
+  // Use a relative base for production so assets are referenced relative to
+  // the HTML file. This avoids hardcoding the repo name and works both for
+  // GitHub Pages project sites and other static hosts where the app is not
+  // served from the domain root.
+  base: mode === 'production' ? './' : '/',
   server: {
     host: "::",
     port: 8080,
