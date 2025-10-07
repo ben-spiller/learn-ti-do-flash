@@ -4,11 +4,11 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-// Use a relative base for production builds so asset URLs are relative to the
-// HTML file location. This avoids hardcoding the repo name and works well for
-// GitHub Pages project sites. Keep an absolute '/' during dev for Vite server.
+// If deploying to GitHub Pages as a project site, set base to the repo name so
+// built assets are requested from /<repo>/assets/... instead of /. For local
+// dev we keep base as '/'. Hardcoding the GitHub repo name is gross but for now let's keep it simple
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? './' : '/',
+  base: mode === 'production' ? '/learn-ti-do-flash/' : '/',
   server: {
     host: "::",
     port: 8080,
