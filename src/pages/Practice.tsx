@@ -3,8 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Volume2, X } from "lucide-react";
-import { playNote, playSequence, generateRandomSequence } from "@/utils/audio";
-import { preloadInstrumentWithGesture } from "@/utils/audio";
+import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 
@@ -18,7 +17,15 @@ const Practice = () => {
     numberOfNotes: 4,
   };
 
-  const [sequence, setSequence] = useState<string[]>([]);
+  // Normalize incoming selected notes (likely solfege strings) into MIDI numbers
+  const initialMidiNotes: number[] = Array.isArray(selectedNotes)
+    ? (selectedNotes as string[]).map(s => {
+        const m = solfegeToMidi(s);
+        return m != null ? m : (typeof s === 'string' ? (noteNameToMidi(s) as number) : (s as unknown as number));
+      })
+    : [];
+
+  const [sequence, setSequence] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -69,13 +76,14 @@ const Practice = () => {
   }, [currentPosition, numberOfNotes]);
 
   const startNewRound = () => {
-    const newSequence = generateRandomSequence(selectedNotes, numberOfNotes);
-    setSequence(newSequence);
+    const pool = initialMidiNotes.length ? initialMidiNotes : [60, 62, 64, 65];
+    const newSequence = generateRandomSequence(pool, numberOfNotes);
+    setSequence(newSequence as number[]);
     setCurrentPosition(0);
-    playSequenceWithDelay(newSequence, false);
+    playSequenceWithDelay(newSequence as number[], false);
   };
 
-  const playSequenceWithDelay = async (seq: string[], allowPreload: boolean = false) => {
+  const playSequenceWithDelay = async (seq: number[], allowPreload: boolean = false) => {
     setIsPlaying(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
     // ensure instrument preloaded on first play (only when allowed)
@@ -95,15 +103,15 @@ const Practice = () => {
     setIsPlaying(false);
   };
 
-  const handleNotePress = (note: string) => {
-    playNote(note, 0.3);
-    
+  const handleNotePress = (noteMidi: number) => {
+    playNote(noteMidi, 0.3);
+
     if (currentPosition >= numberOfNotes) return;
-    
+
     const correctNote = sequence[currentPosition];
     setTotalAttempts(totalAttempts + 1);
-    
-    if (note === correctNote) {
+
+    if (noteMidi === correctNote) {
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
     } else {
@@ -117,7 +125,7 @@ const Practice = () => {
   };
 
   const handlePlayReference = () => {
-    playSequenceWithDelay(selectedNotes, true);
+    playSequenceWithDelay(initialMidiNotes.length ? initialMidiNotes : [60, 62, 64, 65], true);
   };
 
   const handleFinish = () => {
@@ -137,9 +145,11 @@ const Practice = () => {
     return colorMap[note] || "bg-muted hover:bg-muted/80";
   };
 
-  const isNoteEnabled = (note: string) => {
-    return selectedNotes.includes(note);
-  };
+    const isNoteEnabled = (note: string) => {
+      const m = solfegeToMidi(note);
+      if (m == null) return false;
+      return initialMidiNotes.includes(m);
+    };
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-4">
@@ -177,16 +187,19 @@ const Practice = () => {
           <>
             {/* Solfege buttons at the top */}
             <div className="grid gap-3">
-              {ALL_NOTES_DISPLAY.map((note) => (
-                <Button
-                  key={note}
-                  onClick={() => handleNotePress(note)}
-                  className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(note)}`}
-                  disabled={isPlaying || currentPosition >= numberOfNotes || !isNoteEnabled(note)}
-                >
-                  {note}
-                </Button>
-              ))}
+              {ALL_NOTES_DISPLAY.map((note) => {
+                const midi = solfegeToMidi(note) as number;
+                return (
+                  <Button
+                    key={note}
+                    onClick={() => handleNotePress(midi)}
+                    className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(note)}`}
+                    disabled={isPlaying || currentPosition >= numberOfNotes || !isNoteEnabled(note)}
+                  >
+                    {note}
+                  </Button>
+                );
+              })}
             </div>
 
             {/* Progress card */}
@@ -205,7 +218,7 @@ const Practice = () => {
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {index < currentPosition ? sequence[index] : "?"}
+                      {index < currentPosition ? (midiToSolfege(sequence[index]) || midiToNoteName(sequence[index])) : "?"}
                     </div>
                   ))}
                 </div>
@@ -213,7 +226,7 @@ const Practice = () => {
                   <div className="mt-4 text-center space-y-2">
                     <p className="text-lg font-semibold text-success">Complete! 🎉</p>
                     <Button onClick={startNewRound} className="w-full">
-                      Next (press N)
+                      Next
                     </Button>
                   </div>
                 )}

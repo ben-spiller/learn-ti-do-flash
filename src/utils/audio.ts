@@ -1,12 +1,25 @@
-// Map solfege to standard note names (C4 scale)
-const SOLFEGE_TO_NOTE: Record<string, string> = {
-  Do: 'C4',
-  Re: 'D4',
-  Mi: 'E4',
-  Fa: 'F4',
-  Sol: 'G4',
-  La: 'A4',
-  Ti: 'B4',
+// Solfege order (diatonic major scale degrees)
+export const SOLFEGE_ORDER = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti'] as const;
+
+// Helpers to convert between solfege labels and MIDI numbers. We keep a
+// default octave of 4 for mapping (Do -> C4 -> 60), but callers can provide
+// another octave when necessary.
+export const solfegeToMidi = (solfege: string, octave: number = 4): number | null => {
+  const idx = SOLFEGE_ORDER.indexOf(solfege as any);
+  if (idx === -1) return null;
+  // Map to natural notes C D E F G A B
+  const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  const noteName = `${letters[idx]}${octave}`;
+  return noteNameToMidi(noteName) as number;
+};
+
+export const midiToSolfege = (midi: number): string | null => {
+  const noteName = midiToNoteName(midi);
+  if (!noteName) return null;
+  // noteName like C4 or C#4; take the letter and map to solfege
+  const letter = noteName.replace(/[#0-9]/g, '').charAt(0);
+  const map: Record<string, string> = { C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Ti' };
+  return map[letter] || null;
 };
 
 let audioContext: AudioContext | null = null;
@@ -173,7 +186,7 @@ export const registerInstrument = (slug: string, data: { label?: string; urls: R
 
 // WebAudioFont support removed: unused in current flow. Kept midi-js (jsDelivr) and Tone paths.
 
-const noteNameToMidi = (note: string) => {
+export const noteNameToMidi = (note: string) => {
   const match = note.match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
   if (!match) return null;
   const [, pitch, accidental, octaveStr] = match;
@@ -324,7 +337,7 @@ export const setInstrument = async (instrumentName: string) => {
  */
 type NoteRange = { from: string; to: string };
 
-const midiToNoteName = (midi: number) => {
+export const midiToNoteName = (midi: number) => {
   const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const name = names[midi % 12];
   const octave = Math.floor(midi / 12) - 1;
@@ -474,8 +487,26 @@ export const preloadInstrumentWithGesture = async (
 
 export const getCurrentInstrument = () => currentInstrument;
 
-export const playNote = async (note: string, duration: number = 1.0) => {
-  const noteName = SOLFEGE_TO_NOTE[note] || note; // allow passing note names directly
+export const playNote = async (note: number | string, duration: number = 1.0) => {
+  // note may be a MIDI number (preferred), a solfege label, or a note name like 'C4'
+  let noteName: string | null = null;
+  if (typeof note === 'number') {
+    noteName = midiToNoteName(note);
+  } else {
+    // try solfege first
+    const midi = solfegeToMidi(note as string);
+    if (midi != null) {
+      noteName = midiToNoteName(midi);
+    } else {
+      // assume the caller passed a note name like 'C4'
+      noteName = note as string;
+    }
+  }
+
+  if (!noteName) {
+    console.error('Invalid note for playNote', note);
+    return;
+  }
 
   await ensureContextRunning();
   try {
@@ -500,18 +531,18 @@ export const playNote = async (note: string, duration: number = 1.0) => {
   }
 };
 
-export const playSequence = async (notes: string[], gap: number = 0.7) => {
+export const playSequence = async (notes: Array<number | string>, gap: number = 0.7) => {
   for (let i = 0; i < notes.length; i++) {
-    await playNote(notes[i]);
+    await playNote(notes[i] as any);
     await new Promise((resolve) => setTimeout(resolve, gap * 1000));
   }
 };
 
 export const generateRandomSequence = (
-  availableNotes: string[],
+  availableNotes: number[],
   length: number
-): string[] => {
-  const sequence: string[] = [];
+): number[] => {
+  const sequence: number[] = [];
   for (let i = 0; i < length; i++) {
     const randomIndex = Math.floor(Math.random() * availableNotes.length);
     sequence.push(availableNotes[randomIndex]);
