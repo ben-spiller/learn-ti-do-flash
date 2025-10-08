@@ -104,7 +104,7 @@ const Practice = () => {
   };
 
   const handleNotePress = (noteMidi: number) => {
-    playNote(noteMidi, 0.3);
+    playNote(noteMidi);
 
     if (currentPosition >= numberOfNotes) return;
 

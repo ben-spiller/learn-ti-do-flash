@@ -14,8 +14,8 @@ const SOLFEGE_NOTES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Ti"];
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [selectedNotes, setSelectedNotes] = useState<string[]>(["Do", "Re", "Mi"]);
-  const [numberOfNotes, setNumberOfNotes] = useState(5);
+  const [selectedNotes, setSelectedNotes] = useState<string[]>(["Do", "Re", "Mi", "Fa"]);
+  const [numberOfNotes, setNumberOfNotes] = useState(3);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(
     () => localStorage.getItem('learn-ti-do.instrument') || 'acoustic_grand_piano'
   );
@@ -143,11 +143,6 @@ const Settings = () => {
                 <option key={opt.slug} value={opt.slug}>{opt.label}</option>
               ))}
             </select>
-            <div>
-              <Button onClick={() => preloadInstrumentWithGesture(selectedInstrument)} className="mt-2">
-                Enable Audio / Preload Instrument
-              </Button>
-            </div>
           </div>
 
           <Button

@@ -136,7 +136,7 @@ const createMidiJsPlayerUsingTone = async (instrument: string) => {
   const audioCtx = (toneRawCtx as any) || getAudioContext();
 
   const player = {
-    async triggerAttackRelease(noteName: string, duration: number) {
+    async triggerAttackRelease(noteName: string, duration: number, when?: number) {
       // soundfont keys are note names like 'C4'
       const midi = noteNameToMidi(noteName);
       if (midi == null) throw new Error('Invalid note name: ' + noteName);
@@ -156,15 +156,47 @@ const createMidiJsPlayerUsingTone = async (instrument: string) => {
 
       const source = audioCtx.createBufferSource();
       source.buffer = buffer;
-      // connect to Tone's destination if possible
+
+      // schedule start time
+      const startAt = typeof when === 'number' ? when : audioCtx.currentTime + 0.0;
+
+      // Create a per-note gain node so we can apply a release envelope instead of
+      // abruptly stopping the source (which causes clicks / unnatural truncation).
+      const gainNode = audioCtx.createGain();
+      // Ensure gain starts at full volume at the scheduled start time
+      gainNode.gain.setValueAtTime(1, startAt);
+
+      // Connect source -> gain -> destination (or Tone's destination when available)
+      source.connect(gainNode);
       if (toneRawCtx) {
-        source.connect(toneRawCtx.destination);
+        gainNode.connect(toneRawCtx.destination);
       } else {
-        source.connect(audioCtx.destination);
+        gainNode.connect(audioCtx.destination);
       }
-      const when = audioCtx.currentTime + 0.0;
-      source.start(when);
-      source.stop(when + duration);
+
+      // Choose a sensible release time per instrument family. These are defaults
+      // and can be tuned per-instrument later (or read from INSTRUMENT_CATALOG).
+      const lower = (instrument || '').toLowerCase();
+      let release = 0.35; // default
+      if (lower.includes('piano')) release = 0.18;
+      else if (lower.includes('organ')) release = 1.2;
+      else if (lower.includes('violin') || lower.includes('string')) release = 0.9;
+
+      // Use an exponential-like decay via setTargetAtTime for a natural tail.
+      // timeConstant controls the curve; smaller => faster drop.
+      const timeConstant = Math.max(0.02, release * 0.25);
+      // Schedule the release to start at (startAt + duration)
+      gainNode.gain.setTargetAtTime(0.0001, startAt + duration, timeConstant);
+
+      // Stop the source slightly after the release finishes to free resources.
+      const stopTime = startAt + duration + Math.max(0.05, release * 1.1);
+      source.start(startAt);
+      source.stop(stopTime);
+
+      // Cleanup gain node when source ends
+      source.onended = () => {
+        try { gainNode.disconnect(); } catch (_) {}
+      };
     }
   };
 
@@ -487,24 +519,18 @@ export const preloadInstrumentWithGesture = async (
 
 export const getCurrentInstrument = () => currentInstrument;
 
-export const playNote = async (note: number | string, duration: number = 1.0) => {
+export const playNote = async (midiNote: number | string, durationSecs: number = 0.7, when?: number) => {
   // note may be a MIDI number (preferred), a solfege label, or a note name like 'C4'
   let noteName: string | null = null;
-  if (typeof note === 'number') {
-    noteName = midiToNoteName(note);
+  if (typeof midiNote === 'number') {
+    noteName = midiToNoteName(midiNote);
   } else {
-    // try solfege first
-    const midi = solfegeToMidi(note as string);
-    if (midi != null) {
-      noteName = midiToNoteName(midi);
-    } else {
       // assume the caller passed a note name like 'C4'
-      noteName = note as string;
-    }
+      noteName = midiNote as string;
   }
 
   if (!noteName) {
-    console.error('Invalid note for playNote', note);
+    console.error('Invalid note for playNote', midiNote);
     return;
   }
 
@@ -512,14 +538,26 @@ export const playNote = async (note: number | string, duration: number = 1.0) =>
   try {
     const player = await createToneInstrument();
     if (player && typeof player.triggerAttackRelease === 'function') {
-      // Tone.js expects note names like 'C4'
-      player.triggerAttackRelease(noteName, duration);
+      // Tone.js player supports optional when scheduling in our midi-js wrapper
+      player.triggerAttackRelease(noteName, durationSecs, when);
       return;
     }
 
     // PolySynth may expose 'triggerAttackRelease' on its voice or directly; try Tone's Transport-scheduled play as fallback
     if (player && typeof player.triggerAttack === 'function') {
-      player.triggerAttackRelease(noteName, duration);
+      // Tone's PolySynth scheduling: use Tone.now() relative if available
+      try {
+        const Tone = (window as any).Tone;
+        if (when && Tone && typeof Tone.now === 'function') {
+          const offset = when - (Tone.now ? Tone.now() : 0);
+          if (offset <= 0) player.triggerAttackRelease(noteName, durationSecs);
+          else setTimeout(() => player.triggerAttackRelease(noteName, durationSecs), Math.max(0, Math.round(offset * 1000)));
+        } else {
+          player.triggerAttackRelease(noteName, durationSecs);
+        }
+      } catch (_) {
+        player.triggerAttackRelease(noteName, durationSecs);
+      }
       return;
     }
 
@@ -531,11 +569,30 @@ export const playNote = async (note: number | string, duration: number = 1.0) =>
   }
 };
 
-export const playSequence = async (notes: Array<number | string>, gap: number = 0.7) => {
-  for (let i = 0; i < notes.length; i++) {
-    await playNote(notes[i] as any);
-    await new Promise((resolve) => setTimeout(resolve, gap * 1000));
+type SequenceItem = { note: number | string; duration?: number; gapAfter?: number };
+
+export const playSequence = async (items: Array<SequenceItem | number | string>, 
+    defaultGap: number = 0.1, defaultDuration: number = 0.7) => {
+  // Convert items to SequenceItem
+  const seq: SequenceItem[] = items.map(it => {
+    if (typeof it === 'number' || typeof it === 'string') return { note: it, duration: defaultDuration, gapAfter: defaultGap };
+    return { note: it.note, duration: it.duration ?? defaultDuration, gapAfter: it.gapAfter ?? defaultGap };
+  });
+
+  // Schedule using AudioContext currentTime so notes don't cut off each other
+  const ctx = getAudioContext();
+  let time = ctx.currentTime + 0.05; // small scheduling offset
+  for (let i = 0; i < seq.length; i++) {
+    const it = seq[i];
+    // schedule each note at 'time'
+    // playNote will accept an absolute 'when' argument in audio context time
+    playNote(it.note, it.duration ?? defaultDuration, time).catch(() => {});
+    // advance time by duration + gapAfter
+    time = time + (it.duration ?? defaultDuration) + (it.gapAfter ?? defaultGap);
   }
+  // return a promise that resolves after the sequence finished
+  const totalDuration = seq.reduce((s, it) => s + (it.duration ?? defaultDuration) + (it.gapAfter ?? defaultGap), 0);
+  return new Promise((resolve) => setTimeout(resolve, Math.round(totalDuration * 1000)));
 };
 
 export const generateRandomSequence = (
