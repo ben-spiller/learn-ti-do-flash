@@ -208,9 +208,21 @@ const Practice = () => {
               <div className="w-24 relative">
                 {/* Chromatic notes positioned in gaps */}
                 {[10, 8, 6, 3, 1].map((pitch, index) => {
-                  // Calculate vertical position based on which gap this flat belongs in
-                  const topPositions = [0, 1, 2, 4, 5]; // Ti-La, La-Sol, Sol-Fa, Re-Mi, Do-Re gaps
-                  const topOffset = topPositions[index];
+                  // Calculate vertical position to center flat button in the gap
+                  const gapPositions = [0, 1, 2, 4, 5]; // Which gap after button index
+                  const gapIndex = gapPositions[index];
+                  
+                  const buttonHeight = 4; // rem (h-16)
+                  const flatButtonHeight = 3; // rem (h-12)
+                  const wideGap = 0.75; // rem (mb-3)
+                  const narrowGap = 0.375; // rem (mb-1.5)
+                  
+                  // Calculate top position: sum of buttons and gaps before, plus half current gap, minus half flat button
+                  let top = 0;
+                  for (let i = 0; i < gapIndex; i++) {
+                    top += buttonHeight + (i === 3 ? narrowGap : wideGap);
+                  }
+                  top += buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
                   
                   let solfege = midiToSolfege(pitch);
                   if (!solfege) { solfege = "?"+pitch.toString(); }
@@ -220,9 +232,7 @@ const Practice = () => {
                       key={pitch}
                       onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
                       className="absolute h-12 w-full text-lg font-bold text-white bg-muted hover:bg-muted/80"
-                      style={{ 
-                        top: `calc(${topOffset * (4.75 + 0.75)}rem + ${topOffset >= 3 ? '0.375rem' : '0.75rem'})` 
-                      }}
+                      style={{ top: `${top}rem` }}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
                     >
                       {solfege}
