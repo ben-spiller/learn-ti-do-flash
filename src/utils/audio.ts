@@ -22,6 +22,11 @@ const _midiJsLoaded: Record<string, boolean> = {};
 const _midiJsData: Record<string, any> = {};
 const _decodedBuffers: Record<string, Record<string, AudioBuffer>> = {};
 
+// Preload dedupe: track in-flight preload promises, completed keys, and progress callbacks
+const _preloadPromises: Record<string, Promise<boolean>> = {};
+const _preloadCallbacks: Record<string, Array<(decoded: number, total: number) => void>> = {};
+const _preloadedDone: Record<string, boolean> = {};
+
 const loadMidiJsSoundfontScript = (instrument: string): Promise<void> => {
   const key = instrument;
   if (_midiJsLoaded[key]) return Promise.resolve();
@@ -348,86 +353,123 @@ export const preloadInstrumentWithGesture = async (
   predecodeNotes?: string[] | NoteRange,
   progressCallback?: (decoded: number, total: number) => void
 ): Promise<boolean> => {
-  // NOTE: this function assumes the caller invoked it from a user gesture
-  // (for example, a Start button). Earlier versions used window.confirm()
-  // here; we removed that so the gesture is the caller's responsibility.
+  // Determine the effective instrument and normalized note-range key so we
+  // dedupe preloads for identical requests.
+  const instrumentToUse = instrumentName || currentInstrument;
+  const normalizeRangeKey = (p?: string[] | NoteRange) => {
+    if (!p) return 'C3-C5';
+    if (Array.isArray(p)) return `arr:${p.join(',')}`;
+    return `range:${(p as NoteRange).from}->${(p as NoteRange).to}`;
+  };
+  const rangeKey = normalizeRangeKey(predecodeNotes);
+  const key = `${instrumentToUse}|${rangeKey}`;
 
-  try {
-    await ensureContextRunning();
-    if (instrumentName) currentInstrument = instrumentName;
-    await createToneInstrument();
+  // If already fully preloaded, immediately notify and resolve
+  if (_preloadedDone[key]) {
+    progressCallback?.(1, 1);
+    return Promise.resolve(true);
+  }
 
-  // Determine whether we should pre-decode samples (only applicable for midi-js path)
-    const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
-    const shouldUseMidiJs = !(catalogEntry && catalogEntry.urls && Object.keys(catalogEntry.urls).length > 0);
-
-    // Build notes list to pre-decode
-    let notesToDecode: string[] = [];
-    if (Array.isArray(predecodeNotes)) {
-      notesToDecode = predecodeNotes;
-    } else if (predecodeNotes && (predecodeNotes as NoteRange).from) {
-      const r = predecodeNotes as NoteRange;
-      notesToDecode = getNotesBetween(r.from, r.to);
-    } else {
-      // default range: C3..C5
-      notesToDecode = getNotesBetween('C3', 'C5');
+  // If there's an in-flight preload for the same key, subscribe progress and
+  // return the existing promise.
+  if (_preloadPromises[key]) {
+    if (progressCallback) {
+      _preloadCallbacks[key] = _preloadCallbacks[key] || [];
+      _preloadCallbacks[key].push(progressCallback);
     }
+    return _preloadPromises[key];
+  }
 
-    if (shouldUseMidiJs) {
-      // Ensure the soundfont JS is loaded and then decode each target (or closest) sample
-      try {
-        await loadMidiJsSoundfontScript(currentInstrument);
-        const sf = _midiJsData[currentInstrument];
-        const Tone = (window as any).Tone;
-        const toneRawCtx: BaseAudioContext | null = Tone && (Tone.getContext ? Tone.getContext().rawContext : Tone.context && Tone.context.rawContext) || null;
-        const audioCtx = (toneRawCtx as any) || getAudioContext();
-        const total = notesToDecode.length;
-        for (let i = 0; i < notesToDecode.length; i++) {
-          const noteName = notesToDecode[i];
-          const midi = noteNameToMidi(noteName);
-          if (midi == null) {
-            progressCallback?.(i + 1, total);
-            continue;
-          }
-          let sampleKey = noteName;
-          if (!sf[sampleKey]) {
-            const closest = findClosestSampleKey(sf, midi);
-            if (!closest) {
-              progressCallback?.(i + 1, total);
+  // Register callback list for this preload
+  _preloadCallbacks[key] = progressCallback ? [progressCallback] : [];
+
+  const promise = (async () => {
+    console.log('Preloading instrument', instrumentName || currentInstrument);
+    try {
+      await ensureContextRunning();
+      if (instrumentName) currentInstrument = instrumentName;
+      await createToneInstrument();
+
+      // Determine whether we should pre-decode samples (only applicable for midi-js path)
+      const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
+      const shouldUseMidiJs = !(catalogEntry && catalogEntry.urls && Object.keys(catalogEntry.urls).length > 0);
+
+      // Build notes list to pre-decode
+      let notesToDecode: string[] = [];
+      if (Array.isArray(predecodeNotes)) {
+        notesToDecode = predecodeNotes;
+      } else if (predecodeNotes && (predecodeNotes as NoteRange).from) {
+        const r = predecodeNotes as NoteRange;
+        notesToDecode = getNotesBetween(r.from, r.to);
+      } else {
+        // default range: C3..C5
+        notesToDecode = getNotesBetween('C3', 'C5');
+      }
+
+      if (shouldUseMidiJs) {
+        // Ensure the soundfont JS is loaded and then decode each target (or closest) sample
+        try {
+          await loadMidiJsSoundfontScript(currentInstrument);
+          const sf = _midiJsData[currentInstrument];
+          const Tone = (window as any).Tone;
+          const toneRawCtx: BaseAudioContext | null = Tone && (Tone.getContext ? Tone.getContext().rawContext : Tone.context && Tone.context.rawContext) || null;
+          const audioCtx = (toneRawCtx as any) || getAudioContext();
+          const total = notesToDecode.length;
+          for (let i = 0; i < notesToDecode.length; i++) {
+            const noteName = notesToDecode[i];
+            const midi = noteNameToMidi(noteName);
+            if (midi == null) {
+              (_preloadCallbacks[key] || []).forEach(cb => cb(i + 1, total));
               continue;
             }
-            sampleKey = closest;
+            let sampleKey = noteName;
+            if (!sf[sampleKey]) {
+              const closest = findClosestSampleKey(sf, midi);
+              if (!closest) {
+                (_preloadCallbacks[key] || []).forEach(cb => cb(i + 1, total));
+                continue;
+              }
+              sampleKey = closest;
+            }
+            const dataUri = sf[sampleKey];
+            if (!dataUri) {
+              (_preloadCallbacks[key] || []).forEach(cb => cb(i + 1, total));
+              continue;
+            }
+            // decode and cache
+            try {
+              // decodeSoundfontSample will cache decoded buffers
+              // eslint-disable-next-line no-unused-vars
+              const buf = await decodeSoundfontSample(currentInstrument, sampleKey, dataUri, audioCtx);
+            } catch (err) {
+              // continue on decode error
+              console.warn('Failed to decode sample', currentInstrument, sampleKey, err);
+            }
+            (_preloadCallbacks[key] || []).forEach(cb => cb(i + 1, total));
           }
-          const dataUri = sf[sampleKey];
-          if (!dataUri) {
-            progressCallback?.(i + 1, total);
-            continue;
-          }
-          // decode and cache
-          try {
-            // decodeSoundfontSample will cache decoded buffers
-            // eslint-disable-next-line no-unused-vars
-            const buf = await decodeSoundfontSample(currentInstrument, sampleKey, dataUri, audioCtx);
-          } catch (err) {
-            // continue on decode error
-            console.warn('Failed to decode sample', currentInstrument, sampleKey, err);
-          }
-          progressCallback?.(i + 1, total);
+        } catch (err) {
+          console.warn('Pre-decode (midi-js) failed', err);
         }
-      } catch (err) {
-        console.warn('Pre-decode (midi-js) failed', err);
       }
+      // Signal completion if using catalog or midi-js path finished
+      (_preloadCallbacks[key] || []).forEach(cb => cb(1, 1));
+      _preloadedDone[key] = true;
+      return true;
+    } catch (err) {
+      console.error('Preload failed', err);
+      try {
+        window.alert('Unable to initialize audio. Audio will not be available.');
+      } catch (_) {}
+      return false;
+    } finally {
+      // cleanup in-flight promise and callbacks (keep _preloadedDone if succeeded)
+      delete _preloadPromises[key];
+      delete _preloadCallbacks[key];
     }
-    // Signal completion if using catalog or midi-js path finished
-    progressCallback?.(1, 1);
-    return true;
-  } catch (err) {
-    console.error('Preload failed', err);
-    try {
-      window.alert('Unable to initialize audio. Audio will not be available.');
-    } catch (_) {}
-    return false;
-  }
+  })();
+
+  _preloadPromises[key] = promise;
+  return promise;
 };
 
 export const getCurrentInstrument = () => currentInstrument;
