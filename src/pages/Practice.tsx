@@ -179,21 +179,57 @@ const Practice = () => {
         {started ? (
           <>
             {/* Solfege buttons at the top */}
-            <div className="grid gap-3 ">
-              {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch) => {
-                let solfege = midiToSolfege(pitch);
-                if (!solfege) { solfege = "?"+pitch.toString(); }
-                return (
-                  <Button
-                    key={pitch}
-                    onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
-                    className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
-                    disabled={isPlaying || currentPosition >= numberOfNotes}
-                  >
-                    {pitch} - {solfege}
-                  </Button>
-                );
-              })}
+            <div className="flex gap-2">
+              {/* Main solfege notes column */}
+              <div className="flex-1 flex flex-col">
+                {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch, index) => {
+                  let solfege = midiToSolfege(pitch);
+                  if (!solfege) { solfege = "?"+pitch.toString(); }
+                  
+                  // Calculate gap - wider except between Mi-Fa (natural semitone)
+                  const nextPitch = [...MAJOR_SCALE_PITCH_CLASSES].reverse()[index + 1];
+                  const hasChromatic = nextPitch !== undefined && Math.abs(pitch - nextPitch) === 2;
+                  const gapClass = hasChromatic ? "mb-3" : "mb-1.5";
+                  
+                  return (
+                    <Button
+                      key={pitch}
+                      onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
+                      className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)} ${index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapClass : ''}`}
+                      disabled={isPlaying || currentPosition >= numberOfNotes}
+                    >
+                      {solfege}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              {/* Chromatic (flat) notes column */}
+              <div className="w-24 relative">
+                {/* Chromatic notes positioned in gaps */}
+                {[10, 8, 6, 3, 1].map((pitch, index) => {
+                  // Calculate vertical position based on which gap this flat belongs in
+                  const topPositions = [0, 1, 2, 4, 5]; // Ti-La, La-Sol, Sol-Fa, Re-Mi, Do-Re gaps
+                  const topOffset = topPositions[index];
+                  
+                  let solfege = midiToSolfege(pitch);
+                  if (!solfege) { solfege = "?"+pitch.toString(); }
+                  
+                  return (
+                    <Button
+                      key={pitch}
+                      onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
+                      className="absolute h-12 w-full text-lg font-bold text-white bg-muted hover:bg-muted/80"
+                      style={{ 
+                        top: `calc(${topOffset * (4.75 + 0.75)}rem + ${topOffset >= 3 ? '0.375rem' : '0.75rem'})` 
+                      }}
+                      disabled={isPlaying || currentPosition >= numberOfNotes}
+                    >
+                      {solfege}
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Progress card */}
