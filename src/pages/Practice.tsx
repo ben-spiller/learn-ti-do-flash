@@ -14,8 +14,8 @@ const Practice = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedNotes, numberOfNotes } = location.state || {
-    selectedNotes: ["Do", "Re", "Mi"],
-    numberOfNotes: 5,
+    selectedNotes: ["Do", "Re", "Mi", "Fa"],
+    numberOfNotes: 4,
   };
 
   const [sequence, setSequence] = useState<string[]>([]);
