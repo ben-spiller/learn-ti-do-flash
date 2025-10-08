@@ -3,24 +3,23 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Volume2, X } from "lucide-react";
-import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture } from "@/utils/audio";
+import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-
-const ALL_NOTES_DISPLAY = ["Ti", "La", "Sol", "Fa", "Mi", "Re", "Do"];
 
 const Practice = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedNotes, numberOfNotes } = location.state || {
-    selectedNotes: ["Do", "Re", "Mi", "Fa"],
-    numberOfNotes: 4,
-  };
+  const {
+    selectedNotes = ["Do", "Re", "Mi", "Fa"], // TODO: use pitch class numbers instead
+    numberOfNotes = 4,
+    doNote = "C4",
+  } = (location.state || {});
 
   // Normalize incoming selected notes (likely solfege strings) into MIDI numbers
   const initialMidiNotes: number[] = Array.isArray(selectedNotes)
     ? (selectedNotes as string[]).map(s => {
-        const m = solfegeToMidi(s);
+        const m = solfegeToMidi(s, doNote);
         return m != null ? m : (typeof s === 'string' ? (noteNameToMidi(s) as number) : (s as unknown as number));
       })
     : [];
@@ -76,7 +75,7 @@ const Practice = () => {
   }, [currentPosition, numberOfNotes]);
 
   const startNewRound = () => {
-    const pool = initialMidiNotes.length ? initialMidiNotes : [60, 62, 64, 65];
+    const pool = initialMidiNotes;
     const newSequence = generateRandomSequence(pool, numberOfNotes);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
@@ -103,15 +102,15 @@ const Practice = () => {
     setIsPlaying(false);
   };
 
-  const handleNotePress = (noteMidi: number) => {
-    playNote(noteMidi);
+  const handleNotePress = (scaleNote: number) => {
+    playNote(scaleNote);
 
     if (currentPosition >= numberOfNotes) return;
 
     const correctNote = sequence[currentPosition];
     setTotalAttempts(totalAttempts + 1);
 
-    if (noteMidi === correctNote) {
+    if (scaleNote === correctNote) {
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
     } else {
@@ -125,7 +124,7 @@ const Practice = () => {
   };
 
   const handlePlayReference = () => {
-    playSequenceWithDelay(initialMidiNotes.length ? initialMidiNotes : [60, 62, 64, 65], true);
+    playSequenceWithDelay([noteNameToMidi(doNote)], true);
   };
 
   const handleFinish = () => {
@@ -144,12 +143,6 @@ const Practice = () => {
     };
     return colorMap[note] || "bg-muted hover:bg-muted/80";
   };
-
-    const isNoteEnabled = (note: string) => {
-      const m = solfegeToMidi(note);
-      if (m == null) return false;
-      return initialMidiNotes.includes(m);
-    };
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-4">
@@ -186,17 +179,18 @@ const Practice = () => {
         {started ? (
           <>
             {/* Solfege buttons at the top */}
-            <div className="grid gap-3">
-              {ALL_NOTES_DISPLAY.map((note) => {
-                const midi = solfegeToMidi(note) as number;
+            <div className="grid gap-3 ">
+              {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch) => {
+                let solfege = midiToSolfege(pitch);
+                if (!solfege) { solfege = "?"+pitch.toString(); }
                 return (
                   <Button
-                    key={note}
-                    onClick={() => handleNotePress(midi)}
-                    className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(note)}`}
-                    disabled={isPlaying || currentPosition >= numberOfNotes || !isNoteEnabled(note)}
+                    key={pitch}
+                    onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
+                    className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
+                    disabled={isPlaying || currentPosition >= numberOfNotes}
                   >
-                    {note}
+                    {pitch} - {solfege}
                   </Button>
                 );
               })}

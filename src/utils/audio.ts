@@ -1,25 +1,65 @@
+/*
+Concepts are:
+ - pitch (or pitch class): a number 0-11 representing a note within an octave, where 0 is "do"
+ - solfege: a string like "Do", "Re", "Mi" which is a display string for pitch, possibly with '#' or 'b' for chromatic alterations
+ - midiNote: a number 0-127 representing a specific note (C-1 to G9)
+ - noteName: a string like "C4", "G#3", "Bb2" representing a specific note
+
+*/
+
 // Solfege order (diatonic major scale degrees)
 export const SOLFEGE_ORDER = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti'] as const;
 
 // Helpers to convert between solfege labels and MIDI numbers. We keep a
 // default octave of 4 for mapping (Do -> C4 -> 60), but callers can provide
 // another octave when necessary.
-export const solfegeToMidi = (solfege: string, octave: number = 4): number | null => {
+
+// Major scale intervals (semitones) from the root (Do)
+export const MAJOR_SCALE_PITCH_CLASSES = [0, 2, 4, 5, 7, 9, 11];
+
+export const solfegeToMidi = (solfege: string, doNote: string = "C4"): number | null => {
   const idx = SOLFEGE_ORDER.indexOf(solfege as any);
   if (idx === -1) return null;
-  // Map to natural notes C D E F G A B
-  const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-  const noteName = `${letters[idx]}${octave}`;
-  return noteNameToMidi(noteName) as number;
+
+  const rootMidi = noteNameToMidi(doNote);
+  if (rootMidi == null) return null;
+
+  const midi = rootMidi + MAJOR_SCALE_PITCH_CLASSES[idx];
+  return midi;
 };
 
-export const midiToSolfege = (midi: number): string | null => {
-  const noteName = midiToNoteName(midi);
-  if (!noteName) return null;
-  // noteName like C4 or C#4; take the letter and map to solfege
-  const letter = noteName.replace(/[#0-9]/g, '').charAt(0);
-  const map: Record<string, string> = { C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Ti' };
-  return map[letter] || null;
+// midiToSolfege(midi, root?, octave?) — map a MIDI number to a solfege label
+// relative to provided root. If the midi does not fall exactly on a major-scale
+// degree we will append '#' or 'b' where appropriate (chromatic altered degrees).
+export const midiToSolfege = (midi: number, doNote: string = 'C'): string | null => {
+  // If root includes an octave digit, use it, else append octave
+  const rootHasOctave = /\d+$/.test(doNote);
+  const rootNoteName = rootHasOctave ? doNote : `${doNote}8`; // just pick a high one
+  const rootMidi = noteNameToMidi(rootNoteName);
+  if (rootMidi == null) return null;
+
+  const pitchClass = ((midi - rootMidi) % 12 + 12) % 12; // 0..11 relative to root
+
+  // Exact match to a degree
+  const exactIdx = MAJOR_SCALE_PITCH_CLASSES.indexOf(pitchClass);
+  if (exactIdx !== -1) return SOLFEGE_ORDER[exactIdx];
+
+  // Try to find a degree that is a semitone away (sharp or flat)
+  for (let i = 0; i < MAJOR_SCALE_PITCH_CLASSES.length; i++) {
+    const deg = MAJOR_SCALE_PITCH_CLASSES[i];
+    const rel = (pitchClass - deg + 12) % 12;
+    if (rel === 1) {
+      // one semitone above degree => sharp
+      return `${SOLFEGE_ORDER[i]}#`;
+    }
+    if (rel === 11) {
+      // one semitone below degree => flat
+      return `${SOLFEGE_ORDER[i]}b`;
+    }
+  }
+
+  // Fallback: return the note name (e.g., C#4) if it doesn't map cleanly
+  return midiToNoteName(midi) || null;
 };
 
 let audioContext: AudioContext | null = null;
@@ -219,8 +259,9 @@ export const registerInstrument = (slug: string, data: { label?: string; urls: R
 // WebAudioFont support removed: unused in current flow. Kept midi-js (jsDelivr) and Tone paths.
 
 export const noteNameToMidi = (note: string) => {
+  if (!note || typeof note !== 'string') throw new Error('Invalid note name: ' + note);
   const match = note.match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
-  if (!match) return null;
+  if (!match) throw new Error('Invalid note name: ' + note);
   const [, pitch, accidental, octaveStr] = match;
   const octave = parseInt(octaveStr, 10);
   const semitoneFromC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
@@ -520,7 +561,7 @@ export const preloadInstrumentWithGesture = async (
 export const getCurrentInstrument = () => currentInstrument;
 
 export const playNote = async (midiNote: number | string, durationSecs: number = 0.7, when?: number) => {
-  // note may be a MIDI number (preferred), a solfege label, or a note name like 'C4'
+  // note may be a MIDI number (preferred), or a note name like 'C4'
   let noteName: string | null = null;
   if (typeof midiNote === 'number') {
     noteName = midiToNoteName(midiNote);
