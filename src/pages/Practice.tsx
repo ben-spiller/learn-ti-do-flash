@@ -141,7 +141,10 @@ const Practice = () => {
       "La": "bg-solfege-la hover:bg-solfege-la/90",
       "Ti": "bg-solfege-ti hover:bg-solfege-ti/90",
     };
-    return colorMap[note] || "bg-muted hover:bg-muted/80";
+    //return colorMap[note] || "bg-muted hover:bg-muted/80";
+
+    const n = note.toLowerCase();
+    return `bg-solfege-${n} hover:bg-solfege-${n}/90`;
   };
 
   return (
@@ -204,7 +207,7 @@ const Practice = () => {
                 })}
               </div>
               
-              {/* Chromatic (flat) notes column */}
+              {/* Chromatic notes column */}
               <div className="w-24 relative">
                 {/* Chromatic notes positioned in gaps */}
                 {[10, 8, 6, 3, 1].map((pitch, index) => {
@@ -231,7 +234,7 @@ const Practice = () => {
                     <Button
                       key={pitch}
                       onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
-                      className="absolute h-12 w-full text-lg font-bold text-white bg-muted hover:bg-muted/80"
+                      className={`absolute h-12 w-full text-lg font-bold text-white ${getNoteButtonColor("semitone")}`}
                       style={{ top: `${top}rem` }}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
                     >

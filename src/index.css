@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
@@ -61,12 +61,13 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Solfege note colors */
-    --solfege-do: 142 76% 36%;
+    --solfege-do: 140 100% 30%;
     --solfege-re: 30 80% 35%;
     --solfege-mi: 0 70% 35%;
     --solfege-fa: 38 92% 50%;
     --solfege-sol: 0 84% 60%;
     --solfege-la: 142 60% 25%;
+    --solfege-semitone: 80 50% 50%;
     --solfege-ti: 0 0% 9%;
   }
 

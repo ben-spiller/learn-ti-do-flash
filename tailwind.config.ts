@@ -63,6 +63,7 @@ export default {
           mi: "hsl(var(--solfege-mi))",
           fa: "hsl(var(--solfege-fa))",
           sol: "hsl(var(--solfege-sol))",
+          semitone: "hsl(var(--solfege-semitone))",
           la: "hsl(var(--solfege-la))",
           ti: "hsl(var(--solfege-ti))",
         },
