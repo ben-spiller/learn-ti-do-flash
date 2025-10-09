@@ -50,11 +50,11 @@ export const midiToSolfege = (midi: number, doNote: string = 'C'): string | null
     const rel = (pitchClass - deg + 12) % 12;
     if (rel === 1) {
       // one semitone above degree => sharp
-      return `${SOLFEGE_ORDER[i]}#`;
+      return `b ${SOLFEGE_ORDER[i+1]}`;
     }
     if (rel === 11) {
       // one semitone below degree => flat
-      return `${SOLFEGE_ORDER[i]}b`;
+      return `b ${SOLFEGE_ORDER[i]}`;
     }
   }
 
