@@ -61,14 +61,14 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Solfege note colors */
-    --solfege-do: 140 100% 30%;
-    --solfege-re: 30 80% 35%;
-    --solfege-mi: 0 70% 35%;
-    --solfege-fa: 38 92% 50%;
-    --solfege-sol: 0 84% 60%;
-    --solfege-la: 142 60% 25%;
-    --solfege-semitone: 80 50% 50%;
-    --solfege-ti: 0 0% 9%;
+    --solfege-do: 120 73% 60%;
+    --solfege-re: 36 100% 75%;
+    --solfege-mi: 0 100% 80%;
+    --solfege-fa: 35 100% 50%;
+    --solfege-sol: 0 100% 60%;
+    --solfege-la: 140 100% 30%;
+    --solfege-ti: 300 100% 35%;
+    --solfege-semitone: 240 100% 70%;
   }
 
   .dark {
