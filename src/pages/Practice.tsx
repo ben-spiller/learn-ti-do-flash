@@ -132,17 +132,6 @@ const Practice = () => {
   };
 
   const getNoteButtonColor = (note: string) => {
-    const colorMap: Record<string, string> = {
-      "Do": "bg-solfege-do hover:bg-solfege-do/90",
-      "Re": "bg-solfege-re hover:bg-solfege-re/90",
-      "Mi": "bg-solfege-mi hover:bg-solfege-mi/90",
-      "Fa": "bg-solfege-fa hover:bg-solfege-fa/90",
-      "Sol": "bg-solfege-sol hover:bg-solfege-sol/90",
-      "La": "bg-solfege-la hover:bg-solfege-la/90",
-      "Ti": "bg-solfege-ti hover:bg-solfege-ti/90",
-    };
-    //return colorMap[note] || "bg-muted hover:bg-muted/80";
-
     const n = note.toLowerCase();
     return `bg-solfege-${n} hover:bg-solfege-${n}/90`;
   };
