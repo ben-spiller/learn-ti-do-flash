@@ -250,7 +250,7 @@ const Practice = () => {
             {/* Progress card */}
             <Card className="relative">
               <CardHeader>
-                <CardTitle className="text-center">Your Progress</CardTitle>
+                <CardTitle className="text-center">Identify the notes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2 justify-center flex-wrap">
@@ -259,7 +259,7 @@ const Practice = () => {
                       key={index}
                       className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
                         index < currentPosition
-                          ? "bg-success text-white"
+                          ? "bg-success text-black"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
