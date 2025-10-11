@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Volume2, X } from "lucide-react";
-import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES } from "@/utils/audio";
+import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 
@@ -14,6 +14,8 @@ const Practice = () => {
     selectedNotes = ["Do", "Re", "Mi", "Fa"], // TODO: use pitch class numbers instead
     numberOfNotes = 4,
     doNote = "C4",
+    referencePlay = "once",
+    rootNotePitch = "C4",
   } = (location.state || {});
 
   // Normalize incoming selected notes (likely solfege strings) into MIDI numbers
@@ -44,8 +46,21 @@ const Practice = () => {
   // don't auto-start; wait for explicit Start button so the initial action can be
   // a user gesture that enables audio autoplay permissions.
   useEffect(() => {
-    if (started) startNewRound();
+    if (started) {
+      startNewRound();
+      // Start drone if configured
+      if (referencePlay === "drone") {
+        startDrone(rootNotePitch || doNote);
+      }
+    }
   }, [started]);
+
+  // Cleanup drone on unmount
+  useEffect(() => {
+    return () => {
+      stopDrone();
+    };
+  }, []);
 
   const handleStart = async () => {
     if (started) return;

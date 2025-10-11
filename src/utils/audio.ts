@@ -66,6 +66,7 @@ let audioContext: AudioContext | null = null;
 let toneInstrument: any = null; // Tone.js synth / sampler instance
 let toneLoaded = false;
 let currentInstrument = 'acoustic_grand_piano';
+let droneSynth: any = null; // PolySynth for background drone
 // Default sample base: point at the midi-js soundfonts on jsDelivr (FluidR3_GM)
 // We will load instrument JS files like `${instrument}-mp3.js` from this base.
 let SAMPLE_BASE = 'https://cdn.jsdelivr.net/gh/gleitz/midi-js-soundfonts@gh-pages/FluidR3_GM/';
@@ -646,4 +647,64 @@ export const generateRandomSequence = (
     sequence.push(availableNotes[randomIndex]);
   }
   return sequence;
+};
+
+/**
+ * Start a continuous background drone on the given note (one octave lower).
+ * Uses a square wave PolySynth from Tone.js.
+ */
+export const startDrone = async (noteNameOrMidi: string | number, volume: number = -18) => {
+  await loadToneScript();
+  const Tone = (window as any).Tone;
+  if (!Tone) {
+    console.error('Tone.js not loaded, cannot start drone');
+    return;
+  }
+
+  // Stop any existing drone first
+  stopDrone();
+
+  // Convert midi to note name if needed
+  let noteName: string;
+  if (typeof noteNameOrMidi === 'number') {
+    noteName = midiToNoteName(noteNameOrMidi);
+  } else {
+    noteName = noteNameOrMidi;
+  }
+
+  // Lower by one octave
+  const midi = noteNameToMidi(noteName);
+  const lowerOctaveNote = midiToNoteName(midi - 12);
+
+  // Create a PolySynth with square wave oscillator
+  droneSynth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: {
+      type: 'square'
+    },
+    envelope: {
+      attack: 0.1,
+      decay: 0,
+      sustain: 1,
+      release: 0.1
+    },
+    volume: volume
+  }).toDestination();
+
+  // Start the continuous note
+  droneSynth.triggerAttack(lowerOctaveNote);
+};
+
+/**
+ * Stop the background drone if it's playing.
+ */
+export const stopDrone = () => {
+  if (droneSynth) {
+    try {
+      droneSynth.releaseAll();
+      droneSynth.dispose();
+    } catch (e) {
+      console.error('Error stopping drone:', e);
+    }
+    droneSynth = null;
+  }
 };
