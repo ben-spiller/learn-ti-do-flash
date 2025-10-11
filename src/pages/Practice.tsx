@@ -39,6 +39,7 @@ const Practice = () => {
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadProgress, setPreloadProgress] = useState<{ decoded: number; total: number } | null>(null);
   const [started, setStarted] = useState(false);
+  const [hasPreloaded, setHasPreloaded] = useState(false);
   const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
@@ -98,6 +99,7 @@ const Practice = () => {
     // small delay so the user can see completion
     setTimeout(() => setPreloadProgress(null), 400);
     if (ok) {
+      setHasPreloaded(true);
       setStarted(true);
     }
   };
@@ -131,15 +133,15 @@ const Practice = () => {
   const playSequenceWithDelay = async (seq: number[], allowPreload: boolean = false) => {
     setIsPlaying(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    // ensure instrument preloaded on first play (only when allowed)
-    if (allowPreload && !isPreloading && !preloadProgress) {
+    // ensure instrument preloaded on first play (only when allowed and not already preloaded)
+    if (allowPreload && !hasPreloaded && !isPreloading && !preloadProgress) {
       setIsPreloading(true);
       const ok = await preloadInstrumentWithGesture(undefined, undefined, (decoded, total) => {
         setPreloadProgress({ decoded, total });
       });
       setIsPreloading(false);
-      if (!ok) {
-        // user declined or preload failed; allow still trying to play which may prompt again
+      if (ok) {
+        setHasPreloaded(true);
       }
       // clear progress after a short delay
       setTimeout(() => setPreloadProgress(null), 400);
