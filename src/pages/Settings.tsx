@@ -126,7 +126,18 @@ const Settings = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Select Notes to Practice</Label>
+                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
+                <Slider
+                  value={[tempo]}
+                  onValueChange={(v) => setTempo(v[0])}
+                  min={40}
+                  max={200}
+                  step={5}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Notes to Practice</Label>
                 <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start">
@@ -161,10 +172,10 @@ const Settings = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Interval Range for Consecutive Notes</Label>
-                <div className="space-y-3">
+                <Label className="text-base font-semibold">Interval Range</Label>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm text-muted-foreground">Minimum: {minInterval}</Label>
+                    <Label className="text-sm text-muted-foreground">Min: {minInterval}</Label>
                     <Slider
                       value={[minInterval]}
                       onValueChange={(v) => setMinInterval(Math.min(v[0], maxInterval))}
@@ -175,7 +186,7 @@ const Settings = () => {
                     />
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">Maximum: {maxInterval}</Label>
+                    <Label className="text-sm text-muted-foreground">Max: {maxInterval}</Label>
                     <Slider
                       value={[maxInterval]}
                       onValueChange={(v) => setMaxInterval(Math.max(v[0], minInterval))}
@@ -213,17 +224,6 @@ const Settings = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
-                <Slider
-                  value={[tempo]}
-                  onValueChange={(v) => setTempo(v[0])}
-                  min={40}
-                  max={200}
-                  step={5}
-                />
-              </div>
-
-              <div className="space-y-4">
                 <Label className="text-base font-semibold">Rhythm</Label>
                 <div className="flex gap-2">
                   <Button
@@ -241,6 +241,21 @@ const Settings = () => {
                     Random
                   </Button>
                 </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Root Note Pitch</Label>
+                <select
+                  value={rootNotePitch}
+                  onChange={(e) => setRootNotePitch(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                >
+                  {["C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3", "A3", "A#3", "B3",
+                    "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4",
+                    "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5"].map(pitch => (
+                    <option key={pitch} value={pitch}>{pitch}</option>
+                  ))}
+                </select>
               </div>
             </TabsContent>
 
@@ -283,21 +298,6 @@ const Settings = () => {
                     Background Drone
                   </Button>
                 </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Root Note Pitch</Label>
-                <select
-                  value={rootNotePitch}
-                  onChange={(e) => setRootNotePitch(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  {["C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3", "A3", "A#3", "B3",
-                    "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4",
-                    "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5"].map(pitch => (
-                    <option key={pitch} value={pitch}>{pitch}</option>
-                  ))}
-                </select>
               </div>
             </TabsContent>
           </Tabs>
