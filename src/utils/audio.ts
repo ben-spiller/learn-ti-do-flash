@@ -653,7 +653,7 @@ export const generateRandomSequence = (
  * Start a continuous background drone on the given note (one octave lower).
  * Uses a square wave PolySynth from Tone.js.
  */
-export const startDrone = async (noteNameOrMidi: string | number, volume: number = -18) => {
+export const startDrone = async (noteNameOrMidi: string | number, volume: number = -26) => {
   await loadToneScript();
   const Tone = (window as any).Tone;
   if (!Tone) {
@@ -706,5 +706,15 @@ export const stopDrone = () => {
       console.error('Error stopping drone:', e);
     }
     droneSynth = null;
+  }
+};
+
+/**
+ * Adjust the volume of the currently playing drone.
+ * @param volume Volume in decibels (e.g., -26 for default, -12 for louder, -40 for quieter)
+ */
+export const setDroneVolume = (volume: number) => {
+  if (droneSynth) {
+    droneSynth.volume.value = volume;
   }
 };

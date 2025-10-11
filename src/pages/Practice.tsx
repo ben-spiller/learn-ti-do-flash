@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Play, Volume2, X } from "lucide-react";
-import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone } from "@/utils/audio";
+import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
+import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Practice = () => {
   const location = useLocation();
@@ -37,6 +39,7 @@ const Practice = () => {
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadProgress, setPreloadProgress] = useState<{ decoded: number; total: number } | null>(null);
   const [started, setStarted] = useState(false);
+  const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
@@ -151,6 +154,12 @@ const Practice = () => {
     navigate("/");
   };
 
+  const handleDroneVolumeChange = (value: number[]) => {
+    const newVolume = value[0];
+    setDroneVolumeState(newVolume);
+    setDroneVolume(newVolume);
+  };
+
 
   // nb: have to do this mapping because Tailwind strips out dynamic class names
   const SOLFEGE_COLOR_CLASSES: Record<string, string> = {
@@ -178,14 +187,42 @@ const Practice = () => {
           </Button>
           <h1 className="text-2xl font-bold ml-2">Practice</h1>
         </div>
-        <div className="flex gap-4 text-sm">
-          <div className="text-center">
-            <div className="font-bold text-lg">{totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%</div>
-            <div className="text-muted-foreground">Score</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold text-lg">{elapsedMinutes}</div>
-            <div className="text-muted-foreground">Min</div>
+        <div className="flex gap-4 items-center">
+          {referencePlay === "drone" && started && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  {droneVolume <= -40 ? <VolumeX className="h-5 w-5" /> : 
+                   droneVolume <= -20 ? <Volume1 className="h-5 w-5" /> : 
+                   <Volume2 className="h-5 w-5" />}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Drone Volume</div>
+                  <Slider
+                    value={[droneVolume]}
+                    onValueChange={handleDroneVolumeChange}
+                    min={-50}
+                    max={-10}
+                    step={2}
+                  />
+                  <div className="text-xs text-muted-foreground text-center">
+                    {droneVolume} dB
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <div className="flex gap-4 text-sm">
+            <div className="text-center">
+              <div className="font-bold text-lg">{totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%</div>
+              <div className="text-muted-foreground">Score</div>
+            </div>
+            <div className="text-center">
+              <div className="font-bold text-lg">{elapsedMinutes}</div>
+              <div className="text-muted-foreground">Min</div>
+            </div>
           </div>
         </div>
       </div>
