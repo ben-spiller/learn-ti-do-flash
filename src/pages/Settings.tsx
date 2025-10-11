@@ -98,7 +98,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-4">
-            <Label className="text-base font-semibold">Number of Notes to Play</Label>
+            <Label className="text-base font-semibold">Number of Notes per Question</Label>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
