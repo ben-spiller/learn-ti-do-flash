@@ -30,6 +30,8 @@ const Settings = () => {
     () => localStorage.getItem('learn-ti-do.instrument') || 'acoustic_grand_piano'
   );
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
 
   const INSTRUMENT_OPTIONS = [
     { slug: 'acoustic_grand_piano', label: 'Grand Piano' },
@@ -44,17 +46,25 @@ const Settings = () => {
     );
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (selectedNotes.length < 2) {
       alert("Please select at least 2 notes to practice");
       return;
     }
-    (async () => {
-      try {
-        await preloadInstrumentWithGesture(selectedInstrument);
-      } catch (e) {
-        // errors are already alerted inside the helper; fall through
-      }
+    
+    setIsPreloading(true);
+    
+    // Show loading indicator only if preload takes more than 400ms
+    const loadingTimer = setTimeout(() => {
+      setShowLoadingIndicator(true);
+    }, 400);
+    
+    try {
+      await preloadInstrumentWithGesture(selectedInstrument);
+      clearTimeout(loadingTimer);
+      setShowLoadingIndicator(false);
+      setIsPreloading(false);
+      
       navigate("/practice", {
         state: { 
           selectedNotes, 
@@ -65,10 +75,15 @@ const Settings = () => {
           rhythm,
           referencePlay,
           referenceType,
-          rootNotePitch
+          rootNotePitch,
+          preloaded: true
         },
       });
-    })();
+    } catch (e) {
+      clearTimeout(loadingTimer);
+      setShowLoadingIndicator(false);
+      setIsPreloading(false);
+    }
   };
 
   useEffect(() => {
@@ -305,9 +320,9 @@ const Settings = () => {
           <Button
             className="w-full h-14 text-lg font-semibold mt-6"
             onClick={handleStart}
-            disabled={selectedNotes.length < 2}
+            disabled={selectedNotes.length < 2 || isPreloading}
           >
-            Start Practice
+            {showLoadingIndicator ? "Loading sounds..." : "Start Practice"}
           </Button>
         </CardContent>
       </Card>

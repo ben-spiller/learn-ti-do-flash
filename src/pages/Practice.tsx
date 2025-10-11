@@ -5,20 +5,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
 import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { toast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Practice = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const state = location.state as {
+    selectedNotes?: string[];
+    numberOfNotes?: number;
+    doNote?: string;
+    referencePlay?: "once" | "drone";
+    referenceType?: "root" | "arpeggio";
+    rootNotePitch?: string;
+    preloaded?: boolean;
+  } | null;
+  
   const {
     selectedNotes = ["Do", "Re", "Mi", "Fa"], // TODO: use pitch class numbers instead
     numberOfNotes = 4,
     doNote = "C4",
     referencePlay = "once",
+    referenceType = "root",
     rootNotePitch = "C4",
-  } = (location.state || {});
+    preloaded = false,
+  } = state || {};
 
   // Normalize incoming selected notes (likely solfege strings) into MIDI numbers
   const initialMidiNotes: number[] = Array.isArray(selectedNotes)
@@ -37,9 +48,9 @@ const Practice = () => {
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
-  const [preloadProgress, setPreloadProgress] = useState<{ decoded: number; total: number } | null>(null);
-  const [started, setStarted] = useState(false);
-  const [hasPreloaded, setHasPreloaded] = useState(false);
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+  const [started, setStarted] = useState(preloaded);
+  const [hasPreloaded, setHasPreloaded] = useState(preloaded);
   const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
@@ -47,31 +58,31 @@ const Practice = () => {
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
   const NARROW_GAP_REM = 0.2; // rem - used for smaller spacing
   
-  // don't auto-start; wait for explicit Start button so the initial action can be
-  // a user gesture that enables audio autoplay permissions.
+  // Auto-start if coming from Settings with preloaded samples
   useEffect(() => {
-    if (started) {
-      // Play reference note/arpeggio first if configured
+    if (started && preloaded) {
       const playReferenceAndStart = async () => {
         if (referencePlay === "once") {
-          // Play reference note once before first question
-          await playSequenceWithDelay([noteNameToMidi(doNote)], true);
-        } else if (referencePlay === "arpeggio") {
-          // Play do-mi-sol-do-sol-mi-do arpeggio
-          const doMidi = noteNameToMidi(doNote);
-          const arpeggio = [
-            doMidi,           // do
-            doMidi + 4,       // mi
-            doMidi + 7,       // sol
-            doMidi + 12,      // do (octave up)
-            doMidi + 7,       // sol
-            doMidi + 4,       // mi
-            doMidi,           // do
-          ];
-          await playSequenceWithDelay(arpeggio, true);
+          if (referenceType === "arpeggio") {
+            // Play do-mi-sol-do-sol-mi-do arpeggio
+            const doMidi = noteNameToMidi(rootNotePitch);
+            const arpeggio = [
+              doMidi,           // do
+              doMidi + 4,       // mi
+              doMidi + 7,       // sol
+              doMidi + 12,      // do (octave up)
+              doMidi + 7,       // sol
+              doMidi + 4,       // mi
+              doMidi,           // do
+            ];
+            await playSequenceWithDelay(arpeggio);
+          } else {
+            // Play reference note once before first question
+            await playSequenceWithDelay([noteNameToMidi(rootNotePitch)]);
+          }
         } else if (referencePlay === "drone") {
           // Start drone if configured
-          startDrone(rootNotePitch || doNote);
+          startDrone(rootNotePitch);
         }
         
         // Now start the first round
@@ -80,7 +91,8 @@ const Practice = () => {
       
       playReferenceAndStart();
     }
-  }, [started]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Cleanup drone on unmount
   useEffect(() => {
@@ -91,13 +103,20 @@ const Practice = () => {
 
   const handleStart = async () => {
     if (started) return;
+    
     setIsPreloading(true);
-    const ok = await preloadInstrumentWithGesture(undefined, undefined, (decoded, total) => {
-      setPreloadProgress({ decoded, total });
-    });
+    
+    // Show loading indicator only if preload takes more than 400ms
+    const loadingTimer = setTimeout(() => {
+      setShowLoadingIndicator(true);
+    }, 400);
+    
+    const ok = await preloadInstrumentWithGesture();
+    
+    clearTimeout(loadingTimer);
+    setShowLoadingIndicator(false);
     setIsPreloading(false);
-    // small delay so the user can see completion
-    setTimeout(() => setPreloadProgress(null), 400);
+    
     if (ok) {
       setHasPreloaded(true);
       setStarted(true);
@@ -127,26 +146,12 @@ const Practice = () => {
     const newSequence = generateRandomSequence(pool, numberOfNotes);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
-    playSequenceWithDelay(newSequence as number[], true);
+    playSequenceWithDelay(newSequence as number[]);
   };
 
-  const playSequenceWithDelay = async (seq: number[], allowPreload: boolean = false) => {
+  const playSequenceWithDelay = async (seq: number[]) => {
     setIsPlaying(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    // ensure instrument preloaded on first play (only when allowed and not already preloaded)
-    if (allowPreload && !hasPreloaded && !isPreloading && !preloadProgress) {
-      setIsPreloading(true);
-      const ok = await preloadInstrumentWithGesture(undefined, undefined, (decoded, total) => {
-        setPreloadProgress({ decoded, total });
-      });
-      setIsPreloading(false);
-      if (ok) {
-        setHasPreloaded(true);
-      }
-      // clear progress after a short delay
-      setTimeout(() => setPreloadProgress(null), 400);
-    }
-    await playSequence(seq);
+    await playSequence(seq, 0.1, 0.7);
     setIsPlaying(false);
   };
 
@@ -168,11 +173,25 @@ const Practice = () => {
   };
 
   const handlePlayAgain = () => {
-    playSequenceWithDelay(sequence, true);
+    playSequenceWithDelay(sequence);
   };
 
   const handlePlayReference = () => {
-    playSequenceWithDelay([noteNameToMidi(doNote)], true);
+    if (referenceType === "arpeggio") {
+      const doMidi = noteNameToMidi(rootNotePitch);
+      const arpeggio = [
+        doMidi,           // do
+        doMidi + 4,       // mi
+        doMidi + 7,       // sol
+        doMidi + 12,      // do (octave up)
+        doMidi + 7,       // sol
+        doMidi + 4,       // mi
+        doMidi,           // do
+      ];
+      playSequenceWithDelay(arpeggio);
+    } else {
+      playSequenceWithDelay([noteNameToMidi(rootNotePitch)]);
+    }
   };
 
   const handleFinish = () => {
@@ -253,16 +272,6 @@ const Practice = () => {
       </div>
 
       <div className="flex-1 flex flex-col gap-6 max-w-md mx-auto w-full">
-        {/* Preload progress indicator */}
-        {(isPreloading || preloadProgress) && (
-          <div className="w-full max-w-md mx-auto p-2">
-            <div className="text-sm mb-2 text-center">Loading audio samples...</div>
-            <Progress value={preloadProgress ? Math.round((preloadProgress.decoded / preloadProgress.total) * 100) : 0} />
-            {preloadProgress && (
-              <div className="text-xs text-muted-foreground mt-1 text-center">{preloadProgress.decoded}/{preloadProgress.total}</div>
-            )}
-          </div>
-        )}
         {started ? (
           <>
             {/* Solfege buttons at the top */}
@@ -401,8 +410,12 @@ const Practice = () => {
         ) : (
           <div className="flex flex-col items-center gap-4 py-8">
             <p className="text-center text-lg">When you're ready, press Start to enable audio and begin.</p>
-            <Button onClick={handleStart} className="w-40 h-14 text-lg">
-              Start
+            <Button 
+              onClick={handleStart} 
+              className="w-40 h-14 text-lg"
+              disabled={isPreloading}
+            >
+              {showLoadingIndicator ? "Loading sounds..." : "Start"}
             </Button>
           </div>
         )}
