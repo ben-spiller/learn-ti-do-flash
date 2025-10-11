@@ -36,6 +36,11 @@ const Practice = () => {
   const [preloadProgress, setPreloadProgress] = useState<{ decoded: number; total: number } | null>(null);
   const [started, setStarted] = useState(false);
 
+  // Shared spacing constants used by both the solfege column and the chromatic column.
+  // Units: rem for the layout math, and Tailwind margin classes for the button stack.
+  const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
+  const NARROW_GAP_REM = 0.2; // rem - used for smaller spacing
+  
   // don't auto-start; wait for explicit Start button so the initial action can be
   // a user gesture that enables audio autoplay permissions.
   useEffect(() => {
@@ -194,13 +199,15 @@ const Practice = () => {
                   // Calculate gap - wider except between Mi-Fa (natural semitone)
                   const nextPitch = [...MAJOR_SCALE_PITCH_CLASSES].reverse()[index + 1];
                   const hasChromatic = nextPitch !== undefined && Math.abs(pitch - nextPitch) === 2;
-                  const gapClass = hasChromatic ? "mb-3" : "mb-1.5";
+                  // use rem-based inline margin so units match the chromatic column math
+                  const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
                   
                   return (
                     <Button
                       key={pitch}
                       onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
-                      className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)} ${index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapClass : ''}`}
+                      className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
+                      style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
                     >
                       {solfege}
@@ -219,8 +226,8 @@ const Practice = () => {
                   
                   const buttonHeight = 4; // rem (h-16)
                   const flatButtonHeight = 3; // rem (h-12)
-                  const wideGap = 0.75; // rem (mb-3)
-                  const narrowGap = 0.375; // rem (mb-1.5)
+                  const wideGap = WIDE_GAP_REM; // rem
+                  const narrowGap = NARROW_GAP_REM; // rem
                   
                   // Calculate top position: sum of buttons and gaps before, plus half current gap, minus half flat button
                   let top = 0;
