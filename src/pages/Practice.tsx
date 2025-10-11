@@ -120,6 +120,29 @@ const Practice = () => {
     if (ok) {
       setHasPreloaded(true);
       setStarted(true);
+      
+      // Play reference and start first round
+      if (referencePlay === "once") {
+        if (referenceType === "arpeggio") {
+          const doMidi = noteNameToMidi(rootNotePitch);
+          const arpeggio = [
+            doMidi,           // do
+            doMidi + 4,       // mi
+            doMidi + 7,       // sol
+            doMidi + 12,      // do (octave up)
+            doMidi + 7,       // sol
+            doMidi + 4,       // mi
+            doMidi,           // do
+          ];
+          await playSequenceWithDelay(arpeggio);
+        } else {
+          await playSequenceWithDelay([noteNameToMidi(rootNotePitch)]);
+        }
+      } else if (referencePlay === "drone") {
+        startDrone(rootNotePitch);
+      }
+      
+      startNewRound();
     }
   };
 
