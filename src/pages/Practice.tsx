@@ -50,11 +50,34 @@ const Practice = () => {
   // a user gesture that enables audio autoplay permissions.
   useEffect(() => {
     if (started) {
-      startNewRound();
-      // Start drone if configured
-      if (referencePlay === "drone") {
-        startDrone(rootNotePitch || doNote);
-      }
+      // Play reference note/arpeggio first if configured
+      const playReferenceAndStart = async () => {
+        if (referencePlay === "once") {
+          // Play reference note once before first question
+          await playSequenceWithDelay([noteNameToMidi(doNote)], false);
+        } else if (referencePlay === "arpeggio") {
+          // Play do-mi-sol-do-sol-mi-do arpeggio
+          const doMidi = noteNameToMidi(doNote);
+          const arpeggio = [
+            doMidi,           // do
+            doMidi + 4,       // mi
+            doMidi + 7,       // sol
+            doMidi + 12,      // do (octave up)
+            doMidi + 7,       // sol
+            doMidi + 4,       // mi
+            doMidi,           // do
+          ];
+          await playSequenceWithDelay(arpeggio, false);
+        } else if (referencePlay === "drone") {
+          // Start drone if configured
+          startDrone(rootNotePitch || doNote);
+        }
+        
+        // Now start the first round
+        startNewRound();
+      };
+      
+      playReferenceAndStart();
     }
   }, [started]);
 
