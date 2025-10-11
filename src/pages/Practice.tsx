@@ -54,7 +54,7 @@ const Practice = () => {
       const playReferenceAndStart = async () => {
         if (referencePlay === "once") {
           // Play reference note once before first question
-          await playSequenceWithDelay([noteNameToMidi(doNote)], false);
+          await playSequenceWithDelay([noteNameToMidi(doNote)], true);
         } else if (referencePlay === "arpeggio") {
           // Play do-mi-sol-do-sol-mi-do arpeggio
           const doMidi = noteNameToMidi(doNote);
@@ -67,7 +67,7 @@ const Practice = () => {
             doMidi + 4,       // mi
             doMidi,           // do
           ];
-          await playSequenceWithDelay(arpeggio, false);
+          await playSequenceWithDelay(arpeggio, true);
         } else if (referencePlay === "drone") {
           // Start drone if configured
           startDrone(rootNotePitch || doNote);
@@ -125,7 +125,7 @@ const Practice = () => {
     const newSequence = generateRandomSequence(pool, numberOfNotes);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
-    playSequenceWithDelay(newSequence as number[], false);
+    playSequenceWithDelay(newSequence as number[], true);
   };
 
   const playSequenceWithDelay = async (seq: number[], allowPreload: boolean = false) => {
