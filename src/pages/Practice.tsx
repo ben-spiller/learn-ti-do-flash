@@ -184,12 +184,24 @@ const Practice = () => {
         '7': 11, 't': 11, // ti
       };
 
+      // Map shifted number keys (US keyboard layout: ! @ # $ % ^ &)
+      const shiftedKeyToInterval: Record<string, number> = {
+        '!': 1, '@': 3, '#': 5, '$': 6, '%': 8, '^': 10, '&': 12,
+      };
+
       const key = e.key.toLowerCase();
-      if (key in keyToInterval) {
+      
+      // Check for shifted number keys first
+      if (e.key in shiftedKeyToInterval) {
+        e.preventDefault();
+        const interval = shiftedKeyToInterval[e.key];
+        const midiNote = rootMidi + interval;
+        handleNotePress(midiNote);
+      } else if (key in keyToInterval) {
         e.preventDefault();
         let interval = keyToInterval[key];
-        // If SHIFT is held, play the sharp (semitone higher)
-        if (e.shiftKey) {
+        // If SHIFT is held with letter keys, play the sharp (semitone higher)
+        if (e.shiftKey && isNaN(Number(key))) {
           interval += 1;
         }
         const midiNote = rootMidi + interval;
