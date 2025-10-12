@@ -170,11 +170,35 @@ const Practice = () => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'n' && currentPosition === numberOfNotes) {
         startNewRound();
+        return;
+      }
+
+      // Map keys to solfege intervals (semitones from root)
+      const keyToInterval: Record<string, number> = {
+        '1': 0, 'd': 0,  // do
+        '2': 2, 'r': 2,  // re
+        '3': 4, 'm': 4,  // mi
+        '4': 5, 'f': 5,  // fa
+        '5': 7, 's': 7,  // sol
+        '6': 9, 'l': 9,  // la
+        '7': 11, 't': 11, // ti
+      };
+
+      const key = e.key.toLowerCase();
+      if (key in keyToInterval) {
+        e.preventDefault();
+        let interval = keyToInterval[key];
+        // If SHIFT is held, play the sharp (semitone higher)
+        if (e.shiftKey) {
+          interval += 1;
+        }
+        const midiNote = rootMidi + interval;
+        handleNotePress(midiNote);
       }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPosition, numberOfNotes]);
+  }, [currentPosition, numberOfNotes, rootMidi]);
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
