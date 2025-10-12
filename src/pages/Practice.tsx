@@ -18,6 +18,7 @@ const Practice = () => {
     referencePlay?: "once" | "drone";
     referenceType?: "root" | "arpeggio";
     rootNotePitch?: string;
+    tempo?: number;
     preloaded?: boolean;
   } | null;
   
@@ -28,8 +29,14 @@ const Practice = () => {
     referencePlay = "once",
     referenceType = "root",
     rootNotePitch = "C4",
+    tempo = 120,
     preloaded = false,
   } = state || {};
+
+  // Calculate note duration based on tempo (BPM)
+  // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
+  const noteDuration = 60 / tempo;
+  const noteGap = noteDuration * 0.15; // Gap is 15% of note duration
 
   // Convert intervals to absolute MIDI notes based on rootNotePitch
   const rootMidi = noteNameToMidi(rootNotePitch);
@@ -179,7 +186,7 @@ const Practice = () => {
 
   const playSequenceWithDelay = async (seq: number[]) => {
     setIsPlaying(true);
-    await playSequence(seq, 0.1, 0.7);
+    await playSequence(seq, noteGap, noteDuration);
     setIsPlaying(false);
   };
 
