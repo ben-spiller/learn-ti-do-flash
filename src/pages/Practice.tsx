@@ -168,6 +168,11 @@ const Practice = () => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Debug logging for keyboard events
+      if (e.shiftKey && ['1', '2', '3', '4', '5', '6', '7'].includes(e.code.replace('Digit', ''))) {
+        console.log('Shifted number key:', { key: e.key, code: e.code, shiftKey: e.shiftKey });
+      }
+
       if (e.key === 'n' && currentPosition === numberOfNotes) {
         startNewRound();
         return;
@@ -184,9 +189,12 @@ const Practice = () => {
         '7': 11, 't': 11, // ti
       };
 
-      // Map shifted number keys (US keyboard layout: ! @ # $ % ^ &)
+      // Map shifted number keys - supporting multiple keyboard layouts
       const shiftedKeyToInterval: Record<string, number> = {
+        // US layout
         '!': 1, '@': 3, '#': 5, '$': 6, '%': 8, '^': 10, '&': 12,
+        // UK and other layouts that might use different symbols
+        '"': 3, '£': 5, '€': 6,
       };
 
       const key = e.key.toLowerCase();
