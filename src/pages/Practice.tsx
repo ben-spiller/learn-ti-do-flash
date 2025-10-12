@@ -168,57 +168,13 @@ const Practice = () => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Debug logging for keyboard events
-      if (e.shiftKey && ['1', '2', '3', '4', '5', '6', '7'].includes(e.code.replace('Digit', ''))) {
-        console.log('Shifted number key:', { key: e.key, code: e.code, shiftKey: e.shiftKey });
-      }
-
       if (e.key === 'n' && currentPosition === numberOfNotes) {
         startNewRound();
-        return;
-      }
-
-      // Map keys to solfege intervals (semitones from root)
-      const keyToInterval: Record<string, number> = {
-        '1': 0, 'd': 0,  // do
-        '2': 2, 'r': 2,  // re
-        '3': 4, 'm': 4,  // mi
-        '4': 5, 'f': 5,  // fa
-        '5': 7, 's': 7,  // sol
-        '6': 9, 'l': 9,  // la
-        '7': 11, 't': 11, // ti
-      };
-
-      // Map shifted number keys - supporting multiple keyboard layouts
-      const shiftedKeyToInterval: Record<string, number> = {
-        // US layout
-        '!': 1, '@': 3, '#': 5, '$': 6, '%': 8, '^': 10, '&': 12,
-        // UK and other layouts that might use different symbols
-        '"': 3, '£': 5, '€': 6,
-      };
-
-      const key = e.key.toLowerCase();
-      
-      // Check for shifted number keys first
-      if (e.key in shiftedKeyToInterval) {
-        e.preventDefault();
-        const interval = shiftedKeyToInterval[e.key];
-        const midiNote = rootMidi + interval;
-        handleNotePress(midiNote);
-      } else if (key in keyToInterval) {
-        e.preventDefault();
-        let interval = keyToInterval[key];
-        // If SHIFT is held with letter keys, play the sharp (semitone higher)
-        if (e.shiftKey && isNaN(Number(key))) {
-          interval += 1;
-        }
-        const midiNote = rootMidi + interval;
-        handleNotePress(midiNote);
       }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPosition, numberOfNotes, rootMidi]);
+  }, [currentPosition, numberOfNotes]);
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
