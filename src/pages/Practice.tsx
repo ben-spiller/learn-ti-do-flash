@@ -52,6 +52,7 @@ const Practice = () => {
   const [started, setStarted] = useState(preloaded);
   const [hasPreloaded, setHasPreloaded] = useState(preloaded);
   const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
+  const [isPlayingReference, setIsPlayingReference] = useState(false);
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
@@ -63,6 +64,7 @@ const Practice = () => {
     if (started && preloaded) {
       const playReferenceAndStart = async () => {
         if (referencePlay === "once") {
+          setIsPlayingReference(true);
           if (referenceType === "arpeggio") {
             // Play do-mi-sol-do-sol-mi-do arpeggio
             const doMidi = noteNameToMidi(rootNotePitch);
@@ -75,11 +77,14 @@ const Practice = () => {
               doMidi + 4,       // mi
               doMidi,           // do
             ];
-            await playSequenceWithDelay(arpeggio);
+            await playSequence(arpeggio, 0.15, 1.0);
           } else {
-            // Play reference note once before first question
-            await playSequenceWithDelay([noteNameToMidi(rootNotePitch)]);
+            // Play reference note longer
+            await playSequence([noteNameToMidi(rootNotePitch)], 0, 2.0);
           }
+          setIsPlayingReference(false);
+          // Add gap before exercise
+          await new Promise(resolve => setTimeout(resolve, 800));
         } else if (referencePlay === "drone") {
           // Start drone if configured
           startDrone(rootNotePitch);
@@ -120,6 +125,33 @@ const Practice = () => {
     if (ok) {
       setHasPreloaded(true);
       setStarted(true);
+      
+      // Play reference and start first round
+      if (referencePlay === "once") {
+        setIsPlayingReference(true);
+        if (referenceType === "arpeggio") {
+          const doMidi = noteNameToMidi(rootNotePitch);
+          const arpeggio = [
+            doMidi,           // do
+            doMidi + 4,       // mi
+            doMidi + 7,       // sol
+            doMidi + 12,      // do (octave up)
+            doMidi + 7,       // sol
+            doMidi + 4,       // mi
+            doMidi,           // do
+          ];
+          await playSequence(arpeggio, 0.15, 1.0);
+        } else {
+          await playSequence([noteNameToMidi(rootNotePitch)], 0, 2.0);
+        }
+        setIsPlayingReference(false);
+        // Add gap before exercise
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } else if (referencePlay === "drone") {
+        startDrone(rootNotePitch);
+      }
+      
+      startNewRound();
     }
   };
 
@@ -176,7 +208,8 @@ const Practice = () => {
     playSequenceWithDelay(sequence);
   };
 
-  const handlePlayReference = () => {
+  const handlePlayReference = async () => {
+    setIsPlayingReference(true);
     if (referenceType === "arpeggio") {
       const doMidi = noteNameToMidi(rootNotePitch);
       const arpeggio = [
@@ -188,10 +221,11 @@ const Practice = () => {
         doMidi + 4,       // mi
         doMidi,           // do
       ];
-      playSequenceWithDelay(arpeggio);
+      await playSequence(arpeggio, 0.15, 1.0);
     } else {
-      playSequenceWithDelay([noteNameToMidi(rootNotePitch)]);
+      await playSequence([noteNameToMidi(rootNotePitch)], 0, 2.0);
     }
+    setIsPlayingReference(false);
   };
 
   const handleFinish = () => {
@@ -343,7 +377,13 @@ const Practice = () => {
             {/* Progress card */}
             <Card className="relative">
               <CardHeader>
-                <CardTitle className="text-center">Identify the notes</CardTitle>
+                <CardTitle className="text-center">
+                  {isPlayingReference ? (
+                    <span className="text-primary animate-pulse">🎵 Reference Playing...</span>
+                  ) : (
+                    "Identify the notes"
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2 justify-center flex-wrap">
@@ -392,7 +432,7 @@ const Practice = () => {
               <Button
                 variant="outline"
                 onClick={handlePlayReference}
-                disabled={isPlaying}
+                disabled={isPlaying || isPlayingReference}
                 className="h-14"
               >
                 <Volume2 className="h-5 w-5 mr-2" />
