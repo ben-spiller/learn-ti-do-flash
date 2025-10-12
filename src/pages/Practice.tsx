@@ -3,8 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
-import { playNote, playSequence, generateRandomSequence, midiToSolfege, solfegeToMidi, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
-import { toast } from "@/hooks/use-toast";
+import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -228,7 +227,7 @@ const Practice = () => {
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
-    const newSequence = generateRandomSequence(pool, numberOfNotes, minInterval, maxInterval, rootMidi);
+    const newSequence = generateNextNoteSequence(pool, numberOfNotes, minInterval, maxInterval, rootMidi);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
     playSequenceWithDelay(newSequence as number[]);
@@ -302,6 +301,87 @@ const Practice = () => {
     setDroneVolume(newVolume);
   };
 
+  const generateNextNoteSequence = (
+    availableNotes: number[],
+    length: number,
+    minInterval: number = 1,
+    maxInterval: number = 7,
+    root: number = 60
+  ): number[] => {
+    if (availableNotes.length === 0) return [];
+    
+    // Add an octave above "do" (the root/C) if it's in the available notes
+    const notesForSequence = [...availableNotes];
+    const rootPitchClass = root % 12;
+    availableNotes.forEach(note => {
+      const pitchClass = note % 12;
+      // Check if this note is "do" (same pitch class as root)
+      if (pitchClass === rootPitchClass) {
+        // This is "do", add an octave above (if within MIDI range)
+        if (note + 12 <= 127) {
+          notesForSequence.push(note + 12);
+        }
+      }
+    });
+    
+    const sequence: number[] = [];
+    
+    // Helper to convert MIDI note to full scale degree (including octave)
+    // Returns -1 if not in major scale
+    const getFullScaleDegree = (midiNote: number): number => {
+      const pitchClass = midiNote % 12;
+      const index = MAJOR_SCALE_PITCH_CLASSES.indexOf(pitchClass);
+      if (index === -1) return -1;
+      
+      // Calculate which octave we're in (MIDI note 0 = C-1)
+      const octave = Math.floor(midiNote / 12) - 1;
+      
+      // Full scale degree: octave * 7 (notes per octave) + position in scale (0-6)
+      return octave * 7 + index;
+    };
+    
+    // Pick the first note randomly
+    const firstIndex = Math.floor(Math.random() * notesForSequence.length);
+    sequence.push(notesForSequence[firstIndex]);
+    
+    // For subsequent notes, filter by interval constraint
+    for (let i = 1; i < length; i++) {
+      const prevNote = sequence[i - 1];
+      const prevFullDegree = getFullScaleDegree(prevNote);
+      
+      if (prevFullDegree === -1) {
+        // Previous note is not in major scale, allow any note
+        const randomIndex = Math.floor(Math.random() * notesForSequence.length);
+        sequence.push(notesForSequence[randomIndex]);
+        continue;
+      }
+      
+      // Filter available notes based on full scale degree distance
+      const validNotes = notesForSequence.filter(note => {
+        const fullDegree = getFullScaleDegree(note);
+        if (fullDegree === -1) return false; // Skip chromatic notes
+        
+        // Calculate actual scale degree distance across octaves
+        const distance = Math.abs(fullDegree - prevFullDegree);
+        
+        // Check if distance is within the allowed range
+        return distance >= minInterval && distance <= maxInterval;
+      });
+      
+      // If no valid notes (constraint too restrictive), fall-back to any note
+      if (validNotes.length === 0) {
+        console.log('No valid notes found with current interval constraints; relaxing constraints.');
+        const randomIndex = Math.floor(Math.random() * notesForSequence.length);
+        sequence.push(notesForSequence[randomIndex]);
+      } else {
+        const randomIndex = Math.floor(Math.random() * validNotes.length);
+        sequence.push(validNotes[randomIndex]);
+      }
+    }
+    
+    return sequence;
+  };
+  
 
   // nb: have to do this mapping because Tailwind strips out dynamic class names
   const SOLFEGE_COLOR_CLASSES: Record<string, string> = {
