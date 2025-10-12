@@ -249,7 +249,15 @@ const Practice = () => {
     const correctNote = sequence[currentPosition];
     setTotalAttempts(totalAttempts + 1);
 
-    if (scaleNote === correctNote) {
+    // Check if the notes match exactly, or if both are "do" (same pitch class as root)
+    const rootPitchClass = rootMidi % 12;
+    const pressedPitchClass = scaleNote % 12;
+    const correctPitchClass = correctNote % 12;
+    
+    const isCorrect = scaleNote === correctNote || 
+      (pressedPitchClass === rootPitchClass && correctPitchClass === rootPitchClass);
+
+    if (isCorrect) {
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
     } else {
