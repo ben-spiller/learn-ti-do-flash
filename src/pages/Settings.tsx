@@ -38,7 +38,7 @@ const SOLFEGE_NOTES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Ti"];
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [selectedNotes, setSelectedNotes] = useState<number[]>([0, 2, 4, 5]); // MIDI intervals relative to root
+  const [selectedNotes, setSelectedNotes] = useState<number[]>([0, 2, 4, 5, 7, 9, 11]); // MIDI intervals relative to root
   const [numberOfNotes, setNumberOfNotes] = useState(3);
   const [intervalRange, setIntervalRange] = useState([1, 7]);
   const [tempo, setTempo] = useState(120);
