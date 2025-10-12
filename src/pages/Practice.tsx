@@ -12,7 +12,7 @@ const Practice = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as {
-    selectedNotes?: string[];
+    selectedNotes?: number[]; // MIDI intervals relative to root
     numberOfNotes?: number;
     doNote?: string;
     referencePlay?: "once" | "drone";
@@ -22,7 +22,7 @@ const Practice = () => {
   } | null;
   
   const {
-    selectedNotes = ["Do", "Re", "Mi", "Fa"], // TODO: use pitch class numbers instead
+    selectedNotes = [0, 2, 4, 5], // Default to Do, Re, Mi, Fa (intervals)
     numberOfNotes = 4,
     doNote = "C4",
     referencePlay = "once",
@@ -31,13 +31,9 @@ const Practice = () => {
     preloaded = false,
   } = state || {};
 
-  // Normalize incoming selected notes (likely solfege strings) into MIDI numbers
-  const initialMidiNotes: number[] = Array.isArray(selectedNotes)
-    ? (selectedNotes as string[]).map(s => {
-        const m = solfegeToMidi(s, doNote);
-        return m != null ? m : (typeof s === 'string' ? (noteNameToMidi(s) as number) : (s as unknown as number));
-      })
-    : [];
+  // Convert intervals to absolute MIDI notes based on rootNotePitch
+  const rootMidi = noteNameToMidi(rootNotePitch);
+  const initialMidiNotes: number[] = selectedNotes.map(interval => rootMidi + interval);
 
   const [sequence, setSequence] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);

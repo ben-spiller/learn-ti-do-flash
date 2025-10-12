@@ -13,11 +13,32 @@ import {
   preloadInstrumentWithGesture,
 } from "@/utils/audio";
 
+// Map solfege to MIDI intervals (semitones from root)
+const SOLFEGE_TO_INTERVAL: Record<string, number> = {
+  "Do": 0,
+  "Re": 2,
+  "Mi": 4,
+  "Fa": 5,
+  "Sol": 7,
+  "La": 9,
+  "Ti": 11,
+};
+
+const INTERVAL_TO_SOLFEGE: Record<number, string> = {
+  0: "Do",
+  2: "Re",
+  4: "Mi",
+  5: "Fa",
+  7: "Sol",
+  9: "La",
+  11: "Ti",
+};
+
 const SOLFEGE_NOTES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Ti"];
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [selectedNotes, setSelectedNotes] = useState<string[]>(["Do", "Re", "Mi", "Fa"]);
+  const [selectedNotes, setSelectedNotes] = useState<number[]>([0, 2, 4, 5]); // MIDI intervals relative to root
   const [numberOfNotes, setNumberOfNotes] = useState(3);
   const [intervalRange, setIntervalRange] = useState([1, 7]);
   const [tempo, setTempo] = useState(120);
@@ -39,9 +60,9 @@ const Settings = () => {
     { slug: 'saxophone', label: 'Saxophone' },
   ];
 
-  const handleNoteToggle = (note: string) => {
+  const handleNoteToggle = (interval: number) => {
     setSelectedNotes((prev) =>
-      prev.includes(note) ? prev.filter((n) => n !== note) : [...prev, note]
+      prev.includes(interval) ? prev.filter((n) => n !== interval) : [...prev, interval]
     );
   };
 
@@ -155,7 +176,7 @@ const Settings = () => {
                 <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start">
-                      {selectedNotes.length} notes selected: {selectedNotes.join(", ")}
+                      {selectedNotes.length} notes selected: {selectedNotes.map(i => INTERVAL_TO_SOLFEGE[i]).join(", ")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -164,21 +185,24 @@ const Settings = () => {
                       <DialogDescription>Choose which solfege notes you want to practice</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 py-4">
-                      {SOLFEGE_NOTES.map((note) => (
-                        <div key={note} className="flex items-center space-x-3">
-                          <Checkbox
-                            id={note}
-                            checked={selectedNotes.includes(note)}
-                            onCheckedChange={() => handleNoteToggle(note)}
-                          />
-                          <Label
-                            htmlFor={note}
-                            className="text-base cursor-pointer flex-1 py-2"
-                          >
-                            {note}
-                          </Label>
-                        </div>
-                      ))}
+                      {SOLFEGE_NOTES.map((note) => {
+                        const interval = SOLFEGE_TO_INTERVAL[note];
+                        return (
+                          <div key={note} className="flex items-center space-x-3">
+                            <Checkbox
+                              id={note}
+                              checked={selectedNotes.includes(interval)}
+                              onCheckedChange={() => handleNoteToggle(interval)}
+                            />
+                            <Label
+                              htmlFor={note}
+                              className="text-base cursor-pointer flex-1 py-2"
+                            >
+                              {note}
+                            </Label>
+                          </div>
+                        );
+                      })}
                     </div>
                     <Button onClick={() => setNotesDialogOpen(false)}>Done</Button>
                   </DialogContent>
