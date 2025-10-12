@@ -186,14 +186,20 @@ const Settings = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Interval Range: {intervalRange[0]} - {intervalRange[1]}</Label>
+                <Label className="text-base font-semibold">Consecutive Notes Interval Range: {intervalRange[0]} - {intervalRange[1]}</Label>
                 <Slider
                   value={intervalRange}
-                  onValueChange={setIntervalRange}
+                  onValueChange={(values) => {
+                    // Ensure min and max are always different
+                    if (values[0] === values[1]) {
+                      return;
+                    }
+                    setIntervalRange(values);
+                  }}
                   min={1}
                   max={7}
                   step={1}
-                  minStepsBetweenThumbs={0}
+                  minStepsBetweenThumbs={1}
                 />
               </div>
             </TabsContent>
