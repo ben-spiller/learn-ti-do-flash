@@ -19,6 +19,8 @@ const Practice = () => {
     rootNotePitch?: string;
     tempo?: number;
     preloaded?: boolean;
+    minInterval?: number;
+    maxInterval?: number;
   } | null;
   
   const {
@@ -29,6 +31,8 @@ const Practice = () => {
     rootNotePitch = "C4",
     tempo = 120,
     preloaded = false,
+    minInterval = 1,
+    maxInterval = 7,
   } = state || {};
 
   // Calculate note duration based on tempo (BPM)
@@ -224,7 +228,7 @@ const Practice = () => {
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
-    const newSequence = generateRandomSequence(pool, numberOfNotes);
+    const newSequence = generateRandomSequence(pool, numberOfNotes, minInterval, maxInterval);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
     playSequenceWithDelay(newSequence as number[]);

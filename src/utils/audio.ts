@@ -639,13 +639,59 @@ export const playSequence = async (items: Array<SequenceItem | number | string>,
 
 export const generateRandomSequence = (
   availableNotes: number[],
-  length: number
+  length: number,
+  minInterval: number = 1,
+  maxInterval: number = 7
 ): number[] => {
+  if (availableNotes.length === 0) return [];
+  
   const sequence: number[] = [];
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * availableNotes.length);
-    sequence.push(availableNotes[randomIndex]);
+  
+  // Helper to convert MIDI note to scale degree (0-6 for do-ti)
+  const getScaleDegree = (midiNote: number): number => {
+    const pitchClass = midiNote % 12;
+    const index = MAJOR_SCALE_PITCH_CLASSES.indexOf(pitchClass);
+    return index >= 0 ? index : -1;
+  };
+  
+  // Pick the first note randomly
+  const firstIndex = Math.floor(Math.random() * availableNotes.length);
+  sequence.push(availableNotes[firstIndex]);
+  
+  // For subsequent notes, filter by interval constraint
+  for (let i = 1; i < length; i++) {
+    const prevNote = sequence[i - 1];
+    const prevScaleDegree = getScaleDegree(prevNote);
+    
+    if (prevScaleDegree === -1) {
+      // Previous note is not in major scale, allow any note
+      const randomIndex = Math.floor(Math.random() * availableNotes.length);
+      sequence.push(availableNotes[randomIndex]);
+      continue;
+    }
+    
+    // Filter available notes based on scale degree distance
+    const validNotes = availableNotes.filter(note => {
+      const scaleDegree = getScaleDegree(note);
+      if (scaleDegree === -1) return false; // Skip chromatic notes
+      
+      // Calculate scale degree distance (considering wrap-around)
+      const distance = Math.abs(scaleDegree - prevScaleDegree);
+      
+      // Check if distance is within the allowed range
+      return distance >= minInterval && distance <= maxInterval;
+    });
+    
+    // If no valid notes (constraint too restrictive), fall back to any note
+    if (validNotes.length === 0) {
+      const randomIndex = Math.floor(Math.random() * availableNotes.length);
+      sequence.push(availableNotes[randomIndex]);
+    } else {
+      const randomIndex = Math.floor(Math.random() * validNotes.length);
+      sequence.push(validNotes[randomIndex]);
+    }
   }
+  
   return sequence;
 };
 
