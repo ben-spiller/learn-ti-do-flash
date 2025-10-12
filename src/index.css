@@ -64,28 +64,20 @@ All colors MUST be HSL.
   --wide-gap: 0.75rem;
   --narrow-gap: 0.375rem;
 
-  /* Solfege note colors — Functional-role palette
-    - Tonic family (I): do, mi, sol => green family (stable)
-    - Subdominant family (IV / vi): fa, la => blue / teal family
-    - Dominant family (V & neighbors): re, ti => red family (tension)
-    Lightness encodes consonance → tension: darker = more stable, lighter = more tense.
-    Values tuned for clear distinction between tonic members and a warm red dominant,
-    while avoiding oversaturated, garish tones.
-  */
 
-  /* TONIC (I) — distinct greens: do (deep), mi (yellow-green, brighter), sol (teal-leaning) */
+  /* TONIC (I) — distinct greens: do (deep), mi (yellow-green, brighter), sol (distinctive, bright but still related to green) */
   --solfege-do: 140 60% 30%;   /* deep, stable green (most consonant) */
   --solfege-mi: 100 55% 52%;   /* brighter yellow-green (distinct, more active) */
-  --solfege-sol: 185 55% 42%;  /* teal / blue-green (clearly distinct from do/mi) */
+  --solfege-sol: 50 100% 50%;  
 
-  /* SUBDOMINANT (IV / vi) — shifted to warm orange family per request
+  /* SUBDOMINANT (IV) — shifted to warm orange family per request
     fa = orangey (clear distinction), la = similar but darker/more stable */
-  --solfege-fa: 30 75% 50%;    /* warm orange - distinguishable from tonic/dominant */
-  --solfege-la: 210 93% 45%;    /* darker, more stable orange/gold for relative/minor */
+  --solfege-fa: 30 75% 50%;   /* orange, on the way towards sol (for harmonic) */
+  --solfege-la: 185 55% 42%;  /* teal / blue-green (clearly distinct from do/mi, but kindof related) */
 
   /* DOMINANT (V & neighbors) — red family for stronger tension / attention */
   --solfege-re: 12 70% 40%;    /* warm red-orange — draws attention */
-  --solfege-ti: 350 68% 52%;   /* slightly pinkish-red — leading-tone tension */
+  --solfege-ti: 330 68% 52%;   /* leading-tone tension */
 
   /* Semitone / accidentals — contrasting violet so they stand apart from primary families */
   --solfege-semitone: 275 60% 50%;
@@ -135,7 +127,9 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 262 52% 57%;
-   /* Solfege (dark) — same functional roles, tuned for dark background
+
+    
+   /* Solfege DARK  — same functional roles, tuned for dark background
      Lightness values increased for legibility; keep relative relationships (do darker than re/ti). */
    --solfege-do: 140 55% 40%;   /* deep green, slightly lifted for dark background */
    --solfege-mi: 100 50% 62%;   /* brighter yellow-green for clear distinction */
