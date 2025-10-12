@@ -76,7 +76,7 @@ All colors MUST be HSL.
   --solfege-la: 185 55% 42%;  /* teal / blue-green (clearly distinct from do/mi, but kindof related) */
 
   /* DOMINANT (V & neighbors) — red family for stronger tension / attention */
-  --solfege-re: 12 70% 40%;    /* warm red-orange — draws attention */
+  --solfege-re: 12 50% 40%;    /* warm red-orange — draws attention */
   --solfege-ti: 330 68% 52%;   /* leading-tone tension */
 
   /* Semitone / accidentals — contrasting violet so they stand apart from primary families */
