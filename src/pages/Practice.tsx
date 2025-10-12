@@ -296,7 +296,7 @@ const Practice = () => {
                       style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
                     >
-                      {solfege}
+                      {solfege} ({7-index})
                     </Button>
                   );
                 })}
@@ -333,7 +333,7 @@ const Practice = () => {
                       style={{ top: `${top}rem` }}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
                     >
-                      {solfege}
+                      # / b
                     </Button>
                   );
                 })}
