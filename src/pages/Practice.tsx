@@ -472,6 +472,31 @@ const Practice = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Temporary debug display */}
+                {sequence.length > 0 && (
+                  <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+                    <div className="font-semibold">Debug Info (Interval Range: {minInterval}-{maxInterval}):</div>
+                    <div>
+                      Sequence: {sequence.map((note, idx) => {
+                        const solfege = midiToSolfege(note) || midiToNoteName(note);
+                        const scaleDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(note % 12);
+                        return `${solfege}(${scaleDegree >= 0 ? scaleDegree + 1 : '?'})`;
+                      }).join(' → ')}
+                    </div>
+                    <div>
+                      Intervals: {sequence.slice(1).map((note, idx) => {
+                        const prevNote = sequence[idx];
+                        const prevDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(prevNote % 12);
+                        const currDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(note % 12);
+                        if (prevDegree === -1 || currDegree === -1) return '?';
+                        const distance = Math.abs(currDegree - prevDegree);
+                        const valid = distance >= minInterval && distance <= maxInterval;
+                        return `${distance}${valid ? '✓' : '✗'}`;
+                      }).join(', ')}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex gap-2 justify-center flex-wrap">
                   {Array.from({ length: numberOfNotes }).map((_, index) => (
                     <div
