@@ -228,7 +228,7 @@ const Practice = () => {
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
-    const newSequence = generateRandomSequence(pool, numberOfNotes, minInterval, maxInterval);
+    const newSequence = generateRandomSequence(pool, numberOfNotes, minInterval, maxInterval, rootMidi);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
     playSequenceWithDelay(newSequence as number[]);
