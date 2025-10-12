@@ -242,8 +242,6 @@ const Practice = () => {
   };
 
   const handleNotePress = (scaleNote: number) => {
-    playNote(scaleNote);
-
     if (currentPosition >= numberOfNotes) return;
 
     const correctNote = sequence[currentPosition];
@@ -258,9 +256,13 @@ const Practice = () => {
       (pressedPitchClass === rootPitchClass && correctPitchClass === rootPitchClass);
 
     if (isCorrect) {
+      // Play the correct note from the sequence (correct octave)
+      playNote(correctNote);
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
     } else {
+      // Play the wrong note that was pressed
+      playNote(scaleNote);
       setShowError(true);
       setTimeout(() => setShowError(false), 500);
     }
