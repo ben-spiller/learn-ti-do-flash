@@ -668,7 +668,9 @@ export const startDrone = async (noteNameOrMidi: string | number, volume: number
     },
     volume: volume
   }).toDestination();
-
+  
+  droneSynth.volume.value = volume;
+  
   // Start the continuous note
   droneSynth.triggerAttack(lowerOctaveNote);
 };

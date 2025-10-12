@@ -93,7 +93,7 @@ const Practice = () => {
           await new Promise(resolve => setTimeout(resolve, 800));
         } else if (referencePlay === "drone") {
           // Start drone if configured
-          startDrone(rootNotePitch);
+          startDrone(rootNotePitch, droneVolume);
         }
         
         // Now start the first round
