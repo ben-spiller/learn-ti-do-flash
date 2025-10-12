@@ -23,7 +23,7 @@ const Practice = () => {
   } | null;
   
   const {
-    selectedNotes = [0, 2, 4, 5], // Default to Do, Re, Mi, Fa (intervals)
+    selectedNotes = [0, 2, 4, 5, 7, 9, 11], // Default to full major scale (intervals)
     numberOfNotes = 4,
     referencePlay = "once",
     referenceType = "root",
@@ -563,7 +563,7 @@ const Practice = () => {
               </CardHeader>
               <CardContent>
                 {/* Temporary debug display */}
-                {sequence.length > 0 && (
+                {sequence.length > 0 && false && (
                   <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
                     <div className="font-semibold">Debug Info (Interval Range: {minInterval}-{maxInterval}):</div>
                     <div>
