@@ -647,11 +647,18 @@ export const generateRandomSequence = (
   
   const sequence: number[] = [];
   
-  // Helper to convert MIDI note to scale degree (0-6 for do-ti)
-  const getScaleDegree = (midiNote: number): number => {
+  // Helper to convert MIDI note to full scale degree (including octave)
+  // Returns -1 if not in major scale
+  const getFullScaleDegree = (midiNote: number): number => {
     const pitchClass = midiNote % 12;
     const index = MAJOR_SCALE_PITCH_CLASSES.indexOf(pitchClass);
-    return index >= 0 ? index : -1;
+    if (index === -1) return -1;
+    
+    // Calculate which octave we're in (MIDI note 0 = C-1)
+    const octave = Math.floor(midiNote / 12) - 1;
+    
+    // Full scale degree: octave * 7 (notes per octave) + position in scale (0-6)
+    return octave * 7 + index;
   };
   
   // Pick the first note randomly
@@ -661,22 +668,22 @@ export const generateRandomSequence = (
   // For subsequent notes, filter by interval constraint
   for (let i = 1; i < length; i++) {
     const prevNote = sequence[i - 1];
-    const prevScaleDegree = getScaleDegree(prevNote);
+    const prevFullDegree = getFullScaleDegree(prevNote);
     
-    if (prevScaleDegree === -1) {
+    if (prevFullDegree === -1) {
       // Previous note is not in major scale, allow any note
       const randomIndex = Math.floor(Math.random() * availableNotes.length);
       sequence.push(availableNotes[randomIndex]);
       continue;
     }
     
-    // Filter available notes based on scale degree distance
+    // Filter available notes based on full scale degree distance
     const validNotes = availableNotes.filter(note => {
-      const scaleDegree = getScaleDegree(note);
-      if (scaleDegree === -1) return false; // Skip chromatic notes
+      const fullDegree = getFullScaleDegree(note);
+      if (fullDegree === -1) return false; // Skip chromatic notes
       
-      // Calculate scale degree distance (considering wrap-around)
-      const distance = Math.abs(scaleDegree - prevScaleDegree);
+      // Calculate actual scale degree distance across octaves
+      const distance = Math.abs(fullDegree - prevFullDegree);
       
       // Check if distance is within the allowed range
       return distance >= minInterval && distance <= maxInterval;
