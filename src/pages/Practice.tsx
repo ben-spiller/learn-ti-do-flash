@@ -14,7 +14,6 @@ const Practice = () => {
   const state = location.state as {
     selectedNotes?: number[]; // MIDI intervals relative to root
     numberOfNotes?: number;
-    doNote?: string;
     referencePlay?: "once" | "drone";
     referenceType?: "root" | "arpeggio";
     rootNotePitch?: string;
@@ -25,7 +24,6 @@ const Practice = () => {
   const {
     selectedNotes = [0, 2, 4, 5], // Default to Do, Re, Mi, Fa (intervals)
     numberOfNotes = 4,
-    doNote = "C4",
     referencePlay = "once",
     referenceType = "root",
     rootNotePitch = "C4",
@@ -37,6 +35,8 @@ const Practice = () => {
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
   const noteDuration = 60 / tempo;
   const noteGap = noteDuration * 0.15; // Gap is 15% of note duration
+
+  console.log('Practice settings:', { tempo, noteDuration, noteGap, rootNotePitch, selectedNotes });
 
   // Convert intervals to absolute MIDI notes based on rootNotePitch
   const rootMidi = noteNameToMidi(rootNotePitch);
@@ -186,6 +186,7 @@ const Practice = () => {
 
   const playSequenceWithDelay = async (seq: number[]) => {
     setIsPlaying(true);
+    console.log('Playing sequence:', { seq, noteGap, noteDuration });
     await playSequence(seq, noteGap, noteDuration);
     setIsPlaying(false);
   };
@@ -328,7 +329,7 @@ const Practice = () => {
                   return (
                     <Button
                       key={pitch}
-                      onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
+                      onClick={() => handleNotePress(pitch+rootMidi)}
                       className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
                       style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
@@ -365,7 +366,7 @@ const Practice = () => {
                   return (
                     <Button
                       key={pitch}
-                      onClick={() => handleNotePress(pitch+noteNameToMidi(doNote))}
+                      onClick={() => handleNotePress(pitch+rootMidi)}
                       className={`absolute h-12 w-full text-lg font-bold text-white ${getNoteButtonColor("semitone")}`}
                       style={{ top: `${top}rem` }}
                       disabled={isPlaying || currentPosition >= numberOfNotes}
