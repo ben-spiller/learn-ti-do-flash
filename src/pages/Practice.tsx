@@ -309,49 +309,71 @@ const Practice = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col p-4">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={handleFinish}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold ml-2">Practice</h1>
+          <h1 className="text-2xl font-bold">Practice</h1>
         </div>
-        <div className="flex gap-4 items-center">
-          {referencePlay === "drone" && started && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  {droneVolume <= -40 ? <VolumeX className="h-5 w-5" /> : 
-                   droneVolume <= -20 ? <Volume1 className="h-5 w-5" /> : 
-                   <Volume2 className="h-5 w-5" />}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Drone Volume</div>
-                  <Slider
-                    value={[droneVolume]}
-                    onValueChange={handleDroneVolumeChange}
-                    min={-50}
-                    max={-10}
-                    step={2}
-                  />
-                  <div className="text-xs text-muted-foreground text-center">
-                    {droneVolume} dB
-                  </div>
+        <div className="flex gap-2 items-center">
+          {started && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePlayAgain}
+                disabled={isPlaying}
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Play Again
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePlayReference}
+                disabled={isPlaying || isPlayingReference}
+              >
+                <Volume2 className="h-4 w-4 mr-1" />
+                Reference
+              </Button>
+              {referencePlay === "drone" && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      {droneVolume <= -40 ? <VolumeX className="h-5 w-5" /> : 
+                       droneVolume <= -20 ? <Volume1 className="h-5 w-5" /> : 
+                       <Volume2 className="h-5 w-5" />}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Drone Volume</div>
+                      <Slider
+                        value={[droneVolume]}
+                        onValueChange={handleDroneVolumeChange}
+                        min={-50}
+                        max={-10}
+                        step={2}
+                      />
+                      <div className="text-xs text-muted-foreground text-center">
+                        {droneVolume} dB
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+              <div className="flex gap-3 text-sm ml-2">
+                <div className="text-center">
+                  <div className="font-bold text-lg">{totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%</div>
+                  <div className="text-muted-foreground text-xs">Score</div>
                 </div>
-              </PopoverContent>
-            </Popover>
+                <div className="text-center">
+                  <div className="font-bold text-lg">{elapsedMinutes}</div>
+                  <div className="text-muted-foreground text-xs">Min</div>
+                </div>
+              </div>
+            </>
           )}
-          <div className="flex gap-4 text-sm">
-            <div className="text-center">
-              <div className="font-bold text-lg">{totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%</div>
-              <div className="text-muted-foreground">Score</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-lg">{elapsedMinutes}</div>
-              <div className="text-muted-foreground">Min</div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -468,34 +490,6 @@ const Practice = () => {
               )}
             </Card>
 
-            {/* Control buttons */}
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                onClick={handlePlayAgain}
-                disabled={isPlaying}
-                className="h-14"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Play Again
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handlePlayReference}
-                disabled={isPlaying || isPlayingReference}
-                className="h-14"
-              >
-                <Volume2 className="h-5 w-5 mr-2" />
-                Reference
-              </Button>
-              <Button
-                onClick={handleFinish}
-                variant="secondary"
-                className="h-14"
-              >
-                Finish
-              </Button>
-            </div>
           </>
         ) : (
           <div className="flex flex-col items-center gap-4 py-8">
