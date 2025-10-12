@@ -314,6 +314,16 @@ const Practice = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-bold">Practice</h1>
+          {started && (
+            <Button
+              onClick={handleFinish}
+              variant="secondary"
+              size="sm"
+              className="ml-2"
+            >
+              Finish
+            </Button>
+          )}
         </div>
         <div className="flex gap-2 items-center">
           {started && (
