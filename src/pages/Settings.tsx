@@ -19,8 +19,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const [selectedNotes, setSelectedNotes] = useState<string[]>(["Do", "Re", "Mi", "Fa"]);
   const [numberOfNotes, setNumberOfNotes] = useState(3);
-  const [minInterval, setMinInterval] = useState(1);
-  const [maxInterval, setMaxInterval] = useState(7);
+  const [intervalRange, setIntervalRange] = useState([1, 7]);
   const [tempo, setTempo] = useState(120);
   const [rhythm, setRhythm] = useState<"fixed" | "random">("fixed");
   const [referencePlay, setReferencePlay] = useState<"once" | "drone">("once");
@@ -69,8 +68,8 @@ const Settings = () => {
         state: { 
           selectedNotes, 
           numberOfNotes,
-          minInterval,
-          maxInterval,
+          minInterval: intervalRange[0],
+          maxInterval: intervalRange[1],
           tempo,
           rhythm,
           referencePlay,
@@ -187,31 +186,15 @@ const Settings = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Interval Range</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Min: {minInterval}</Label>
-                    <Slider
-                      value={[minInterval]}
-                      onValueChange={(v) => setMinInterval(Math.min(v[0], maxInterval))}
-                      min={1}
-                      max={7}
-                      step={1}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Max: {maxInterval}</Label>
-                    <Slider
-                      value={[maxInterval]}
-                      onValueChange={(v) => setMaxInterval(Math.max(v[0], minInterval))}
-                      min={1}
-                      max={7}
-                      step={1}
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
+                <Label className="text-base font-semibold">Interval Range: {intervalRange[0]} - {intervalRange[1]}</Label>
+                <Slider
+                  value={intervalRange}
+                  onValueChange={setIntervalRange}
+                  min={1}
+                  max={7}
+                  step={1}
+                  minStepsBetweenThumbs={0}
+                />
               </div>
             </TabsContent>
 
