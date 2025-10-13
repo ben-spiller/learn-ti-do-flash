@@ -568,10 +568,13 @@ export const playNote = async (midiNote: number | string, durationSecs: number =
     console.error('Invalid note for playNote', midiNote);
     return;
   }
+  //console.log(`Playing note ${noteName} for ${durationSecs} at ${when}; now is ${getAudioContext().currentTime} / ${(window as any).Tone.now()}`);
 
   await ensureContextRunning();
   try {
     const player = await createToneInstrument();
+
+    // Usually this is what we use
     if (player && typeof player.triggerAttackRelease === 'function') {
       // Tone.js player supports optional when scheduling in our midi-js wrapper
       player.triggerAttackRelease(noteName, durationSecs, when);
@@ -580,11 +583,13 @@ export const playNote = async (midiNote: number | string, durationSecs: number =
 
     // PolySynth may expose 'triggerAttackRelease' on its voice or directly; try Tone's Transport-scheduled play as fallback
     if (player && typeof player.triggerAttack === 'function') {
+      console.debug(`  using triggerAttack`);
       // Tone's PolySynth scheduling: use Tone.now() relative if available
       try {
         const Tone = (window as any).Tone;
         if (when && Tone && typeof Tone.now === 'function') {
           const offset = when - (Tone.now ? Tone.now() : 0);
+          console.debug(`  scheduling note ${noteName} at Tone offset ${offset} (when=${when}, now=${Tone.now()})`);
           if (offset <= 0) player.triggerAttackRelease(noteName, durationSecs);
           else setTimeout(() => player.triggerAttackRelease(noteName, durationSecs), Math.max(0, Math.round(offset * 1000)));
         } else {
@@ -616,8 +621,9 @@ export const playSequence = async (items: Array<SequenceItem | number | string>,
   });
 
   // Schedule using AudioContext currentTime so notes don't cut off each other
-  const ctx = getAudioContext();
-  let time = ctx.currentTime + 0.05; // small scheduling offset
+  const Tone = (window as any).Tone;
+  let time = Tone && typeof Tone.now === 'function' ? Tone.now() : getAudioContext().currentTime;
+  time += 0.05; // small scheduling offset
   for (let i = 0; i < seq.length; i++) {
     const it = seq[i];
     // schedule each note at 'time'
