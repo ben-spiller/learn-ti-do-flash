@@ -101,6 +101,7 @@ const loadMidiJsSoundfontScript = (instrument: string): Promise<void> => {
         _midiJsLoaded[key] = true;
         resolve();
       } catch (e) {
+        console.warn('Error processing loaded midi-js soundfont script', e);
         reject(e);
       }
     };
@@ -367,14 +368,16 @@ const ensureContextRunning = async () => {
     if ((window as any).Tone && typeof (window as any).Tone.start === 'function') {
       await (window as any).Tone.start();
     }
-  } catch (_) {
+  } catch (e) { console.warn('Error starting Tone.js', e);
+    
     // ignore
   }
   const ctx = getAudioContext();
   if (ctx.state === 'suspended') {
     try {
       await ctx.resume();
-    } catch (e) {
+    } catch (e) { 
+      console.warn('Error resuming AudioContext', e);
       // ignore - resume may require user gesture
     }
   }
@@ -587,7 +590,8 @@ export const playNote = async (midiNote: number | string, durationSecs: number =
         } else {
           player.triggerAttackRelease(noteName, durationSecs);
         }
-      } catch (_) {
+      } catch (e) { 
+        console.warn('Error scheduling note with Tone.js', e);
         player.triggerAttackRelease(noteName, durationSecs);
       }
       return;
@@ -618,7 +622,7 @@ export const playSequence = async (items: Array<SequenceItem | number | string>,
     const it = seq[i];
     // schedule each note at 'time'
     // playNote will accept an absolute 'when' argument in audio context time
-    playNote(it.note, it.duration ?? defaultDuration, time).catch(() => {});
+    playNote(it.note, it.duration ?? defaultDuration, time).catch((e) => {console.warn('playNote failed in playSequence', e);});
     // advance time by duration + gapAfter
     time = time + (it.duration ?? defaultDuration) + (it.gapAfter ?? defaultGap);
   }
@@ -670,7 +674,6 @@ export const startDrone = async (noteNameOrMidi: string | number, volume: number
   }).toDestination();
   
   droneSynth.volume.value = volume;
-  
   // Start the continuous note
   droneSynth.triggerAttack(lowerOctaveNote);
 };
