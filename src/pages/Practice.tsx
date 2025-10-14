@@ -583,18 +583,20 @@ const Practice = () => {
                 )}
                 
                 <div className="flex gap-2 justify-center flex-wrap">
-                  {Array.from({ length: numberOfNotes }).map((_, index) => (
-                    <div
-                      key={index}
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
-                        index < currentPosition
-                          ? "bg-success text-black"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {index < currentPosition ? (midiToSolfege(sequence[index]) || midiToNoteName(sequence[index])) : "?"}
-                    </div>
-                  ))}
+                  {Array.from({ length: numberOfNotes }).map((_, index) => {
+                    const isAnswered = index < currentPosition;
+                    const noteSolfege = isAnswered ? (midiToSolfege(sequence[index]) || midiToNoteName(sequence[index])) : "?";
+                    const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
+                      >
+                        {noteSolfege}
+                      </div>
+                    );
+                  })}
                 </div>
                 {currentPosition === numberOfNotes && (
                   <div className="mt-4 flex items-center justify-center gap-3">
