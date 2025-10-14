@@ -232,41 +232,41 @@ const SettingsView = () => {
           <CardDescription>Configure your practice settings</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Saved Configurations - Compact Layout */}
+          {/* Saved Configurations - Card Grid */}
           {savedConfigs.length > 0 && (
             <div className="mb-6 pb-6 border-b">
-              <Label className="text-sm font-medium mb-2 block">Saved Configurations</Label>
-              <div className="flex gap-2">
-                <Select value={selectedConfigId} onValueChange={(id) => {
-                  setSelectedConfigId(id);
-                  loadConfig(id);
-                }}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Load a configuration..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background">
-                    {savedConfigs.map((config) => (
-                      <SelectItem key={config.id} value={config.id}>
-                        {config.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm font-medium">My Configurations</Label>
                 <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="icon" title="Save current settings">
-                      <Plus className="h-4 w-4" />
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Save
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Save Configuration</DialogTitle>
                       <DialogDescription>
-                        Enter a name. If it matches an existing configuration, it will be updated.
+                        Save or update your practice settings configuration.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="config-select">Update Existing (optional)</Label>
+                        <Select value={configName} onValueChange={setConfigName}>
+                          <SelectTrigger id="config-select">
+                            <SelectValue placeholder="Or select to update..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background">
+                            {savedConfigs.map((config) => (
+                              <SelectItem key={config.id} value={config.name}>
+                                {config.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="config-name">Configuration Name</Label>
                         <Input
@@ -281,14 +281,17 @@ const SettingsView = () => {
                           }}
                         />
                         {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() && (
-                          <p className="text-sm text-muted-foreground">
-                            ⚠️ This will update the existing "{configName.trim()}" configuration
+                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                            ⚠️ Will update existing "{configName.trim()}"
                           </p>
                         )}
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                      <Button variant="outline" onClick={() => {
+                        setSaveDialogOpen(false);
+                        setConfigName("");
+                      }}>
                         Cancel
                       </Button>
                       <Button onClick={handleSaveConfig}>
@@ -297,22 +300,41 @@ const SettingsView = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                
-                {selectedConfigId && (
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    title="Delete selected configuration"
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {savedConfigs.map((config) => (
+                  <Card 
+                    key={config.id} 
+                    className={`relative cursor-pointer hover:border-primary transition-colors group ${selectedConfigId === config.id ? 'border-primary' : ''}`}
                     onClick={() => {
-                      const config = savedConfigs.find(c => c.id === selectedConfigId);
-                      if (config) {
-                        handleDeleteConfig(config.id, config.name);
-                      }
+                      setSelectedConfigId(config.id);
+                      loadConfig(config.id);
                     }}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                    <CardHeader className="p-3 pb-2">
+                      <CardTitle className="text-sm truncate pr-6">{config.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0">
+                      <div className="text-xs text-muted-foreground space-y-0.5">
+                        <div>{config.settings.numberOfNotes} notes • {config.settings.tempo} BPM</div>
+                        <div className="truncate">
+                          {config.settings.selectedNotes.length} scale notes
+                        </div>
+                      </div>
+                    </CardContent>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteConfig(config.id, config.name);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
