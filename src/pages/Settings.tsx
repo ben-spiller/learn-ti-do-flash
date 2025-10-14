@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { Music } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Music, Plus, Trash2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import {
   setInstrument,
   preloadInstrumentWithGesture,
@@ -17,6 +19,13 @@ import {
   INSTRUMENT_OPTIONS,
   CONSTRAINTS,
 } from "@/config/practiceSettings";
+import {
+  getSavedConfigurations,
+  saveConfiguration,
+  deleteConfiguration,
+  loadConfiguration,
+  SavedConfiguration,
+} from "@/utils/settingsStorage";
 
 const SettingsView = () => {
   const navigate = useNavigate();
@@ -35,6 +44,83 @@ const SettingsView = () => {
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+  
+  // Saved configurations state
+  const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>([]);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [configName, setConfigName] = useState("");
+
+  // Load saved configurations on mount
+  useEffect(() => {
+    setSavedConfigs(getSavedConfigurations());
+  }, []);
+
+  const getCurrentSettings = (): SettingsData => {
+    return new SettingsData({
+      selectedNotes,
+      numberOfNotes,
+      minInterval: intervalRange[0],
+      maxInterval: intervalRange[1],
+      tempo,
+      rhythm,
+      referencePlay,
+      referenceType,
+      rootNotePitch,
+      instrument: selectedInstrument,
+    });
+  };
+
+  const loadConfig = (id: string) => {
+    const settings = loadConfiguration(id);
+    if (!settings) return;
+    
+    setSelectedNotes(settings.selectedNotes);
+    setNumberOfNotes(settings.numberOfNotes);
+    setIntervalRange([settings.minInterval, settings.maxInterval]);
+    setTempo(settings.tempo);
+    setRhythm(settings.rhythm);
+    setReferencePlay(settings.referencePlay);
+    setReferenceType(settings.referenceType);
+    setRootNotePitch(settings.rootNotePitch);
+    setSelectedInstrument(settings.instrument);
+    
+    toast({
+      title: "Configuration Loaded",
+      description: "Your settings have been updated.",
+    });
+  };
+
+  const handleSaveConfig = () => {
+    if (!configName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for this configuration.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const currentSettings = getCurrentSettings();
+    saveConfiguration(configName.trim(), currentSettings);
+    setSavedConfigs(getSavedConfigurations());
+    setConfigName("");
+    setSaveDialogOpen(false);
+    
+    toast({
+      title: "Configuration Saved",
+      description: `"${configName.trim()}" has been saved.`,
+    });
+  };
+
+  const handleDeleteConfig = (id: string, name: string) => {
+    deleteConfiguration(id);
+    setSavedConfigs(getSavedConfigurations());
+    
+    toast({
+      title: "Configuration Deleted",
+      description: `"${name}" has been removed.`,
+    });
+  };
 
   const handleNoteToggle = (interval: number) => {
     setSelectedNotes((prev) =>
@@ -124,7 +210,141 @@ const SettingsView = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
+      <div className="w-full max-w-2xl space-y-4">
+        {/* Saved Configurations Grid */}
+        {savedConfigs.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold mb-3">My Configurations</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {savedConfigs.map((config) => (
+                <Card 
+                  key={config.id} 
+                  className="relative cursor-pointer hover:border-primary transition-colors group"
+                  onClick={() => loadConfig(config.id)}
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm truncate pr-6">{config.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3">
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div>{config.settings.numberOfNotes} notes</div>
+                      <div>{config.settings.tempo} BPM</div>
+                      <div className="truncate">
+                        {config.settings.selectedNotes.length} scale notes
+                      </div>
+                    </div>
+                  </CardContent>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteConfig(config.id, config.name);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </Card>
+              ))}
+              
+              {/* Add New Config Card */}
+              <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Card className="cursor-pointer hover:border-primary transition-colors flex items-center justify-center min-h-[140px]">
+                    <CardContent className="flex flex-col items-center justify-center p-6">
+                      <Plus className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Save Current</p>
+                    </CardContent>
+                  </Card>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Configuration</DialogTitle>
+                    <DialogDescription>
+                      Give your current settings a name to save them for later.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="config-name">Configuration Name</Label>
+                      <Input
+                        id="config-name"
+                        placeholder="e.g., Fast Practice, Beginner Mode"
+                        value={configName}
+                        onChange={(e) => setConfigName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveConfig();
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveConfig}>Save</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        )}
+        
+        {/* Add New Config Card - Show when no configs exist */}
+        {savedConfigs.length === 0 && (
+          <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+            <DialogTrigger asChild>
+              <Card className="cursor-pointer hover:border-primary transition-colors">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Plus className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Save Your First Configuration</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Save your current settings to quickly load them later
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Save Configuration</DialogTitle>
+                <DialogDescription>
+                  Give your current settings a name to save them for later.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="config-name-empty">Configuration Name</Label>
+                  <Input
+                    id="config-name-empty"
+                    placeholder="e.g., Fast Practice, Beginner Mode"
+                    value={configName}
+                    onChange={(e) => setConfigName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSaveConfig();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveConfig}>Save</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+      <Card className="w-full">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -343,6 +563,7 @@ const SettingsView = () => {
           </Button>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
