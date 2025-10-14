@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1, Check } from "lucide-react";
 import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,7 +37,8 @@ const PracticeView = () => {
   const [sequence, setSequence] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [lastPressedNote, setLastPressedNote] = useState<number | null>(null);
+  const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [startTime, setStartTime] = useState<number>(Date.now());
@@ -159,8 +161,25 @@ const PracticeView = () => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'n' && currentPosition === settings.numberOfNotes) {
+      // Next button shortcuts
+      if ((e.key === 'n' || e.key === 'Enter') && currentPosition === settings.numberOfNotes) {
+        e.preventDefault();
         startNewRound();
+        return;
+      }
+
+      // Play again shortcut
+      if (e.key === 'p' && started && !isPlaying) {
+        e.preventDefault();
+        handlePlayAgain();
+        return;
+      }
+
+      // Reference shortcut
+      if (e.key === 'r' && started && !isPlaying && !isPlayingReference) {
+        e.preventDefault();
+        handlePlayReference();
+        return;
       }
 
       // Map keys to solfege intervals (semitones from root)
@@ -211,7 +230,7 @@ const PracticeView = () => {
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPosition, settings.numberOfNotes, rootMidi, sequence]);
+  }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, started, isPlaying, isPlayingReference]);
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
@@ -242,16 +261,28 @@ const PracticeView = () => {
     const isCorrect = scaleNote === correctNote || 
       (pressedPitchClass === rootPitchClass && correctPitchClass === rootPitchClass);
 
+    // Store the pressed note and feedback
+    setLastPressedNote(scaleNote);
+    setLastPressedWasCorrect(isCorrect);
+
     if (isCorrect) {
       // Play the correct note from the sequence (correct octave)
       playNote(correctNote);
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
+      // Clear feedback after animation
+      setTimeout(() => {
+        setLastPressedNote(null);
+        setLastPressedWasCorrect(null);
+      }, 600);
     } else {
       // Play the wrong note that was pressed
       playNote(scaleNote);
-      setShowError(true);
-      setTimeout(() => setShowError(false), 500);
+      // Clear feedback after animation
+      setTimeout(() => {
+        setLastPressedNote(null);
+        setLastPressedWasCorrect(null);
+      }, 600);
     }
   };
 
@@ -404,25 +435,40 @@ const PracticeView = () => {
         </div>
         <div className="flex gap-2 items-center">
           {started && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handlePlayAgain}
-                disabled={isPlaying}
-              >
-                <Play className="h-4 w-4 mr-1" />
-                Play Again
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handlePlayReference}
-                disabled={isPlaying || isPlayingReference}
-              >
-                <Volume2 className="h-4 w-4 mr-1" />
-                Reference
-              </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handlePlayAgain}
+                    disabled={isPlaying}
+                  >
+                    <Play className="h-4 w-4 mr-1" />
+                    Play Again
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Press P</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handlePlayReference}
+                    disabled={isPlaying || isPlayingReference}
+                  >
+                    <Volume2 className="h-4 w-4 mr-1" />
+                    Reference
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Press R</p>
+                </TooltipContent>
+              </Tooltip>
               {settings.referencePlay === "drone" && (
                 <Popover>
                   <PopoverTrigger asChild>
@@ -459,7 +505,7 @@ const PracticeView = () => {
                   <div className="text-muted-foreground text-xs">Min</div>
                 </div>
               </div>
-            </>
+            </TooltipProvider>
           )}
         </div>
       </div>
@@ -481,16 +527,28 @@ const PracticeView = () => {
                   // use rem-based inline margin so units match the chromatic column math
                   const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
                   
+                  const midiNote = pitch + rootMidi;
+                  const isLastPressed = lastPressedNote === midiNote;
+                  
                   return (
-                    <Button
-                      key={pitch}
-                      onClick={() => handleNotePress(pitch+rootMidi)}
-                      className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
-                      style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}
-                      disabled={isPlaying || currentPosition >= settings.numberOfNotes}
-                    >
-                      {solfege} ({7-index})
-                    </Button>
+                    <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
+                      {isLastPressed && lastPressedWasCorrect !== null && (
+                        <div className={`absolute -top-8 left-1/2 -translate-x-1/2 z-10 animate-scale-in ${lastPressedWasCorrect ? 'text-green-500' : 'text-red-500'}`}>
+                          {lastPressedWasCorrect ? (
+                            <Check className="w-8 h-8" strokeWidth={3} />
+                          ) : (
+                            <X className="w-8 h-8" strokeWidth={3} />
+                          )}
+                        </div>
+                      )}
+                      <Button
+                        onClick={() => handleNotePress(midiNote)}
+                        className={`h-16 w-full text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
+                        disabled={isPlaying || currentPosition >= settings.numberOfNotes}
+                      >
+                        {solfege} ({7-index})
+                      </Button>
+                    </div>
                   );
                 })}
               </div>
@@ -518,16 +576,28 @@ const PracticeView = () => {
                   let solfege = midiToSolfege(pitch);
                   if (!solfege) { solfege = "?"+pitch.toString(); }
                   
+                  const midiNote = pitch + rootMidi;
+                  const isLastPressed = lastPressedNote === midiNote;
+                  
                   return (
-                    <Button
-                      key={pitch}
-                      onClick={() => handleNotePress(pitch+rootMidi)}
-                      className={`absolute h-12 w-full text-lg font-bold text-white ${getNoteButtonColor("semitone")}`}
-                      style={{ top: `${top}rem` }}
-                      disabled={isPlaying || currentPosition >= settings.numberOfNotes}
-                    >
-                      # / b
-                    </Button>
+                    <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
+                      {isLastPressed && lastPressedWasCorrect !== null && (
+                        <div className={`absolute -top-8 left-1/2 -translate-x-1/2 z-10 animate-scale-in ${lastPressedWasCorrect ? 'text-green-500' : 'text-red-500'}`}>
+                          {lastPressedWasCorrect ? (
+                            <Check className="w-8 h-8" strokeWidth={3} />
+                          ) : (
+                            <X className="w-8 h-8" strokeWidth={3} />
+                          )}
+                        </div>
+                      )}
+                      <Button
+                        onClick={() => handleNotePress(midiNote)}
+                        className={`h-12 w-full text-lg font-bold text-white ${getNoteButtonColor("semitone")}`}
+                        disabled={isPlaying || currentPosition >= settings.numberOfNotes}
+                      >
+                        # / b
+                      </Button>
+                    </div>
                   );
                 })}
               </div>
@@ -589,19 +659,21 @@ const PracticeView = () => {
                 {currentPosition === settings.numberOfNotes && (
                   <div className="mt-4 flex items-center justify-center gap-3">
                     <span className="text-lg font-semibold text-success">Complete! 🎉</span>
-                    <Button onClick={startNewRound} size="lg">
-                      Next
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button onClick={startNewRound} size="lg">
+                            Next
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Press N or Enter</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 )}
               </CardContent>
-              
-              {/* Error flash overlay */}
-              {showError && (
-                <div className="absolute inset-0 bg-destructive/20 rounded-lg flex items-center justify-center animate-pulse">
-                  <X className="w-20 h-20 text-destructive" strokeWidth={3} />
-                </div>
-              )}
             </Card>
 
           </>
