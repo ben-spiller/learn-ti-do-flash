@@ -6,6 +6,7 @@ import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
 import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DEFAULT_SETTINGS } from "@/config/practiceSettings";
 
 const Practice = () => {
   const location = useLocation();
@@ -23,15 +24,15 @@ const Practice = () => {
   } | null;
   
   const {
-    selectedNotes = [0, 2, 4, 5, 7, 9, 11], // Default to full major scale (intervals)
-    numberOfNotes = 4,
-    referencePlay = "once",
-    referenceType = "root",
-    rootNotePitch = "C4",
-    tempo = 120,
+    selectedNotes = DEFAULT_SETTINGS.selectedNotes,
+    numberOfNotes = DEFAULT_SETTINGS.numberOfNotes,
+    referencePlay = DEFAULT_SETTINGS.referencePlay,
+    referenceType = DEFAULT_SETTINGS.referenceType,
+    rootNotePitch = DEFAULT_SETTINGS.rootNotePitch,
+    tempo = DEFAULT_SETTINGS.tempo,
     preloaded = false,
-    minInterval = 1,
-    maxInterval = 7,
+    minInterval = DEFAULT_SETTINGS.minInterval,
+    maxInterval = DEFAULT_SETTINGS.maxInterval,
   } = state || {};
 
   // Calculate note duration based on tempo (BPM)

@@ -12,53 +12,32 @@ import {
   setInstrument,
   preloadInstrumentWithGesture,
 } from "@/utils/audio";
-
-// Map solfege to MIDI intervals (semitones from root)
-const SOLFEGE_TO_INTERVAL: Record<string, number> = {
-  "Do": 0,
-  "Re": 2,
-  "Mi": 4,
-  "Fa": 5,
-  "Sol": 7,
-  "La": 9,
-  "Ti": 11,
-};
-
-const INTERVAL_TO_SOLFEGE: Record<number, string> = {
-  0: "Do",
-  2: "Re",
-  4: "Mi",
-  5: "Fa",
-  7: "Sol",
-  9: "La",
-  11: "Ti",
-};
-
-const SOLFEGE_NOTES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Ti"];
+import {
+  DEFAULT_SETTINGS,
+  SOLFEGE_TO_INTERVAL,
+  INTERVAL_TO_SOLFEGE,
+  SOLFEGE_NOTES,
+  INSTRUMENT_OPTIONS,
+  ROOT_NOTE_OPTIONS,
+  CONSTRAINTS,
+} from "@/config/practiceSettings";
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [selectedNotes, setSelectedNotes] = useState<number[]>([0, 2, 4, 5, 7, 9, 11]); // MIDI intervals relative to root
-  const [numberOfNotes, setNumberOfNotes] = useState(3);
-  const [intervalRange, setIntervalRange] = useState([1, 7]);
-  const [tempo, setTempo] = useState(120);
-  const [rhythm, setRhythm] = useState<"fixed" | "random">("fixed");
-  const [referencePlay, setReferencePlay] = useState<"once" | "drone">("once");
-  const [referenceType, setReferenceType] = useState<"root" | "arpeggio">("root");
-  const [rootNotePitch, setRootNotePitch] = useState("C4");
+  const [selectedNotes, setSelectedNotes] = useState<number[]>(DEFAULT_SETTINGS.selectedNotes);
+  const [numberOfNotes, setNumberOfNotes] = useState(DEFAULT_SETTINGS.numberOfNotes);
+  const [intervalRange, setIntervalRange] = useState([DEFAULT_SETTINGS.minInterval, DEFAULT_SETTINGS.maxInterval]);
+  const [tempo, setTempo] = useState(DEFAULT_SETTINGS.tempo);
+  const [rhythm, setRhythm] = useState<"fixed" | "random">(DEFAULT_SETTINGS.rhythm);
+  const [referencePlay, setReferencePlay] = useState<"once" | "drone">(DEFAULT_SETTINGS.referencePlay);
+  const [referenceType, setReferenceType] = useState<"root" | "arpeggio">(DEFAULT_SETTINGS.referenceType);
+  const [rootNotePitch, setRootNotePitch] = useState(DEFAULT_SETTINGS.rootNotePitch);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(
-    () => localStorage.getItem('learn-ti-do.instrument') || 'acoustic_grand_piano'
+    () => localStorage.getItem('learn-ti-do.instrument') || DEFAULT_SETTINGS.instrument
   );
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-
-  const INSTRUMENT_OPTIONS = [
-    { slug: 'acoustic_grand_piano', label: 'Grand Piano' },
-    { slug: 'electric_piano', label: 'Electric Piano' },
-    { slug: 'violin', label: 'Violin' },
-    { slug: 'saxophone', label: 'Saxophone' },
-  ];
 
   const handleNoteToggle = (interval: number) => {
     setSelectedNotes((prev) =>
@@ -143,7 +122,7 @@ const Settings = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setNumberOfNotes(Math.max(2, numberOfNotes - 1))}
+                    onClick={() => setNumberOfNotes(Math.max(CONSTRAINTS.numberOfNotes.min, numberOfNotes - 1))}
                   >
                     -
                   </Button>
@@ -153,7 +132,7 @@ const Settings = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setNumberOfNotes(Math.min(10, numberOfNotes + 1))}
+                    onClick={() => setNumberOfNotes(Math.min(CONSTRAINTS.numberOfNotes.max, numberOfNotes + 1))}
                   >
                     +
                   </Button>
@@ -165,9 +144,9 @@ const Settings = () => {
                 <Slider
                   value={[tempo]}
                   onValueChange={(v) => setTempo(v[0])}
-                  min={40}
-                  max={200}
-                  step={5}
+                  min={CONSTRAINTS.tempo.min}
+                  max={CONSTRAINTS.tempo.max}
+                  step={CONSTRAINTS.tempo.step}
                 />
               </div>
 
@@ -220,8 +199,8 @@ const Settings = () => {
                     }
                     setIntervalRange(values);
                   }}
-                  min={1}
-                  max={7}
+                  min={CONSTRAINTS.interval.min}
+                  max={CONSTRAINTS.interval.max}
                   step={1}
                   minStepsBetweenThumbs={1}
                 />
@@ -278,9 +257,7 @@ const Settings = () => {
                   onChange={(e) => setRootNotePitch(e.target.value)}
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                 >
-                  {["C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3", "A3", "A#3", "B3",
-                    "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4",
-                    "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5"].map(pitch => (
+                  {ROOT_NOTE_OPTIONS.map(pitch => (
                     <option key={pitch} value={pitch}>{pitch}</option>
                   ))}
                 </select>
