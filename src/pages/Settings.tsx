@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Music } from "lucide-react";
+import { Music, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   setInstrument,
@@ -19,7 +20,13 @@ import {
   INSTRUMENT_OPTIONS,
   CONSTRAINTS,
 } from "@/config/practiceSettings";
-import { SavedConfiguration } from "@/utils/settingsStorage";
+import {
+  getSavedConfigurations,
+  saveConfiguration,
+  deleteConfiguration,
+  loadConfiguration,
+  SavedConfiguration,
+} from "@/utils/settingsStorage";
 
 const SettingsView = () => {
   const navigate = useNavigate();
@@ -39,22 +46,82 @@ const SettingsView = () => {
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   
-  // Load configuration from navigation state
+  // Saved configurations state
+  const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>([]);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [configName, setConfigName] = useState("");
+
+  // Load saved configurations on mount
   useEffect(() => {
-    const state = window.history.state?.usr;
-    if (state?.loadConfig) {
-      const config = state.loadConfig as SavedConfiguration;
-      setSelectedNotes(config.settings.selectedNotes);
-      setNumberOfNotes(config.settings.numberOfNotes);
-      setIntervalRange([config.settings.minInterval, config.settings.maxInterval]);
-      setTempo(config.settings.tempo);
-      setRhythm(config.settings.rhythm);
-      setReferencePlay(config.settings.referencePlay);
-      setReferenceType(config.settings.referenceType);
-      setRootNotePitch(config.settings.rootNotePitch);
-      setSelectedInstrument(config.settings.instrument);
-    }
+    setSavedConfigs(getSavedConfigurations());
   }, []);
+
+  const getCurrentSettings = (): SettingsData => {
+    return new SettingsData({
+      selectedNotes,
+      numberOfNotes,
+      minInterval: intervalRange[0],
+      maxInterval: intervalRange[1],
+      tempo,
+      rhythm,
+      referencePlay,
+      referenceType,
+      rootNotePitch,
+      instrument: selectedInstrument,
+    });
+  };
+
+  const loadConfig = (id: string) => {
+    const settings = loadConfiguration(id);
+    if (!settings) return;
+    
+    setSelectedNotes(settings.selectedNotes);
+    setNumberOfNotes(settings.numberOfNotes);
+    setIntervalRange([settings.minInterval, settings.maxInterval]);
+    setTempo(settings.tempo);
+    setRhythm(settings.rhythm);
+    setReferencePlay(settings.referencePlay);
+    setReferenceType(settings.referenceType);
+    setRootNotePitch(settings.rootNotePitch);
+    setSelectedInstrument(settings.instrument);
+    
+    toast({
+      title: "Configuration Loaded",
+      description: "Your settings have been updated.",
+    });
+  };
+
+  const handleSaveConfig = () => {
+    if (!configName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for this configuration.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const currentSettings = getCurrentSettings();
+    saveConfiguration(configName.trim(), currentSettings);
+    setSavedConfigs(getSavedConfigurations());
+    setConfigName("");
+    setSaveDialogOpen(false);
+    
+    toast({
+      title: "Configuration Saved",
+      description: `"${configName.trim()}" has been saved.`,
+    });
+  };
+
+  const handleDeleteConfig = (id: string, name: string) => {
+    deleteConfiguration(id);
+    setSavedConfigs(getSavedConfigurations());
+    
+    toast({
+      title: "Configuration Deleted",
+      description: `"${name}" has been removed.`,
+    });
+  };
 
 
   const handleNoteToggle = (interval: number) => {
@@ -157,6 +224,77 @@ const SettingsView = () => {
           <CardDescription>Configure your practice settings</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Saved Configurations - Compact Layout */}
+          {savedConfigs.length > 0 && (
+            <div className="mb-6 pb-6 border-b">
+              <Label className="text-sm font-medium mb-2 block">Saved Configurations</Label>
+              <div className="flex gap-2">
+                <Select onValueChange={loadConfig}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Load a configuration..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {savedConfigs.map((config) => (
+                      <SelectItem key={config.id} value={config.id}>
+                        <div className="flex items-center justify-between w-full pr-8">
+                          <span>{config.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 absolute right-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteConfig(config.id, config.name);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Save Configuration</DialogTitle>
+                      <DialogDescription>
+                        Give your current settings a name to save them for later.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="config-name">Configuration Name</Label>
+                        <Input
+                          id="config-name"
+                          placeholder="e.g., Fast Practice, Beginner Mode"
+                          value={configName}
+                          onChange={(e) => setConfigName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveConfig();
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveConfig}>Save</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          )}
           <Tabs defaultValue="practice" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="practice">Practice</TabsTrigger>
