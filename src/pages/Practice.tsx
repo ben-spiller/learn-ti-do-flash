@@ -6,14 +6,14 @@ import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
 import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PracticeSettings } from "@/config/practiceSettings";
+import { SettingsData } from "@/config/practiceSettings";
 
-const Practice = () => {
+const PracticeView = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
   // Initialize settings with defaults, then override with any passed state
-  const settings = new PracticeSettings(location.state as Partial<PracticeSettings>);
+  const settings = new SettingsData(location.state as Partial<SettingsData>);
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
@@ -621,4 +621,4 @@ const Practice = () => {
   );
 };
 
-export default Practice;
+export default PracticeView;

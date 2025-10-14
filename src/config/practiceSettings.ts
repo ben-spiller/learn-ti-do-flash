@@ -1,7 +1,7 @@
 // Practice Settings Configuration
 // Central location for all practice-related settings, defaults, and constants
 
-export class PracticeSettings {
+export class SettingsData {
   selectedNotes: number[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
   numberOfNotes: number = 3; // Number of notes per question (2-10)
   minInterval: number = 1; // Minimum interval between consecutive notes (1-7)
@@ -14,7 +14,7 @@ export class PracticeSettings {
   instrument: string = "acoustic_grand_piano"; // Instrument slug
   preloaded?: boolean = false; // Whether audio has been preloaded
 
-  constructor(partial?: Partial<PracticeSettings>) {
+  constructor(partial?: Partial<SettingsData>) {
     if (partial) {
       Object.assign(this, partial);
     }

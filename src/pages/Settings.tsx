@@ -13,14 +13,14 @@ import {
   preloadInstrumentWithGesture,
 } from "@/utils/audio";
 import {
-  PracticeSettings,
+  SettingsData,
   INSTRUMENT_OPTIONS,
   CONSTRAINTS,
 } from "@/config/practiceSettings";
 
-const Settings = () => {
+const SettingsView = () => {
   const navigate = useNavigate();
-  const defaults = new PracticeSettings();
+  const defaults = new SettingsData();
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
@@ -347,4 +347,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SettingsView;
