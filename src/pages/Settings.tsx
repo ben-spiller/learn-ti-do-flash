@@ -50,6 +50,7 @@ const SettingsView = () => {
   const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>([]);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [configName, setConfigName] = useState("");
+  const [selectedConfigId, setSelectedConfigId] = useState<string>("");
 
   // Load saved configurations on mount
   useEffect(() => {
@@ -102,20 +103,27 @@ const SettingsView = () => {
     }
     
     const currentSettings = getCurrentSettings();
+    const existingConfig = savedConfigs.find(c => c.name === configName.trim());
+    
     saveConfiguration(configName.trim(), currentSettings);
     setSavedConfigs(getSavedConfigurations());
     setConfigName("");
     setSaveDialogOpen(false);
     
     toast({
-      title: "Configuration Saved",
-      description: `"${configName.trim()}" has been saved.`,
+      title: existingConfig ? "Configuration Updated" : "Configuration Saved",
+      description: existingConfig 
+        ? `"${configName.trim()}" has been updated.`
+        : `"${configName.trim()}" has been saved.`,
     });
   };
 
   const handleDeleteConfig = (id: string, name: string) => {
     deleteConfiguration(id);
     setSavedConfigs(getSavedConfigurations());
+    if (selectedConfigId === id) {
+      setSelectedConfigId("");
+    }
     
     toast({
       title: "Configuration Deleted",
@@ -229,27 +237,17 @@ const SettingsView = () => {
             <div className="mb-6 pb-6 border-b">
               <Label className="text-sm font-medium mb-2 block">Saved Configurations</Label>
               <div className="flex gap-2">
-                <Select onValueChange={loadConfig}>
+                <Select value={selectedConfigId} onValueChange={(id) => {
+                  setSelectedConfigId(id);
+                  loadConfig(id);
+                }}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Load a configuration..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background">
                     {savedConfigs.map((config) => (
                       <SelectItem key={config.id} value={config.id}>
-                        <div className="flex items-center justify-between w-full pr-8">
-                          <span>{config.name}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 absolute right-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteConfig(config.id, config.name);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        {config.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -257,7 +255,7 @@ const SettingsView = () => {
                 
                 <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" title="Save current settings">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
@@ -265,7 +263,7 @@ const SettingsView = () => {
                     <DialogHeader>
                       <DialogTitle>Save Configuration</DialogTitle>
                       <DialogDescription>
-                        Give your current settings a name to save them for later.
+                        Enter a name. If it matches an existing configuration, it will be updated.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -282,16 +280,39 @@ const SettingsView = () => {
                             }
                           }}
                         />
+                        {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() && (
+                          <p className="text-sm text-muted-foreground">
+                            ⚠️ This will update the existing "{configName.trim()}" configuration
+                          </p>
+                        )}
                       </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleSaveConfig}>Save</Button>
+                      <Button onClick={handleSaveConfig}>
+                        {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() ? "Update" : "Save"}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                
+                {selectedConfigId && (
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    title="Delete selected configuration"
+                    onClick={() => {
+                      const config = savedConfigs.find(c => c.id === selectedConfigId);
+                      if (config) {
+                        handleDeleteConfig(config.id, config.name);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           )}

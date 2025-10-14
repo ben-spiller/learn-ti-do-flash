@@ -13,7 +13,11 @@ export const getSavedConfigurations = (): SavedConfiguration[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return [];
-    return JSON.parse(stored);
+    const configs = JSON.parse(stored);
+    // Sort by name alphabetically
+    return configs.sort((a: SavedConfiguration, b: SavedConfiguration) => 
+      a.name.localeCompare(b.name)
+    );
   } catch (error) {
     console.error("Error loading saved configurations:", error);
     return [];
@@ -23,17 +27,31 @@ export const getSavedConfigurations = (): SavedConfiguration[] => {
 export const saveConfiguration = (name: string, settings: SettingsData): SavedConfiguration => {
   const configurations = getSavedConfigurations();
   
-  const newConfig: SavedConfiguration = {
-    id: crypto.randomUUID(),
-    name,
-    settings: new SettingsData(settings), // Ensure it's a proper SettingsData instance
-    createdAt: new Date().toISOString(),
-  };
+  // Check if a configuration with this name already exists
+  const existingIndex = configurations.findIndex(c => c.name === name);
   
-  configurations.push(newConfig);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(configurations));
-  
-  return newConfig;
+  if (existingIndex !== -1) {
+    // Update existing configuration
+    configurations[existingIndex] = {
+      ...configurations[existingIndex],
+      settings: new SettingsData(settings),
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(configurations));
+    return configurations[existingIndex];
+  } else {
+    // Create new configuration
+    const newConfig: SavedConfiguration = {
+      id: crypto.randomUUID(),
+      name,
+      settings: new SettingsData(settings),
+      createdAt: new Date().toISOString(),
+    };
+    
+    configurations.push(newConfig);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(configurations));
+    return newConfig;
+  }
 };
 
 export const deleteConfiguration = (id: string): void => {
