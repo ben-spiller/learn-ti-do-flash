@@ -1,32 +1,25 @@
 // Practice Settings Configuration
 // Central location for all practice-related settings, defaults, and constants
 
-export interface PracticeSettings {
-  selectedNotes: number[]; // MIDI intervals relative to root (0-11)
-  numberOfNotes: number; // Number of notes per question (2-10)
-  minInterval: number; // Minimum interval between consecutive notes (1-7)
-  maxInterval: number; // Maximum interval between consecutive notes (1-7)
-  tempo: number; // BPM (40-200)
-  rhythm: "fixed" | "random";
-  referencePlay: "once" | "drone";
-  referenceType: "root" | "arpeggio";
-  rootNotePitch: string; // e.g., "C4"
-  instrument: string; // Instrument slug
-}
+export class PracticeSettings {
+  selectedNotes: number[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
+  numberOfNotes: number = 3; // Number of notes per question (2-10)
+  minInterval: number = 1; // Minimum interval between consecutive notes (1-7)
+  maxInterval: number = 7; // Maximum interval between consecutive notes (1-7)
+  tempo: number = 120; // BPM (40-200)
+  rhythm: "fixed" | "random" = "fixed";
+  referencePlay: "once" | "drone" = "once";
+  referenceType: "root" | "arpeggio" = "root";
+  rootNotePitch: string = "C4"; // e.g., "C4"
+  instrument: string = "acoustic_grand_piano"; // Instrument slug
+  preloaded?: boolean = false; // Whether audio has been preloaded
 
-// Default settings
-export const DEFAULT_SETTINGS: PracticeSettings = {
-  selectedNotes: [0, 2, 4, 5, 7, 9, 11], // Full major scale
-  numberOfNotes: 3,
-  minInterval: 1,
-  maxInterval: 7,
-  tempo: 120,
-  rhythm: "fixed",
-  referencePlay: "once",
-  referenceType: "root",
-  rootNotePitch: "C4",
-  instrument: "acoustic_grand_piano",
-};
+  constructor(partial?: Partial<PracticeSettings>) {
+    if (partial) {
+      Object.assign(this, partial);
+    }
+  }
+}
 
 // Solfege mappings
 export const SOLFEGE_TO_INTERVAL: Record<string, number> = {

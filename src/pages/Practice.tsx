@@ -6,45 +6,31 @@ import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1 } from "lucide-react";
 import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DEFAULT_SETTINGS } from "@/config/practiceSettings";
+import { PracticeSettings } from "@/config/practiceSettings";
 
 const Practice = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = location.state as {
-    selectedNotes?: number[]; // MIDI intervals relative to root
-    numberOfNotes?: number;
-    referencePlay?: "once" | "drone";
-    referenceType?: "root" | "arpeggio";
-    rootNotePitch?: string;
-    tempo?: number;
-    preloaded?: boolean;
-    minInterval?: number;
-    maxInterval?: number;
-  } | null;
   
-  const {
-    selectedNotes = DEFAULT_SETTINGS.selectedNotes,
-    numberOfNotes = DEFAULT_SETTINGS.numberOfNotes,
-    referencePlay = DEFAULT_SETTINGS.referencePlay,
-    referenceType = DEFAULT_SETTINGS.referenceType,
-    rootNotePitch = DEFAULT_SETTINGS.rootNotePitch,
-    tempo = DEFAULT_SETTINGS.tempo,
-    preloaded = false,
-    minInterval = DEFAULT_SETTINGS.minInterval,
-    maxInterval = DEFAULT_SETTINGS.maxInterval,
-  } = state || {};
+  // Initialize settings with defaults, then override with any passed state
+  const settings = new PracticeSettings(location.state as Partial<PracticeSettings>);
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
-  const noteDuration = 60 / tempo;
+  const noteDuration = 60 / settings.tempo;
   const noteGap = noteDuration * 0.15; // Gap is 15% of note duration
 
-  console.log('Practice settings:', { tempo, noteDuration, noteGap, rootNotePitch, selectedNotes });
+  console.log('Practice settings:', { 
+    tempo: settings.tempo, 
+    noteDuration, 
+    noteGap, 
+    rootNotePitch: settings.rootNotePitch, 
+    selectedNotes: settings.selectedNotes 
+  });
 
   // Convert intervals to absolute MIDI notes based on rootNotePitch
-  const rootMidi = noteNameToMidi(rootNotePitch);
-  const initialMidiNotes: number[] = selectedNotes.map(interval => rootMidi + interval);
+  const rootMidi = noteNameToMidi(settings.rootNotePitch);
+  const initialMidiNotes: number[] = settings.selectedNotes.map(interval => rootMidi + interval);
 
   const [sequence, setSequence] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -56,8 +42,8 @@ const Practice = () => {
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [started, setStarted] = useState(preloaded);
-  const [hasPreloaded, setHasPreloaded] = useState(preloaded);
+  const [started, setStarted] = useState(settings.preloaded || false);
+  const [hasPreloaded, setHasPreloaded] = useState(settings.preloaded || false);
   const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
@@ -68,13 +54,13 @@ const Practice = () => {
   
   // Auto-start if coming from Settings with preloaded samples
   useEffect(() => {
-    if (started && preloaded) {
+    if (started && settings.preloaded) {
       const playReferenceAndStart = async () => {
-        if (referencePlay === "once") {
+        if (settings.referencePlay === "once") {
           setIsPlayingReference(true);
-          if (referenceType === "arpeggio") {
+          if (settings.referenceType === "arpeggio") {
             // Play do-mi-sol-do-sol-mi-do arpeggio
-            const doMidi = noteNameToMidi(rootNotePitch);
+            const doMidi = noteNameToMidi(settings.rootNotePitch);
             const arpeggio = [
               doMidi,           // do
               doMidi + 4,       // mi
@@ -87,14 +73,14 @@ const Practice = () => {
             await playSequence(arpeggio, 0.15, 1.0);
           } else {
             // Play reference note longer
-            await playSequence([noteNameToMidi(rootNotePitch)], 0, 2.0);
+            await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
           }
           setIsPlayingReference(false);
           // Add gap before exercise
           await new Promise(resolve => setTimeout(resolve, 800));
-        } else if (referencePlay === "drone") {
+        } else if (settings.referencePlay === "drone") {
           // Start drone if configured
-          startDrone(rootNotePitch, droneVolume);
+          startDrone(settings.rootNotePitch, droneVolume);
         }
         
         // Now start the first round
@@ -134,10 +120,10 @@ const Practice = () => {
       setStarted(true);
       
       // Play reference and start first round
-      if (referencePlay === "once") {
+      if (settings.referencePlay === "once") {
         setIsPlayingReference(true);
-        if (referenceType === "arpeggio") {
-          const doMidi = noteNameToMidi(rootNotePitch);
+        if (settings.referenceType === "arpeggio") {
+          const doMidi = noteNameToMidi(settings.rootNotePitch);
           const arpeggio = [
             doMidi,           // do
             doMidi + 4,       // mi
@@ -149,13 +135,13 @@ const Practice = () => {
           ];
           await playSequence(arpeggio, 0.15, 1.0);
         } else {
-          await playSequence([noteNameToMidi(rootNotePitch)], 0, 2.0);
+          await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
         }
         setIsPlayingReference(false);
         // Add gap before exercise
         await new Promise(resolve => setTimeout(resolve, 800));
-      } else if (referencePlay === "drone") {
-        startDrone(rootNotePitch);
+      } else if (settings.referencePlay === "drone") {
+        startDrone(settings.rootNotePitch);
       }
       
       startNewRound();
@@ -172,7 +158,7 @@ const Practice = () => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'n' && currentPosition === numberOfNotes) {
+      if (e.key === 'n' && currentPosition === settings.numberOfNotes) {
         startNewRound();
       }
 
@@ -224,11 +210,11 @@ const Practice = () => {
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPosition, numberOfNotes, rootMidi, sequence]);
+  }, [currentPosition, settings.numberOfNotes, rootMidi, sequence]);
 
   const startNewRound = () => {
     const pool = initialMidiNotes;
-    const newSequence = generateNextNoteSequence(pool, numberOfNotes, minInterval, maxInterval, rootMidi);
+    const newSequence = generateNextNoteSequence(pool, settings.numberOfNotes, settings.minInterval, settings.maxInterval, rootMidi);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
     playSequenceWithDelay(newSequence as number[]);
@@ -242,7 +228,7 @@ const Practice = () => {
   };
 
   const handleNotePress = (scaleNote: number) => {
-    if (currentPosition >= numberOfNotes) return;
+    if (currentPosition >= settings.numberOfNotes) return;
 
     const correctNote = sequence[currentPosition];
     setTotalAttempts(totalAttempts + 1);
@@ -274,8 +260,8 @@ const Practice = () => {
 
   const handlePlayReference = async () => {
     setIsPlayingReference(true);
-    if (referenceType === "arpeggio") {
-      const doMidi = noteNameToMidi(rootNotePitch);
+    if (settings.referenceType === "arpeggio") {
+      const doMidi = noteNameToMidi(settings.rootNotePitch);
       const arpeggio = [
         doMidi,           // do
         doMidi + 4,       // mi
@@ -287,7 +273,7 @@ const Practice = () => {
       ];
       await playSequence(arpeggio, 0.15, 1.0);
     } else {
-      await playSequence([noteNameToMidi(rootNotePitch)], 0, 2.0);
+      await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
     }
     setIsPlayingReference(false);
   };
@@ -436,7 +422,7 @@ const Practice = () => {
                 <Volume2 className="h-4 w-4 mr-1" />
                 Reference
               </Button>
-              {referencePlay === "drone" && (
+              {settings.referencePlay === "drone" && (
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -500,7 +486,7 @@ const Practice = () => {
                       onClick={() => handleNotePress(pitch+rootMidi)}
                       className={`h-16 text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
                       style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}
-                      disabled={isPlaying || currentPosition >= numberOfNotes}
+                      disabled={isPlaying || currentPosition >= settings.numberOfNotes}
                     >
                       {solfege} ({7-index})
                     </Button>
@@ -537,7 +523,7 @@ const Practice = () => {
                       onClick={() => handleNotePress(pitch+rootMidi)}
                       className={`absolute h-12 w-full text-lg font-bold text-white ${getNoteButtonColor("semitone")}`}
                       style={{ top: `${top}rem` }}
-                      disabled={isPlaying || currentPosition >= numberOfNotes}
+                      disabled={isPlaying || currentPosition >= settings.numberOfNotes}
                     >
                       # / b
                     </Button>
@@ -561,7 +547,7 @@ const Practice = () => {
                 {/* Temporary debug display */}
                 {sequence.length > 0 && false && (
                   <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
-                    <div className="font-semibold">Debug Info (Interval Range: {minInterval}-{maxInterval}):</div>
+                    <div className="font-semibold">Debug Info (Interval Range: {settings.minInterval}-{settings.maxInterval}):</div>
                     <div>
                       Sequence: {sequence.map((note, idx) => {
                         const solfege = midiToSolfege(note) || midiToNoteName(note);
@@ -576,7 +562,7 @@ const Practice = () => {
                         const currDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(note % 12);
                         if (prevDegree === -1 || currDegree === -1) return '?';
                         const distance = Math.abs(currDegree - prevDegree);
-                        const valid = distance >= minInterval && distance <= maxInterval;
+                        const valid = distance >= settings.minInterval && distance <= settings.maxInterval;
                         return `${distance}${valid ? '✓' : '✗'}`;
                       }).join(', ')}
                     </div>
@@ -584,7 +570,7 @@ const Practice = () => {
                 )}
                 
                 <div className="flex gap-2 justify-center flex-wrap">
-                  {Array.from({ length: numberOfNotes }).map((_, index) => {
+                  {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
                     const isAnswered = index < currentPosition;
                     const noteSolfege = isAnswered ? (midiToSolfege(sequence[index]) || midiToNoteName(sequence[index])) : "?";
                     const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
@@ -599,7 +585,7 @@ const Practice = () => {
                     );
                   })}
                 </div>
-                {currentPosition === numberOfNotes && (
+                {currentPosition === settings.numberOfNotes && (
                   <div className="mt-4 flex items-center justify-center gap-3">
                     <span className="text-lg font-semibold text-success">Complete! 🎉</span>
                     <Button onClick={startNewRound} size="lg">

@@ -13,7 +13,7 @@ import {
   preloadInstrumentWithGesture,
 } from "@/utils/audio";
 import {
-  DEFAULT_SETTINGS,
+  PracticeSettings,
   SOLFEGE_TO_INTERVAL,
   INTERVAL_TO_SOLFEGE,
   SOLFEGE_NOTES,
@@ -24,16 +24,17 @@ import {
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [selectedNotes, setSelectedNotes] = useState<number[]>(DEFAULT_SETTINGS.selectedNotes);
-  const [numberOfNotes, setNumberOfNotes] = useState(DEFAULT_SETTINGS.numberOfNotes);
-  const [intervalRange, setIntervalRange] = useState([DEFAULT_SETTINGS.minInterval, DEFAULT_SETTINGS.maxInterval]);
-  const [tempo, setTempo] = useState(DEFAULT_SETTINGS.tempo);
-  const [rhythm, setRhythm] = useState<"fixed" | "random">(DEFAULT_SETTINGS.rhythm);
-  const [referencePlay, setReferencePlay] = useState<"once" | "drone">(DEFAULT_SETTINGS.referencePlay);
-  const [referenceType, setReferenceType] = useState<"root" | "arpeggio">(DEFAULT_SETTINGS.referenceType);
-  const [rootNotePitch, setRootNotePitch] = useState(DEFAULT_SETTINGS.rootNotePitch);
+  const defaults = new PracticeSettings();
+  const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
+  const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
+  const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
+  const [tempo, setTempo] = useState(defaults.tempo);
+  const [rhythm, setRhythm] = useState<"fixed" | "random">(defaults.rhythm);
+  const [referencePlay, setReferencePlay] = useState<"once" | "drone">(defaults.referencePlay);
+  const [referenceType, setReferenceType] = useState<"root" | "arpeggio">(defaults.referenceType);
+  const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(
-    () => localStorage.getItem('learn-ti-do.instrument') || DEFAULT_SETTINGS.instrument
+    () => localStorage.getItem('learn-ti-do.instrument') || defaults.instrument
   );
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
