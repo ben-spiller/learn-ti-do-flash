@@ -401,18 +401,14 @@ const Practice = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col p-4">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          {/* <Button variant="ghost" size="icon" onClick={handleFinish}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button> */}
           {started && (
             <Button
               onClick={handleFinish}
-              variant="secondary"
+              variant="outline"
               size="sm"
-              className="ml-2"
             >
               Finish
             </Button>
@@ -480,7 +476,7 @@ const Practice = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-6 max-w-md mx-auto w-full">
+      <div className="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
         {started ? (
           <>
             {/* Solfege buttons at the top */}
