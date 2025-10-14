@@ -597,9 +597,9 @@ const Practice = () => {
                   ))}
                 </div>
                 {currentPosition === numberOfNotes && (
-                  <div className="mt-4 text-center space-y-2">
-                    <p className="text-lg font-semibold text-success">Complete! 🎉</p>
-                    <Button onClick={startNewRound} className="w-full">
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    <span className="text-lg font-semibold text-success">Complete! 🎉</span>
+                    <Button onClick={startNewRound} size="lg">
                       Next
                     </Button>
                   </div>
