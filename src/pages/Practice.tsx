@@ -532,21 +532,23 @@ const PracticeView = () => {
                   
                   return (
                     <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
-                      {isLastPressed && lastPressedWasCorrect !== null && (
-                        <div className={`absolute -top-8 left-1/2 -translate-x-1/2 z-10 animate-scale-in ${lastPressedWasCorrect ? 'text-green-500' : 'text-red-500'}`}>
-                          {lastPressedWasCorrect ? (
-                            <Check className="w-8 h-8" strokeWidth={3} />
-                          ) : (
-                            <X className="w-8 h-8" strokeWidth={3} />
-                          )}
-                        </div>
-                      )}
                       <Button
                         onClick={() => handleNotePress(midiNote)}
-                        className={`h-16 w-full text-xl font-bold text-white ${getNoteButtonColor(solfege)}`}
+                        className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(solfege)}`}
                         disabled={isPlaying || currentPosition >= settings.numberOfNotes}
                       >
                         {solfege} ({7-index})
+                        {isLastPressed && lastPressedWasCorrect !== null && (
+                          <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
+                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
+                              {lastPressedWasCorrect ? (
+                                <Check className="w-8 h-8 text-green-500" strokeWidth={3} />
+                              ) : (
+                                <X className="w-8 h-8 text-red-500" strokeWidth={3} />
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </Button>
                     </div>
                   );
@@ -581,21 +583,23 @@ const PracticeView = () => {
                   
                   return (
                     <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
-                      {isLastPressed && lastPressedWasCorrect !== null && (
-                        <div className={`absolute -top-8 left-1/2 -translate-x-1/2 z-10 animate-scale-in ${lastPressedWasCorrect ? 'text-green-500' : 'text-red-500'}`}>
-                          {lastPressedWasCorrect ? (
-                            <Check className="w-8 h-8" strokeWidth={3} />
-                          ) : (
-                            <X className="w-8 h-8" strokeWidth={3} />
-                          )}
-                        </div>
-                      )}
                       <Button
                         onClick={() => handleNotePress(midiNote)}
-                        className={`h-12 w-full text-lg font-bold text-white ${getNoteButtonColor("semitone")}`}
+                        className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
                         disabled={isPlaying || currentPosition >= settings.numberOfNotes}
                       >
                         # / b
+                        {isLastPressed && lastPressedWasCorrect !== null && (
+                          <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
+                              {lastPressedWasCorrect ? (
+                                <Check className="w-7 h-7 text-green-500" strokeWidth={3} />
+                              ) : (
+                                <X className="w-7 h-7 text-red-500" strokeWidth={3} />
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </Button>
                     </div>
                   );
