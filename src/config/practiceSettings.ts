@@ -12,7 +12,6 @@ export class SettingsData {
   referenceType: "root" | "arpeggio" = "root";
   rootNotePitch: string = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug
-  preloaded?: boolean = false; // Whether audio has been preloaded
 
   constructor(partial?: Partial<SettingsData>) {
     if (partial) {

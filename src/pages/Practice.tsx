@@ -14,6 +14,7 @@ const PracticeView = () => {
   
   // Initialize settings with defaults, then override with any passed state
   const settings = new SettingsData(location.state as Partial<SettingsData>);
+  const preloaded = (location.state as any)?.preloaded || false;
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
@@ -42,8 +43,8 @@ const PracticeView = () => {
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [started, setStarted] = useState(settings.preloaded || false);
-  const [hasPreloaded, setHasPreloaded] = useState(settings.preloaded || false);
+  const [started, setStarted] = useState(preloaded);
+  const [hasPreloaded, setHasPreloaded] = useState(preloaded);
   const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
@@ -54,7 +55,7 @@ const PracticeView = () => {
   
   // Auto-start if coming from Settings with preloaded samples
   useEffect(() => {
-    if (started && settings.preloaded) {
+    if (started && preloaded) {
       const playReferenceAndStart = async () => {
         if (settings.referencePlay === "once") {
           setIsPlayingReference(true);
