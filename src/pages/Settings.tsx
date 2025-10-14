@@ -233,45 +233,34 @@ const SettingsView = () => {
         </CardHeader>
         <CardContent>
           {/* Saved Configurations - Card Grid */}
-          {savedConfigs.length > 0 && (
-            <div className="mb-6 pb-6 border-b">
-              <div className="flex items-center justify-between mb-3">
-                <Label className="text-sm font-medium">My Configurations</Label>
-                <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Save
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Save Configuration</DialogTitle>
-                      <DialogDescription>
-                        Save or update your practice settings configuration.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="config-select">Update Existing (optional)</Label>
-                        <Select value={configName} onValueChange={setConfigName}>
-                          <SelectTrigger id="config-select">
-                            <SelectValue placeholder="Or select to update..." />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background">
-                            {savedConfigs.map((config) => (
-                              <SelectItem key={config.id} value={config.name}>
-                                {config.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="config-name">Configuration Name</Label>
+          <div className="mb-6 pb-6 border-b">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-sm font-medium">My Configurations</Label>
+              <Dialog open={saveDialogOpen} onOpenChange={(open) => {
+                setSaveDialogOpen(open);
+                if (!open) setConfigName("");
+              }}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Save
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Configuration</DialogTitle>
+                    <DialogDescription>
+                      Type a new name or select an existing one to update.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="config-name">Configuration Name</Label>
+                      <div className="relative">
                         <Input
                           id="config-name"
-                          placeholder="e.g., Fast Practice, Beginner Mode"
+                          list="config-suggestions"
+                          placeholder="Type new or select existing..."
                           value={configName}
                           onChange={(e) => setConfigName(e.target.value)}
                           onKeyDown={(e) => {
@@ -279,28 +268,37 @@ const SettingsView = () => {
                               handleSaveConfig();
                             }
                           }}
+                          maxLength={50}
+                          className="pr-10"
                         />
-                        {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() && (
-                          <p className="text-xs text-amber-600 dark:text-amber-400">
-                            ⚠️ Will update existing "{configName.trim()}"
-                          </p>
-                        )}
+                        <datalist id="config-suggestions">
+                          {savedConfigs.map((config) => (
+                            <option key={config.id} value={config.name} />
+                          ))}
+                        </datalist>
                       </div>
+                      {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          ⚠️ Will update existing "{configName.trim()}"
+                        </p>
+                      )}
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => {
-                        setSaveDialogOpen(false);
-                        setConfigName("");
-                      }}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleSaveConfig}>
-                        {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() ? "Update" : "Save"}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => {
+                      setSaveDialogOpen(false);
+                      setConfigName("");
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveConfig}>
+                      {savedConfigs.some(c => c.name === configName.trim()) && configName.trim() ? "Update" : "Save"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {savedConfigs.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {savedConfigs.map((config) => (
                   <Card 
@@ -336,8 +334,12 @@ const SettingsView = () => {
                   </Card>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No saved configurations yet. Click "Save" to create your first one.
+              </p>
+            )}
+          </div>
           <Tabs defaultValue="practice" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="practice">Practice</TabsTrigger>
