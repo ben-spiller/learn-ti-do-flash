@@ -39,7 +39,7 @@ const PracticeView = () => {
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [started, setStarted] = useState(preloaded);
   const [hasPreloaded, setHasPreloaded] = useState(preloaded);
-  const [droneVolume, setDroneVolumeState] = useState(-26); // default volume in dB
+  const [droneVolume, setDroneVolumeState] = useState(-8); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
@@ -136,7 +136,7 @@ const PracticeView = () => {
         // Add gap before exercise
         await new Promise(resolve => setTimeout(resolve, 800));
       } else if (settings.referencePlay === "drone") {
-        startDrone(settings.rootNotePitch);
+        startDrone(settings.rootNotePitch, droneVolume);
       }
       
       startNewRound();
@@ -483,8 +483,8 @@ const PracticeView = () => {
                       <Slider
                         value={[droneVolume]}
                         onValueChange={handleDroneVolumeChange}
-                        min={-50}
-                        max={-10}
+                        min={-30}
+                        max={10}
                         step={2}
                       />
                       <div className="text-xs text-muted-foreground text-center">

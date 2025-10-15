@@ -642,7 +642,7 @@ export const playSequence = async (items: Array<SequenceItem | number | string>,
  * Start a continuous background drone on the given note (one octave lower).
  * Uses a square wave PolySynth from Tone.js.
  */
-export const startDrone = async (noteNameOrMidi: string | number, volume: number = -26) => {
+export const startDrone = async (noteNameOrMidi: string | number, volume: number) => {
   await loadToneScript();
   const Tone = (window as any).Tone;
   if (!Tone) {
@@ -665,16 +665,17 @@ export const startDrone = async (noteNameOrMidi: string | number, volume: number
   const midi = noteNameToMidi(noteName);
   const lowerOctaveNote = midiToNoteName(midi - 12);
 
-  // Create a PolySynth with square wave oscillator
-  droneSynth = new Tone.PolySynth(Tone.Synth, {
+  // Create a PolySynth with wave oscillator
+  // sine, square, triangle, or sawtooth
+  droneSynth = new Tone.PolySynth(Tone.FMSynth, {
     oscillator: {
-      type: 'square'
+      type: 'sine'
     },
     envelope: {
-      attack: 0.1,
+      attack: 0.5,
       decay: 0,
       sustain: 1,
-      release: 0.1
+      release: 0.5
     },
     volume: volume
   }).toDestination();
