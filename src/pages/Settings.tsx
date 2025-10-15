@@ -87,6 +87,22 @@ const SettingsView = () => {
     });
   };
 
+  const configMatches = (config: SavedConfiguration): boolean => {
+    const current = getCurrentSettings();
+    return (
+      JSON.stringify(config.settings.selectedNotes.sort()) === JSON.stringify(current.selectedNotes.sort()) &&
+      config.settings.numberOfNotes === current.numberOfNotes &&
+      config.settings.minInterval === current.minInterval &&
+      config.settings.maxInterval === current.maxInterval &&
+      config.settings.tempo === current.tempo &&
+      config.settings.rhythm === current.rhythm &&
+      config.settings.referencePlay === current.referencePlay &&
+      config.settings.referenceType === current.referenceType &&
+      config.settings.rootNotePitch === current.rootNotePitch &&
+      config.settings.instrument === current.instrument
+    );
+  };
+
   const loadConfig = (id: string) => {
     const settings = loadConfiguration(id);
     if (!settings) return;
@@ -315,10 +331,14 @@ const SettingsView = () => {
             </div>
             {savedConfigs.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {savedConfigs.map((config) => (
+                {savedConfigs.map((config) => {
+                  const isMatching = configMatches(config);
+                  return (
                   <Card 
                     key={config.id} 
-                    className={`relative cursor-pointer hover:border-primary transition-colors group ${selectedConfigId === config.id ? 'border-primary' : ''}`}
+                    className={`relative cursor-pointer hover:border-primary transition-colors group ${
+                      isMatching ? 'border-primary bg-primary/5' : ''
+                    }`}
                     onClick={() => {
                       setSelectedConfigId(config.id);
                       loadConfig(config.id);
@@ -347,7 +367,8 @@ const SettingsView = () => {
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
