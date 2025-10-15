@@ -8,6 +8,7 @@ import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, 
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
+import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 
 const PracticeView = () => {
   const location = useLocation();
@@ -96,6 +97,9 @@ const PracticeView = () => {
 
   const handleStart = async () => {
     if (started) return;
+    
+    // Save current configuration to local storage
+    saveCurrentConfiguration(settings);
     
     setIsPreloading(true);
     

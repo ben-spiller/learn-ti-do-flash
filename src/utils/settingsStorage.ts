@@ -8,6 +8,7 @@ export interface SavedConfiguration {
 }
 
 const STORAGE_KEY = "saved-practice-configurations";
+const CURRENT_CONFIG_KEY = "current-practice-configuration";
 
 export const getSavedConfigurations = (): SavedConfiguration[] => {
   try {
@@ -66,4 +67,19 @@ export const loadConfiguration = (id: string): ConfigData | null => {
   if (!config) return null;
   
   return new ConfigData(config.settings);
+};
+
+export const saveCurrentConfiguration = (settings: ConfigData): void => {
+  localStorage.setItem(CURRENT_CONFIG_KEY, JSON.stringify(settings));
+};
+
+export const getCurrentConfiguration = (): ConfigData | null => {
+  try {
+    const stored = localStorage.getItem(CURRENT_CONFIG_KEY);
+    if (!stored) return null;
+    return new ConfigData(JSON.parse(stored));
+  } catch (error) {
+    console.error("Error loading current configuration:", error);
+    return null;
+  }
 };

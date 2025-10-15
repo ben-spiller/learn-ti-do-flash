@@ -25,6 +25,7 @@ import {
   saveConfiguration,
   deleteConfiguration,
   loadConfiguration,
+  getCurrentConfiguration,
   SavedConfiguration,
 } from "@/utils/settingsStorage";
 
@@ -52,9 +53,23 @@ const SettingsView = () => {
   const [configName, setConfigName] = useState("");
   const [selectedConfigId, setSelectedConfigId] = useState<string>("");
 
-  // Load saved configurations on mount
+  // Load saved configurations and current configuration on mount
   useEffect(() => {
     setSavedConfigs(getSavedConfigurations());
+    
+    // Load the current configuration if it exists
+    const currentConfig = getCurrentConfiguration();
+    if (currentConfig) {
+      setSelectedNotes(currentConfig.selectedNotes);
+      setNumberOfNotes(currentConfig.numberOfNotes);
+      setIntervalRange([currentConfig.minInterval, currentConfig.maxInterval]);
+      setTempo(currentConfig.tempo);
+      setRhythm(currentConfig.rhythm);
+      setReferencePlay(currentConfig.referencePlay);
+      setReferenceType(currentConfig.referenceType);
+      setRootNotePitch(currentConfig.rootNotePitch);
+      setSelectedInstrument(currentConfig.instrument);
+    }
   }, []);
 
   const getCurrentSettings = (): ConfigData => {
