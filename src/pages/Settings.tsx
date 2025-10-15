@@ -31,7 +31,11 @@ import {
 
 const SettingsView = () => {
   const navigate = useNavigate();
-  const defaults = new ConfigData();
+  
+  // Load current configuration or use defaults
+  const currentConfig = getCurrentConfiguration();
+  const defaults = currentConfig || new ConfigData();
+  
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
@@ -40,9 +44,7 @@ const SettingsView = () => {
   const [referencePlay, setReferencePlay] = useState<"once" | "drone">(defaults.referencePlay);
   const [referenceType, setReferenceType] = useState<"root" | "arpeggio">(defaults.referenceType);
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
-  const [selectedInstrument, setSelectedInstrument] = useState<string>(
-    () => localStorage.getItem('learn-ti-do.instrument') || defaults.instrument
-  );
+  const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
@@ -53,23 +55,9 @@ const SettingsView = () => {
   const [configName, setConfigName] = useState("");
   const [selectedConfigId, setSelectedConfigId] = useState<string>("");
 
-  // Load saved configurations and current configuration on mount
+  // Load saved configurations on mount
   useEffect(() => {
     setSavedConfigs(getSavedConfigurations());
-    
-    // Load the current configuration if it exists
-    const currentConfig = getCurrentConfiguration();
-    if (currentConfig) {
-      setSelectedNotes(currentConfig.selectedNotes);
-      setNumberOfNotes(currentConfig.numberOfNotes);
-      setIntervalRange([currentConfig.minInterval, currentConfig.maxInterval]);
-      setTempo(currentConfig.tempo);
-      setRhythm(currentConfig.rhythm);
-      setReferencePlay(currentConfig.referencePlay);
-      setReferenceType(currentConfig.referenceType);
-      setRootNotePitch(currentConfig.rootNotePitch);
-      setSelectedInstrument(currentConfig.instrument);
-    }
   }, []);
 
   const getCurrentSettings = (): ConfigData => {
