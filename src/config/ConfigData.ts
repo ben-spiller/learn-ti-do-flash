@@ -30,7 +30,7 @@ export const INSTRUMENT_OPTIONS = [
 
 // Constraints on valid values
 export const CONSTRAINTS = {
-  numberOfNotes: { min: 2, max: 10 },
+  numberOfNotes: { min: 1, max: 10 },
   tempo: { min: 40, max: 300, step: 5 },
   interval: { min: 1, max: 7 },
 } as const;
