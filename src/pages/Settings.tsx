@@ -26,6 +26,7 @@ import {
   deleteConfiguration,
   loadConfiguration,
   getCurrentConfiguration,
+  saveCurrentConfiguration,
   SavedConfiguration,
 } from "@/utils/settingsStorage";
 
@@ -175,6 +176,9 @@ const SettingsView = () => {
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
       setIsPreloading(false);
+      
+      // Save current configuration so practice can restore later
+      saveCurrentConfiguration(getCurrentSettings());
       
       navigate("/practice", {
         state: { 

@@ -51,6 +51,8 @@ const PracticeView = () => {
   // Auto-start if coming from Settings with preloaded samples
   useEffect(() => {
     if (started && preloaded) {
+      // Save current configuration when auto-starting from preloaded flow
+      saveCurrentConfiguration(settings);
       const playReferenceAndStart = async () => {
         if (settings.referencePlay === "once") {
           setIsPlayingReference(true);
@@ -314,6 +316,7 @@ const PracticeView = () => {
   };
 
   const handleFinish = () => {
+    saveCurrentConfiguration(settings);
     navigate("/");
   };
 
