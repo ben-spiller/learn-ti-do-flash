@@ -22,14 +22,6 @@ const PracticeView = () => {
   const noteDuration = 60 / settings.tempo;
   const noteGap = noteDuration * 0.15; // Gap is 15% of note duration
 
-  console.log('Practice settings:', { 
-    tempo: settings.tempo, 
-    noteDuration, 
-    noteGap, 
-    rootNotePitch: settings.rootNotePitch, 
-    selectedNotes: settings.selectedNotes 
-  });
-
   // Convert intervals to absolute MIDI notes based on rootNotePitch
   const rootMidi = noteNameToMidi(settings.rootNotePitch);
   const initialMidiNotes: number[] = settings.selectedNotes.map(interval => rootMidi + interval);
@@ -41,7 +33,7 @@ const PracticeView = () => {
   const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);
-  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
@@ -152,14 +144,6 @@ const PracticeView = () => {
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 60000);
-      setElapsedMinutes(elapsed);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [startTime]);
-
-  useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Next button shortcuts
       if ((e.key === 'n' || e.key === 'Enter') && currentPosition === settings.numberOfNotes) {
@@ -237,6 +221,9 @@ const PracticeView = () => {
     const newSequence = generateNextNoteSequence(pool, settings.numberOfNotes, settings.minInterval, settings.maxInterval, rootMidi);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
+    // measure each questions separately, so we can ignore times when the user left it for ages
+    // start the timer just before we play the notes
+    setQuestionStartTime(Date.now());
     playSequenceWithDelay(newSequence as number[]);
   };
 
@@ -268,8 +255,20 @@ const PracticeView = () => {
     if (isCorrect) {
       // Play the correct note from the sequence (correct octave)
       playNote(correctNote);
+
+      // once we completed this question, add to the elapsed time 
+      if (currentPosition+1 === settings.numberOfNotes) {
+        if (Date.now() - questionStartTime > 60000) {
+          // avoid counting up wildly big times
+          console.log("Ignoring time spent on this question as user probably stepped away from the app");
+        } else {
+          setElapsedMinutes(elapsedMinutes + (Math.floor((Date.now() - questionStartTime) / 60000)));
+        }
+      }
+
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
+
       // Clear feedback after animation
       setTimeout(() => {
         setLastPressedNote(null);
