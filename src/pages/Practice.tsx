@@ -7,14 +7,14 @@ import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1, Check } from "lucide-rea
 import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { SettingsData } from "@/config/practiceSettings";
+import { ConfigData } from "@/config/ConfigData";
 
 const PracticeView = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
   // Initialize settings with defaults, then override with any passed state
-  const settings = new SettingsData(location.state as Partial<SettingsData>);
+  const settings = new ConfigData(location.state as Partial<ConfigData>);
   const preloaded = (location.state as any)?.preloaded || false;
 
   // Calculate note duration based on tempo (BPM)

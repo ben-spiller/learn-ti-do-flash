@@ -1,9 +1,9 @@
-import { SettingsData } from "@/config/practiceSettings";
+import { ConfigData } from "@/config/ConfigData";
 
 export interface SavedConfiguration {
   id: string;
   name: string;
-  settings: SettingsData;
+  settings: ConfigData;
   createdAt: string;
 }
 
@@ -24,7 +24,7 @@ export const getSavedConfigurations = (): SavedConfiguration[] => {
   }
 };
 
-export const saveConfiguration = (name: string, settings: SettingsData): SavedConfiguration => {
+export const saveConfiguration = (name: string, settings: ConfigData): SavedConfiguration => {
   const configurations = getSavedConfigurations();
   
   // Check if a configuration with this name already exists
@@ -34,7 +34,7 @@ export const saveConfiguration = (name: string, settings: SettingsData): SavedCo
     // Update existing configuration
     configurations[existingIndex] = {
       ...configurations[existingIndex],
-      settings: new SettingsData(settings),
+      settings: new ConfigData(settings),
       createdAt: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(configurations));
@@ -44,7 +44,7 @@ export const saveConfiguration = (name: string, settings: SettingsData): SavedCo
     const newConfig: SavedConfiguration = {
       id: crypto.randomUUID(),
       name,
-      settings: new SettingsData(settings),
+      settings: new ConfigData(settings),
       createdAt: new Date().toISOString(),
     };
     
@@ -60,10 +60,10 @@ export const deleteConfiguration = (id: string): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
 };
 
-export const loadConfiguration = (id: string): SettingsData | null => {
+export const loadConfiguration = (id: string): ConfigData | null => {
   const configurations = getSavedConfigurations();
   const config = configurations.find(c => c.id === id);
   if (!config) return null;
   
-  return new SettingsData(config.settings);
+  return new ConfigData(config.settings);
 };

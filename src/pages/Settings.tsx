@@ -16,10 +16,10 @@ import {
   preloadInstrumentWithGesture,
 } from "@/utils/audio";
 import {
-  SettingsData,
+  ConfigData,
   INSTRUMENT_OPTIONS,
   CONSTRAINTS,
-} from "@/config/practiceSettings";
+} from "@/config/ConfigData";
 import {
   getSavedConfigurations,
   saveConfiguration,
@@ -30,7 +30,7 @@ import {
 
 const SettingsView = () => {
   const navigate = useNavigate();
-  const defaults = new SettingsData();
+  const defaults = new ConfigData();
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
@@ -57,8 +57,8 @@ const SettingsView = () => {
     setSavedConfigs(getSavedConfigurations());
   }, []);
 
-  const getCurrentSettings = (): SettingsData => {
-    return new SettingsData({
+  const getCurrentSettings = (): ConfigData => {
+    return new ConfigData({
       selectedNotes,
       numberOfNotes,
       minInterval: intervalRange[0],
