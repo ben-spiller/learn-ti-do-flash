@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Music2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import appIcon from "@/assets/app-icon.png";
 import { toast } from "@/hooks/use-toast";
 import {
   setInstrument,
@@ -247,9 +248,7 @@ const SettingsView = () => {
       <Card className="w-full">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Music2 className="w-8 h-8 text-primary" />
-            </div>
+            <img src={appIcon} alt="LearnTiDo" className="w-16 h-16" />
           </div>
           <CardTitle className="text-3xl font-bold">LearnTiDo</CardTitle>
           <CardDescription>Configure your practice settings</CardDescription>
