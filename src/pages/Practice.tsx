@@ -169,14 +169,14 @@ const PracticeView = () => {
       }
 
       // Play again shortcut
-      if (e.key === 'p' && started && !isPlaying) {
+      if (e.key === 'a' && started && !isPlaying) {
         e.preventDefault();
         handlePlayAgain();
         return;
       }
 
       // Reference shortcut
-      if (e.key === 'r' && started && !isPlaying && !isPlayingReference) {
+      if (e.key === 'e' && started && !isPlaying && !isPlayingReference) {
         e.preventDefault();
         handlePlayReference();
         return;
@@ -445,11 +445,11 @@ const PracticeView = () => {
                     disabled={isPlaying}
                   >
                     <Play className="h-4 w-4 mr-1" />
-                    Play Again
+                    Again
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Press P</p>
+                  <p>Play again (keyboard shortcut: a)</p>
                 </TooltipContent>
               </Tooltip>
               
@@ -466,7 +466,7 @@ const PracticeView = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Press R</p>
+                  <p>Play reference for this key (keyboard shortcut: e)</p>
                 </TooltipContent>
               </Tooltip>
               {settings.referencePlay === "drone" && (
