@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Music, Plus, Trash2 } from "lucide-react";
+import { Music2, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   setInstrument,
@@ -248,7 +248,7 @@ const SettingsView = () => {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Music className="w-8 h-8 text-primary" />
+              <Music2 className="w-8 h-8 text-primary" />
             </div>
           </div>
           <CardTitle className="text-3xl font-bold">LearnTiDo</CardTitle>
