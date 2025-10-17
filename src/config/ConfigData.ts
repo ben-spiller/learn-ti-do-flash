@@ -10,7 +10,7 @@ export class ConfigData {
   maxInterval: number = 7; // Maximum interval between consecutive notes (1-7)
   tempo: number = 120; // BPM (40-200)
   rhythm: "fixed" | "random" = "fixed";
-  referencePlay: "once" | "drone" = "once";
+  droneType: "none" | "root" = "none";
   referenceType: "root" | "arpeggio" = "root";
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug

@@ -43,9 +43,9 @@ const SettingsView = () => {
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
   const [tempo, setTempo] = useState(defaults.tempo);
-  const [rhythm, setRhythm] = useState<"fixed" | "random">(defaults.rhythm);
-  const [referencePlay, setReferencePlay] = useState<"once" | "drone">(defaults.referencePlay);
-  const [referenceType, setReferenceType] = useState<"root" | "arpeggio">(defaults.referenceType);
+  const [rhythm, setRhythm] = useState(defaults.rhythm);
+  const [droneType, setDroneType] = useState(defaults.droneType);
+  const [referenceType, setReferenceType] = useState(defaults.referenceType);
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
@@ -71,7 +71,7 @@ const SettingsView = () => {
       maxInterval: intervalRange[1],
       tempo,
       rhythm,
-      referencePlay,
+      droneType,
       referenceType,
       rootNotePitch,
       instrument: selectedInstrument,
@@ -87,7 +87,7 @@ const SettingsView = () => {
       config.settings.maxInterval === current.maxInterval &&
       config.settings.tempo === current.tempo &&
       config.settings.rhythm === current.rhythm &&
-      config.settings.referencePlay === current.referencePlay &&
+      config.settings.droneType === current.droneType &&
       config.settings.referenceType === current.referenceType &&
       config.settings.rootNotePitch === current.rootNotePitch &&
       config.settings.instrument === current.instrument
@@ -103,15 +103,10 @@ const SettingsView = () => {
     setIntervalRange([settings.minInterval, settings.maxInterval]);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
-    setReferencePlay(settings.referencePlay);
+    setDroneType(settings.droneType);
     setReferenceType(settings.referenceType);
     setRootNotePitch(settings.rootNotePitch);
     setSelectedInstrument(settings.instrument);
-    
-    toast({
-      title: "Configuration Loaded",
-      description: "Your settings have been updated.",
-    });
   };
 
   const handleSaveConfig = () => {
@@ -190,7 +185,7 @@ const SettingsView = () => {
           maxInterval: intervalRange[1],
           tempo,
           rhythm,
-          referencePlay,
+          droneType,
           referenceType,
           rootNotePitch,
           preloaded: true
@@ -546,21 +541,21 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Play Reference</Label>
+                <Label className="text-base font-semibold">Background Drone</Label>
                 <div className="flex gap-2">
                   <Button
-                    variant={referencePlay === "once" ? "default" : "outline"}
-                    onClick={() => setReferencePlay("once")}
+                    variant={droneType === "none" ? "default" : "outline"}
+                    onClick={() => setDroneType("none")}
                     className="flex-1"
                   >
-                    Once at Start
+                    None
                   </Button>
                   <Button
-                    variant={referencePlay === "drone" ? "default" : "outline"}
-                    onClick={() => setReferencePlay("drone")}
+                    variant={droneType === "root" ? "default" : "outline"}
+                    onClick={() => setDroneType("root")}
                     className="flex-1"
                   >
-                    Background Drone
+                    Root note
                   </Button>
                 </div>
               </div>

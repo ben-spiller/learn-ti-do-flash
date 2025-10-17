@@ -48,45 +48,30 @@ const PracticeView = () => {
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
   const NARROW_GAP_REM = 0.2; // rem - used for smaller spacing
+
+  async function doStart() {
+      if (settings.droneType !== "none") {
+        // Start drone if configured
+        startDrone(settings.rootNotePitch, droneVolume);
+      }
+        
+      await handlePlayReference();
+
+      // Add gap before exercise
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Now start the first round
+      startNewRound();
+      
+      //playReferenceAndStart();
+  }
   
   // Auto-start if coming from Settings with preloaded samples
   useEffect(() => {
     if (started && preloaded) {
       // Save current configuration when auto-starting from preloaded flow
       saveCurrentConfiguration(settings);
-      const playReferenceAndStart = async () => {
-        if (settings.referencePlay === "once") {
-          setIsPlayingReference(true);
-          if (settings.referenceType === "arpeggio") {
-            // Play do-mi-sol-do-sol-mi-do arpeggio
-            const doMidi = noteNameToMidi(settings.rootNotePitch);
-            const arpeggio = [
-              doMidi,           // do
-              doMidi + 4,       // mi
-              doMidi + 7,       // sol
-              doMidi + 12,      // do (octave up)
-              doMidi + 7,       // sol
-              doMidi + 4,       // mi
-              doMidi,           // do
-            ];
-            await playSequence(arpeggio, 0.15, 1.0);
-          } else {
-            // Play reference note longer
-            await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
-          }
-          setIsPlayingReference(false);
-          // Add gap before exercise
-          await new Promise(resolve => setTimeout(resolve, 800));
-        } else if (settings.referencePlay === "drone") {
-          // Start drone if configured
-          startDrone(settings.rootNotePitch, droneVolume);
-        }
-        
-        // Now start the first round
-        startNewRound();
-      };
-      
-      playReferenceAndStart();
+      doStart();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -121,32 +106,7 @@ const PracticeView = () => {
       setHasPreloaded(true);
       setStarted(true);
       
-      // Play reference and start first round
-      if (settings.referencePlay === "once") {
-        setIsPlayingReference(true);
-        if (settings.referenceType === "arpeggio") {
-          const doMidi = noteNameToMidi(settings.rootNotePitch);
-          const arpeggio = [
-            doMidi,           // do
-            doMidi + 4,       // mi
-            doMidi + 7,       // sol
-            doMidi + 12,      // do (octave up)
-            doMidi + 7,       // sol
-            doMidi + 4,       // mi
-            doMidi,           // do
-          ];
-          await playSequence(arpeggio, 0.15, 1.0);
-        } else {
-          await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
-        }
-        setIsPlayingReference(false);
-        // Add gap before exercise
-        await new Promise(resolve => setTimeout(resolve, 800));
-      } else if (settings.referencePlay === "drone") {
-        startDrone(settings.rootNotePitch, droneVolume);
-      }
-      
-      startNewRound();
+      doStart();
     }
   };
 
@@ -309,7 +269,7 @@ const PracticeView = () => {
         doMidi + 4,       // mi
         doMidi,           // do
       ];
-      await playSequence(arpeggio, 0.15, 1.0);
+      await playSequence(arpeggio, 0.15, noteDuration*1.5);
     } else {
       await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
     }
@@ -476,7 +436,7 @@ const PracticeView = () => {
                   <p>Play reference for this key (keyboard shortcut: e)</p>
                 </TooltipContent>
               </Tooltip>
-              {settings.referencePlay === "drone" && (
+              {settings.droneType !== "none" && (
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon">
