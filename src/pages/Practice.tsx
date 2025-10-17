@@ -619,7 +619,7 @@ const PracticeView = () => {
               <CardHeader>
                 <CardTitle className="text-center">
                   {isPlayingReference ? (
-                    <span className="text-primary animate-pulse">🎵 Reference Playing...</span>
+                    <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
                   ) : (
                     "Identify the notes"
                   )}
