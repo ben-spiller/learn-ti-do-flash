@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   setInstrument,
   preloadInstrumentWithGesture,
+  SemitoneOffset,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -213,7 +214,7 @@ const SettingsView = () => {
   }, []);
 
   // TODO: this is a crazy way to do it - refactor this to something more compact
-  const SOLFEGE_TO_INTERVAL: Record<string, number> = {
+  const SOLFEGE_TO_INTERVAL: Record<string, SemitoneOffset> = {
     "Do": 0,
     "Re": 2,
     "Mi": 4,
@@ -223,7 +224,7 @@ const SettingsView = () => {
     "Ti": 11,
   };
 
-  const INTERVAL_TO_SOLFEGE: Record<number, string> = {
+  const INTERVAL_TO_SOLFEGE: Record<SemitoneOffset, string> = {
     0: "Do",
     2: "Re",
     4: "Mi",

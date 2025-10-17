@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1, Check } from "lucide-react";
-import { playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
+import { MidiNoteNumber, SemitoneOffset, playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
+
 
 const PracticeView = () => {
   const location = useLocation();
@@ -25,12 +26,12 @@ const PracticeView = () => {
 
   // Convert intervals to absolute MIDI notes based on rootNotePitch
   const rootMidi = noteNameToMidi(settings.rootNotePitch);
-  const initialMidiNotes: number[] = settings.selectedNotes.map(interval => rootMidi + interval);
+  const initialMidiNotes: MidiNoteNumber[] = settings.selectedNotes.map(interval => rootMidi + interval);
 
-  const [sequence, setSequence] = useState<number[]>([]);
+  const [sequence, setSequence] = useState<MidiNoteNumber[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [lastPressedNote, setLastPressedNote] = useState<number | null>(null);
+  const [lastPressedNote, setLastPressedNote] = useState<MidiNoteNumber | null>(null);
   const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);

@@ -1,8 +1,10 @@
 // Practice Settings Configuration
 // Central location for all practice-related settings, defaults, and constants
 
+import { MidiNoteName, SemitoneOffset } from "@/utils/audio";
+
 export class ConfigData {
-  selectedNotes: number[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
+  selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
   numberOfNotes: number = 3; // Number of notes per question (2-10)
   minInterval: number = 1; // Minimum interval between consecutive notes (1-7)
   maxInterval: number = 7; // Maximum interval between consecutive notes (1-7)
@@ -10,7 +12,7 @@ export class ConfigData {
   rhythm: "fixed" | "random" = "fixed";
   referencePlay: "once" | "drone" = "once";
   referenceType: "root" | "arpeggio" = "root";
-  rootNotePitch: string = "C4"; // e.g., "C4"
+  rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug
 
   constructor(partial?: Partial<ConfigData>) {

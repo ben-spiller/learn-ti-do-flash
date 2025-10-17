@@ -1,11 +1,17 @@
-/*
-Concepts are:
- - pitch (or pitch class): a number 0-11 representing a note within an octave, where 0 is "do"
- - solfege: a string like "Do", "Re", "Mi" which is a display string for pitch, possibly with '#' or 'b' for chromatic alterations
- - midiNote: a number 0-127 representing a specific note (C-1 to G9)
- - noteName: a string like "C4", "G#3", "Bb2" representing a specific note
+/** Specifies the number of semitones above (or for negative numbers, below)
+ * the root ("do") note. Add this to rootMidi to get the absolute MIDI note number.
+ * This can extend beyond the octave (0-11) range. 
+ */
+export type SemitoneOffset = number;
 
-*/
+/** Specifies an absolute MIDI note number (0-127). 
+ */
+export type MidiNoteNumber = number;
+
+/** A string like "C4", "G#3", "Bb2" representing a specific note 
+ */
+export type MidiNoteName = string;
+
 
 // Solfege order (diatonic major scale degrees)
 export const SOLFEGE_ORDER = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti'] as const;
@@ -14,14 +20,14 @@ export const SOLFEGE_ORDER = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti'] as cons
 // default octave of 4 for mapping (Do -> C4 -> 60), but callers can provide
 // another octave when necessary.
 
-// Major scale intervals (semitones) from the root (Do)
-export const MAJOR_SCALE_PITCH_CLASSES = [0, 2, 4, 5, 7, 9, 11];
+// Major scale intervals (semitones) from the root - do, re, me, etc
+export const MAJOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
 
 
 // midiToSolfege(midi, root?, octave?) — map a MIDI number to a solfege label
 // relative to provided root. If the midi does not fall exactly on a major-scale
 // degree we will append '#' or 'b' where appropriate (chromatic altered degrees).
-export const midiToSolfege = (midi: number, doNote: string = 'C'): string | null => {
+export const midiToSolfege = (midi: SemitoneOffset, doNote: MidiNoteName = 'C'): string | null => {
   // If root includes an octave digit, use it, else append octave
   const rootHasOctave = /\d+$/.test(doNote);
   const rootNoteName = rootHasOctave ? doNote : `${doNote}8`; // just pick a high one
@@ -250,13 +256,14 @@ export const registerInstrument = (slug: string, data: { label?: string; urls: R
 
 // WebAudioFont support removed: unused in current flow. Kept midi-js (jsDelivr) and Tone paths.
 
-export const noteNameToMidi = (note: string) => {
+//returns MidiNoteNumber
+export const noteNameToMidi = (note: MidiNoteName) => {
   if (!note || typeof note !== 'string') throw new Error('Invalid note name: ' + note);
   const match = note.match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
   if (!match) throw new Error('Invalid note name: ' + note);
   const [, pitch, accidental, octaveStr] = match;
   const octave = parseInt(octaveStr, 10);
-  const semitoneFromC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const semitoneFromC: Record<string, SemitoneOffset> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
   let semis = semitoneFromC[pitch];
   if (accidental === '#') semis += 1;
   if (accidental === 'b') semis -= 1;
@@ -402,16 +409,16 @@ export const setInstrument = async (instrumentName: string) => {
  * Prompt the user (this click satisfies browser gesture requirements) and preload the configured instrument.
  * Call this from the exercise start flow (e.g. on a "Start exercise" button click).
  */
-type NoteRange = { from: string; to: string };
+type NoteRange = { from: MidiNoteName; to: MidiNoteName };
 
-export const midiToNoteName = (midi: number) => {
+export const midiToNoteName = (midi: MidiNoteNumber) => {
   const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const name = names[midi % 12];
   const octave = Math.floor(midi / 12) - 1;
   return `${name}${octave}`;
 };
 
-const getNotesBetween = (from: string, to: string) => {
+const getNotesBetween = (from: MidiNoteName, to: MidiNoteName) => {
   const start = noteNameToMidi(from);
   const end = noteNameToMidi(to);
   if (start == null || end == null) return [];
@@ -554,7 +561,7 @@ export const preloadInstrumentWithGesture = async (
 
 export const getCurrentInstrument = () => currentInstrument;
 
-export const playNote = async (midiNote: number | string, durationSecs: number = 0.7, when?: number) => {
+export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, durationSecs: number = 0.7, when?: number) => {
   // note may be a MIDI number (preferred), or a note name like 'C4'
   let noteName: string | null = null;
   if (typeof midiNote === 'number') {
@@ -610,9 +617,9 @@ export const playNote = async (midiNote: number | string, durationSecs: number =
   }
 };
 
-type SequenceItem = { note: number | string; duration?: number; gapAfter?: number };
+type SequenceItem = { note: MidiNoteNumber | MidiNoteName; duration?: number; gapAfter?: number };
 
-export const playSequence = async (items: Array<SequenceItem | number | string>, 
+export const playSequence = async (items: Array<SequenceItem | MidiNoteNumber | MidiNoteName>, 
     defaultGap: number = 0.1, defaultDuration: number = 0.7) => {
   // Convert items to SequenceItem
   const seq: SequenceItem[] = items.map(it => {
@@ -642,7 +649,7 @@ export const playSequence = async (items: Array<SequenceItem | number | string>,
  * Start a continuous background drone on the given note (one octave lower).
  * Uses a square wave PolySynth from Tone.js.
  */
-export const startDrone = async (noteNameOrMidi: string | number, volume: number) => {
+export const startDrone = async (noteNameOrMidi: MidiNoteName | MidiNoteNumber, volume: number) => {
   await loadToneScript();
   const Tone = (window as any).Tone;
   if (!Tone) {
@@ -654,7 +661,7 @@ export const startDrone = async (noteNameOrMidi: string | number, volume: number
   stopDrone();
 
   // Convert midi to note name if needed
-  let noteName: string;
+  let noteName: MidiNoteName;
   if (typeof noteNameOrMidi === 'number') {
     noteName = midiToNoteName(noteNameOrMidi);
   } else {
