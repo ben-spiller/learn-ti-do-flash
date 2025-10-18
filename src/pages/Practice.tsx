@@ -202,7 +202,10 @@ const PracticeView = () => {
   };
 
   const handleNotePress = (scaleNote: number) => {
-    if (currentPosition >= settings.numberOfNotes) return;
+    if (currentPosition >= settings.numberOfNotes) {
+      playNote(scaleNote);
+      return;
+    }
 
     const correctNote = sequence[currentPosition];
     setTotalAttempts(totalAttempts + 1);
@@ -269,7 +272,7 @@ const PracticeView = () => {
         doMidi + 4,       // mi
         doMidi,           // do
       ];
-      await playSequence(arpeggio, 0.15, noteDuration*1.5);
+      await playSequence(arpeggio, 0.03, noteDuration*1);
     } else {
       await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
     }
@@ -480,9 +483,10 @@ const PracticeView = () => {
       <div className="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
         {started ? (
           <>
-            {/* Solfege buttons at the top */}
+            {/* Musical note button div at the top */}
             <div className="flex gap-2">
-              {/* Main solfege notes column */}
+
+              {/* Main (major scale / solfege) notes column */}
               <div className="flex-1 flex flex-col">
                 {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch, index) => {
                   let solfege = midiToSolfege(pitch);
@@ -502,7 +506,7 @@ const PracticeView = () => {
                       <Button
                         onClick={() => handleNotePress(midiNote)}
                         className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(solfege)}`}
-                        disabled={isPlaying || currentPosition >= settings.numberOfNotes}
+                        disabled={isPlayingReference}
                       >
                         {solfege} ({7-index})
                         {isLastPressed && lastPressedWasCorrect !== null && (
@@ -553,7 +557,7 @@ const PracticeView = () => {
                       <Button
                         onClick={() => handleNotePress(midiNote)}
                         className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
-                        disabled={isPlaying || currentPosition >= settings.numberOfNotes}
+                        disabled={isPlayingReference}
                       >
                         # / b
                         {isLastPressed && lastPressedWasCorrect !== null && (
@@ -587,7 +591,7 @@ const PracticeView = () => {
               </CardHeader>
               <CardContent>
                 {/* Temporary debug display */}
-                {sequence.length > 0 && false && (
+                {/* {sequence.length > 0 && false && (
                   <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
                     <div className="font-semibold">Debug Info (Interval Range: {settings.minInterval}-{settings.maxInterval}):</div>
                     <div>
@@ -609,7 +613,7 @@ const PracticeView = () => {
                       }).join(', ')}
                     </div>
                   </div>
-                )}
+                )} */}
                 
                 <div className="flex gap-2 justify-center flex-wrap">
                   {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
