@@ -24,8 +24,9 @@ const PracticeView = () => {
   const noteDuration = 60 / settings.tempo;
   const noteGap = noteDuration * 0.15; // Gap is 15% of note duration
 
-  // Convert intervals to absolute MIDI notes based on rootNotePitch
-  const rootMidi = noteNameToMidi(settings.rootNotePitch);
+  /** The MIDI note of the root/do note for this particular exercise (may be randomly selected based on the config) */  
+  const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNotePitch)+(Math.floor(Math.random() * 6)-3));
+
   const initialMidiNotes: MidiNoteNumber[] = settings.selectedNotes.map(interval => rootMidi + interval);
 
   const [sequence, setSequence] = useState<MidiNoteNumber[]>([]);
@@ -52,7 +53,7 @@ const PracticeView = () => {
   async function doStart() {
       if (settings.droneType !== "none") {
         // Start drone if configured
-        startDrone(settings.rootNotePitch, droneVolume);
+        startDrone(rootMidi, droneVolume);
       }
         
       await handlePlayReference();
@@ -262,7 +263,7 @@ const PracticeView = () => {
   const handlePlayReference = async () => {
     setIsPlayingReference(true);
     if (settings.referenceType === "arpeggio") {
-      const doMidi = noteNameToMidi(settings.rootNotePitch);
+      const doMidi = rootMidi;
       const arpeggio = [
         doMidi,           // do
         doMidi + 4,       // mi
@@ -274,7 +275,7 @@ const PracticeView = () => {
       ];
       await playSequence(arpeggio, 0.03, noteDuration*1);
     } else {
-      await playSequence([noteNameToMidi(settings.rootNotePitch)], 0, 2.0);
+      await playSequence([rootMidi], 0, 2.0);
     }
     setIsPlayingReference(false);
   };
