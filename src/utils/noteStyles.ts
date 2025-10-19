@@ -17,7 +17,7 @@ export const getNoteButtonColor = (note: string): string => {
 };
 
 export const getScoreColor = (score: number): string => {
-  if (score >= 80) return "text-success";
-  if (score >= 60) return "text-amber-600";
+  if (score >= 90) return "text-success";
+  if (score >= 80) return "text-amber-600";
   return "text-destructive";
 };
