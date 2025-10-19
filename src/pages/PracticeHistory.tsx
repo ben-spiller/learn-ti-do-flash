@@ -3,29 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { semitonesToSolfege } from "@/utils/audio";
-
-// Solfege color classes matching Practice.tsx
-const SOLFEGE_COLOR_CLASSES: Record<string, string> = {
-  do: "bg-solfege-do",
-  re: "bg-solfege-re",
-  mi: "bg-solfege-mi",
-  fa: "bg-solfege-fa",
-  sol: "bg-solfege-sol",
-  la: "bg-solfege-la",
-  ti: "bg-solfege-ti",
-  semitone: "bg-solfege-semitone",
-};
-
-const getNoteButtonColor = (note: string) => {
-  const n = (note || "").toLowerCase();
-  return SOLFEGE_COLOR_CLASSES[n] ?? "bg-muted";
-};
-
-const getScoreColor = (score: number): string => {
-  if (score >= 80) return "text-success";
-  if (score >= 60) return "text-amber-600";
-  return "text-destructive";
-};
+import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
 
 interface PracticeSession {
   sessionDate: number;
