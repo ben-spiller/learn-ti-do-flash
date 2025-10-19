@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1, Check } from "lucide-react";
-import { MidiNoteNumber, SemitoneOffset, playNote, playSequence, midiToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
+import { MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
@@ -26,8 +26,6 @@ const PracticeView = () => {
 
   /** The MIDI note of the root/do note for this particular exercise (may be randomly selected based on the config) */  
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNotePitch)+(Math.floor(Math.random() * 6)-3));
-
-  const initialMidiNotes: MidiNoteNumber[] = settings.selectedNotes.map(interval => rootMidi + interval);
 
   const [sequence, setSequence] = useState<MidiNoteNumber[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -184,9 +182,8 @@ const PracticeView = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, started, isPlaying, isPlayingReference]);
 
-  const startNewRound = () => {
-    const pool = initialMidiNotes;
-    const newSequence = generateNextNoteSequence(pool, settings.numberOfNotes, settings.minInterval, settings.maxInterval, rootMidi);
+  const startNewRound = () => {    
+    const newSequence = generateNextNoteSequence().map(interval => rootMidi + interval);
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
     // measure each questions separately, so we can ignore times when the user left it for ages
@@ -197,7 +194,7 @@ const PracticeView = () => {
 
   const playSequenceWithDelay = async (seq: number[]) => {
     setIsPlaying(true);
-    console.log('Playing sequence:', { seq, noteGap, noteDuration });
+    console.debug('Playing sequence:', { seq, noteGap, noteDuration });
     await playSequence(seq, noteGap, noteDuration);
     setIsPlaying(false);
   };
@@ -291,86 +288,53 @@ const PracticeView = () => {
     setDroneVolume(newVolume);
   };
 
-  const generateNextNoteSequence = (
-    availableNotes: number[],
-    length: number,
-    minInterval: number = 1,
-    maxInterval: number = 7,
-    root: number = 60
-  ): number[] => {
-    if (availableNotes.length === 0) return [];
-    
-    // Add an octave above "do" (the root/C) if it's in the available notes
-    const notesForSequence = [...availableNotes];
-    const rootPitchClass = root % 12;
-    availableNotes.forEach(note => {
-      const pitchClass = note % 12;
-      // Check if this note is "do" (same pitch class as root)
-      if (pitchClass === rootPitchClass) {
-        // This is "do", add an octave above (if within MIDI range)
-        if (note + 12 <= 127) {
-          notesForSequence.push(note + 12);
-        }
-      }
-    });
+  const generateNextNoteSequence = (): SemitoneOffset[] => {
+    let pool: SemitoneOffset[] = [...settings.selectedNotes];
+
+    // Special-case: add an octave above "do" (the root) if it's in the available notes
+    // (once we properly support compounds intervals we can do this without a special-case)
+    if (pool.indexOf(0) !== -1) { pool.push(12); }
     
     const sequence: number[] = [];
-    
-    // Helper to convert MIDI note to full scale degree (including octave)
-    // Returns -1 if not in major scale
-    const getFullScaleDegree = (midiNote: number): number => {
-      const pitchClass = midiNote % 12;
-      const index = MAJOR_SCALE_PITCH_CLASSES.indexOf(pitchClass);
-      if (index === -1) return -1;
-      
-      // Calculate which octave we're in (MIDI note 0 = C-1)
-      const octave = Math.floor(midiNote / 12) - 1;
-      
-      // Full scale degree: octave * 7 (notes per octave) + position in scale (0-6)
-      return octave * 7 + index;
-    };
-    
-    // Pick the first note randomly
-    const firstIndex = Math.floor(Math.random() * notesForSequence.length);
-    sequence.push(notesForSequence[firstIndex]);
-    
-    // For subsequent notes, filter by interval constraint
-    for (let i = 1; i < length; i++) {
-      const prevNote = sequence[i - 1];
-      const prevFullDegree = getFullScaleDegree(prevNote);
-      
-      if (prevFullDegree === -1) {
-        // Previous note is not in major scale, allow any note
-        const randomIndex = Math.floor(Math.random() * notesForSequence.length);
-        sequence.push(notesForSequence[randomIndex]);
-        continue;
-      }
-      
-      // Filter available notes based on full scale degree distance
-      const validNotes = notesForSequence.filter(note => {
-        const fullDegree = getFullScaleDegree(note);
-        if (fullDegree === -1) return false; // Skip chromatic notes
-        
-        // Calculate actual scale degree distance across octaves
-        const distance = Math.abs(fullDegree - prevFullDegree);
-        
-        // Check if distance is within the allowed range
-        return distance >= minInterval && distance <= maxInterval;
-      });
-      
-      // If no valid notes (constraint too restrictive), fall-back to any note
-      if (validNotes.length === 0) {
-        console.log('No valid notes found with current interval constraints; relaxing constraints.');
-        const randomIndex = Math.floor(Math.random() * notesForSequence.length);
-        sequence.push(notesForSequence[randomIndex]);
-      } else {
-        const randomIndex = Math.floor(Math.random() * validNotes.length);
-        sequence.push(validNotes[randomIndex]);
-      }
+    for (let i = 0; i < settings.numberOfNotes; i++) {
+      sequence.push(generateNextNote(pool, sequence)[0]);
     }
     
+    console.log("Note sequence is: "+JSON.stringify(sequence));
+
     return sequence;
   };
+
+  function randomInt(max: number): number {
+    return Math.floor(Math.random() * max);
+  }
+  /** Return the next semitone for the current sequence, and a string explaining why it was chosen */
+  function generateNextNote(pool: SemitoneOffset[], currentSequence: SemitoneOffset[]): [SemitoneOffset, string] {
+      // Choices for this note. Start with the current pool
+      let choices = [...pool];
+
+      if (currentSequence.length === 0) {
+        // Pick the first note randomly
+        // TODO: avoid same first note as the previous one (avoids a complete duplication)
+        return [pool[randomInt(pool.length)], "random-first"];
+      } 
+
+      const prevNote = currentSequence[currentSequence.length - 1];
+      // Limit options based on interval constraints
+      let intervalFiltered = choices.filter(note => {
+        const distance = Math.abs(note - prevNote);
+        return distance >= settings.minInterval && distance <= settings.maxInterval; 
+      });
+      if (intervalFiltered.length === 0) { console.log("No possible notes after "+prevNote); }
+      else { choices = intervalFiltered; }
+      
+      // TODO: Limit options to avoid repetition in the current sequence if possible (TBD)
+
+      // TODO: try to pick a (prevNote,newNote) combination that is a priority practice combination
+            
+      // Filter available notes based on full scale degree distance
+      return [ choices[randomInt(choices.length)], "random" ];      
+  }
   
 
   // nb: have to do this mapping because Tailwind strips out dynamic class names
@@ -490,8 +454,7 @@ const PracticeView = () => {
               {/* Main (major scale / solfege) notes column */}
               <div className="flex-1 flex flex-col">
                 {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch, index) => {
-                  let solfege = midiToSolfege(pitch);
-                  if (!solfege) { solfege = "?"+pitch.toString(); }
+                  let solfege = semitonesToSolfege(pitch, true);
                   
                   // Calculate gap - wider except between Mi-Fa (natural semitone)
                   const nextPitch = [...MAJOR_SCALE_PITCH_CLASSES].reverse()[index + 1];
@@ -506,10 +469,10 @@ const PracticeView = () => {
                     <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
                       <Button
                         onClick={() => handleNotePress(midiNote)}
-                        className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(solfege)}`}
+                        className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))}`}
                         disabled={isPlayingReference}
                       >
-                        {solfege} ({7-index})
+                        {solfege}
                         {isLastPressed && lastPressedWasCorrect !== null && (
                           <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
                             <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
@@ -547,9 +510,6 @@ const PracticeView = () => {
                   }
                   top += buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
                   
-                  let solfege = midiToSolfege(pitch);
-                  if (!solfege) { solfege = "?"+pitch.toString(); }
-                  
                   const midiNote = pitch + rootMidi;
                   const isLastPressed = lastPressedNote === midiNote;
                   
@@ -559,6 +519,7 @@ const PracticeView = () => {
                         onClick={() => handleNotePress(midiNote)}
                         className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
                         disabled={isPlayingReference}
+                        title={semitonesToSolfege(pitch, true)}
                       >
                         # / b
                         {isLastPressed && lastPressedWasCorrect !== null && (
@@ -619,7 +580,7 @@ const PracticeView = () => {
                 <div className="flex gap-2 justify-center flex-wrap">
                   {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
                     const isAnswered = index < currentPosition;
-                    const noteSolfege = isAnswered ? (midiToSolfege(sequence[index]) || midiToNoteName(sequence[index])) : "?";
+                    const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index]-rootMidi)) : "?";
                     const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
                     
                     return (

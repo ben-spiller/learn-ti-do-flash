@@ -63,6 +63,7 @@ const SettingsView = () => {
     setSavedConfigs(getSavedConfigurations());
   }, []);
 
+  // TODO: instead of this, store the entire ConfigData object as a state
   const getCurrentSettings = (): ConfigData => {
     return new ConfigData({
       selectedNotes,
@@ -80,6 +81,7 @@ const SettingsView = () => {
 
   const configMatches = (config: SavedConfiguration): boolean => {
     const current = getCurrentSettings();
+    // TODO: move this to the ConfigData class
     return (
       JSON.stringify(config.settings.selectedNotes.sort()) === JSON.stringify(current.selectedNotes.sort()) &&
       config.settings.numberOfNotes === current.numberOfNotes &&
@@ -444,7 +446,8 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Consecutive Notes Interval Range: {intervalRange[0]} - {intervalRange[1]}</Label>
+                <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
+                  Consecutive Notes Range (semitones): {intervalRange[0]} - {intervalRange[1]}</Label>
                 <Slider
                   value={intervalRange}
                   onValueChange={(values) => {

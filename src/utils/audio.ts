@@ -1,6 +1,6 @@
 /** Specifies the number of semitones above (or for negative numbers, below)
  * the root ("do") note. Add this to rootMidi to get the absolute MIDI note number.
- * This can extend beyond the octave (0-11) range. 
+ * This can extend beyond the octave (0-11) range. Use %12 to get the pitch class.  
  */
 export type SemitoneOffset = number;
 
@@ -13,50 +13,17 @@ export type MidiNoteNumber = number;
 export type MidiNoteName = string;
 
 
-// Solfege order (diatonic major scale degrees)
-export const SOLFEGE_ORDER = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Ti'] as const;
-
-// Helpers to convert between solfege labels and MIDI numbers. We keep a
-// default octave of 4 for mapping (Do -> C4 -> 60), but callers can provide
-// another octave when necessary.
-
 // Major scale intervals (semitones) from the root - do, re, me, etc
 export const MAJOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
 
+const SOLFEGE_NAMES = ['Do (1)', 'Ra (b2)', 'Re (2)', 'Me (b3)', 'Mi (3)', 'Fa (4)', 'Se (b5)', 'Sol (5)', 'Le (b6)', 'La (6)', 'Te (b7)', 'Ti (7)'] as const;
 
-// midiToSolfege(midi, root?, octave?) — map a MIDI number to a solfege label
-// relative to provided root. If the midi does not fall exactly on a major-scale
-// degree we will append '#' or 'b' where appropriate (chromatic altered degrees).
-export const midiToSolfege = (midi: SemitoneOffset, doNote: MidiNoteName = 'C'): string | null => {
-  // If root includes an octave digit, use it, else append octave
-  const rootHasOctave = /\d+$/.test(doNote);
-  const rootNoteName = rootHasOctave ? doNote : `${doNote}8`; // just pick a high one
-  const rootMidi = noteNameToMidi(rootNoteName);
-  if (rootMidi == null) return null;
-
-  const pitchClass = ((midi - rootMidi) % 12 + 12) % 12; // 0..11 relative to root
-
-  // Exact match to a degree
-  const exactIdx = MAJOR_SCALE_PITCH_CLASSES.indexOf(pitchClass);
-  if (exactIdx !== -1) return SOLFEGE_ORDER[exactIdx];
-
-  // Try to find a degree that is a semitone away (sharp or flat)
-  for (let i = 0; i < MAJOR_SCALE_PITCH_CLASSES.length; i++) {
-    const deg = MAJOR_SCALE_PITCH_CLASSES[i];
-    const rel = (pitchClass - deg + 12) % 12;
-    if (rel === 1) {
-      // one semitone above degree => sharp
-      return `b ${SOLFEGE_ORDER[i+1]}`;
-    }
-    if (rel === 11) {
-      // one semitone below degree => flat
-      return `b ${SOLFEGE_ORDER[i]}`;
-    }
-  }
-
-  // Fallback: return the note name (e.g., C#4) if it doesn't map cleanly
-  return midiToNoteName(midi) || null;
-};
+export function semitonesToSolfege(semitoneOffset: SemitoneOffset, longVersion = false): string {
+  const pc = ((semitoneOffset % 12) + 12) % 12; // normalize to 0..11
+  const name = SOLFEGE_NAMES[pc];
+  if (longVersion) return name;
+  return name.split(' ')[0];
+}
 
 let audioContext: AudioContext | null = null;
 let toneInstrument: any = null; // Tone.js synth / sampler instance
