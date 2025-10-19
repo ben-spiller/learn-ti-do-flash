@@ -43,6 +43,25 @@ const PracticeView = () => {
   const [droneVolume, setDroneVolumeState] = useState(-8); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
+  // Practice tracking: Maps "prevNote,note" -> count (use "null" for first note's prevNote)
+  const [wrongAnswerHistory, setWrongAnswerHistory] = useState<Map<string, number>>(() => {
+    const stored = localStorage.getItem('wrongAnswerHistory');
+    return stored ? new Map(JSON.parse(stored)) : new Map();
+  });
+  const [needsPractice, setNeedsPractice] = useState<Map<string, number>>(() => {
+    const stored = localStorage.getItem('needsPractice');
+    return stored ? new Map(JSON.parse(stored)) : new Map();
+  });
+
+  // Persist practice data to localStorage
+  useEffect(() => {
+    localStorage.setItem('wrongAnswerHistory', JSON.stringify(Array.from(wrongAnswerHistory.entries())));
+  }, [wrongAnswerHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('needsPractice', JSON.stringify(Array.from(needsPractice.entries())));
+  }, [needsPractice]);
+
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
@@ -220,9 +239,29 @@ const PracticeView = () => {
     setLastPressedNote(scaleNote);
     setLastPressedWasCorrect(isCorrect);
 
+    // Update practice tracking
+    const correctInterval = correctNote - rootMidi;
+    const prevInterval = currentPosition === 0 ? null : sequence[currentPosition - 1] - rootMidi;
+    const pairKey = `${prevInterval},${correctInterval}`;
+
     if (isCorrect) {
       // Play the correct note from the sequence (correct octave)
       playNote(correctNote);
+
+      // Decrement needsPractice for correct answer
+      setNeedsPractice(prev => {
+        const updated = new Map(prev);
+        const currentCount = updated.get(pairKey) || 0;
+        if (currentCount > 0) {
+          const newCount = currentCount - 1;
+          if (newCount <= 0) {
+            updated.delete(pairKey);
+          } else {
+            updated.set(pairKey, newCount);
+          }
+        }
+        return updated;
+      });
 
       // once we completed this question, add to the elapsed time 
       if (currentPosition+1 === settings.numberOfNotes) {
@@ -245,6 +284,21 @@ const PracticeView = () => {
     } else {
       // Play the wrong note that was pressed
       playNote(scaleNote);
+
+      // Update wrong answer history
+      setWrongAnswerHistory(prev => {
+        const updated = new Map(prev);
+        updated.set(pairKey, (updated.get(pairKey) || 0) + 1);
+        return updated;
+      });
+
+      // Add to needsPractice (+3 for wrong answer)
+      setNeedsPractice(prev => {
+        const updated = new Map(prev);
+        updated.set(pairKey, (updated.get(pairKey) || 0) + 3);
+        return updated;
+      });
+
       // Clear feedback after animation
       setTimeout(() => {
         setLastPressedNote(null);
@@ -308,18 +362,75 @@ const PracticeView = () => {
   function randomInt(max: number): number {
     return Math.floor(Math.random() * max);
   }
+
+  /** Weighted random selection from needsPractice, biased towards higher counts */
+  function pickFromNeedsPractice(pool: SemitoneOffset[], prevNote: SemitoneOffset | null): SemitoneOffset | null {
+    // Filter needsPractice entries that match the current prevNote and are in the pool
+    const validPairs: [string, number][] = [];
+    for (const [pairKey, count] of needsPractice.entries()) {
+      const [storedPrev, storedNote] = pairKey.split(',');
+      const storedPrevNum = storedPrev === 'null' ? null : parseInt(storedPrev);
+      const storedNoteNum = parseInt(storedNote);
+      
+      if (storedPrevNum === prevNote && pool.includes(storedNoteNum)) {
+        // Check interval constraints if there's a previous note
+        if (prevNote !== null) {
+          const distance = Math.abs(storedNoteNum - prevNote);
+          if (distance >= settings.minInterval && distance <= settings.maxInterval) {
+            validPairs.push([pairKey, count]);
+          }
+        } else {
+          validPairs.push([pairKey, count]);
+        }
+      }
+    }
+
+    if (validPairs.length === 0) return null;
+
+    // Weight by count (higher count = more likely to be selected)
+    const totalWeight = validPairs.reduce((sum, [_, count]) => sum + count, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const [pairKey, count] of validPairs) {
+      random -= count;
+      if (random <= 0) {
+        const [_, storedNote] = pairKey.split(',');
+        return parseInt(storedNote);
+      }
+    }
+
+    // Fallback to last item
+    const [_, lastNote] = validPairs[validPairs.length - 1][0].split(',');
+    return parseInt(lastNote);
+  }
+
   /** Return the next semitone for the current sequence, and a string explaining why it was chosen */
   function generateNextNote(pool: SemitoneOffset[], currentSequence: SemitoneOffset[]): [SemitoneOffset, string] {
       // Choices for this note. Start with the current pool
       let choices = [...pool];
 
       if (currentSequence.length === 0) {
+        // For first note, try to pick from needsPractice 70% of the time
+        if (Math.random() < 0.7) {
+          const practiceNote = pickFromNeedsPractice(pool, null);
+          if (practiceNote !== null) {
+            return [practiceNote, "practice-first"];
+          }
+        }
         // Pick the first note randomly
-        // TODO: avoid same first note as the previous one (avoids a complete duplication)
         return [pool[randomInt(pool.length)], "random-first"];
       } 
 
       const prevNote = currentSequence[currentSequence.length - 1];
+      
+      // Try to pick from needsPractice 70% of the time
+      if (Math.random() < 0.7) {
+        const practiceNote = pickFromNeedsPractice(pool, prevNote);
+        if (practiceNote !== null) {
+          return [practiceNote, "practice"];
+        }
+      }
+
       // Limit options based on interval constraints
       let intervalFiltered = choices.filter(note => {
         const distance = Math.abs(note - prevNote);
@@ -327,12 +438,7 @@ const PracticeView = () => {
       });
       if (intervalFiltered.length === 0) { console.log("No possible notes after "+prevNote); }
       else { choices = intervalFiltered; }
-      
-      // TODO: Limit options to avoid repetition in the current sequence if possible (TBD)
-
-      // TODO: try to pick a (prevNote,newNote) combination that is a priority practice combination
             
-      // Filter available notes based on full scale degree distance
       return [ choices[randomInt(choices.length)], "random" ];      
   }
   
