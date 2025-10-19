@@ -48,7 +48,7 @@ const PracticeView = () => {
 
   /** Count of wrong answers: Maps "prevNote,note" -> count (prevNote="" for note at start of sequence) */
   const wrongAnswerCount = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem('wrongAnswerHistory:'+settings.getExerciseKey());
+    const stored = localStorage.getItem('wrongAnswerHistory:latest');
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());  
   /** 2-note sequences that need more practice */
@@ -59,7 +59,7 @@ const PracticeView = () => {
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
-    localStorage.setItem('wrongAnswerHistory:'+settings.getExerciseKey(), JSON.stringify(Array.from(wrongAnswerCount.current.entries())));
+    localStorage.setItem('wrongAnswerHistory:latest', JSON.stringify(Array.from(wrongAnswerCount.current.entries())));
     localStorage.setItem('needsPracticeNotePairs:'+settings.getExerciseKey(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
@@ -78,6 +78,8 @@ const PracticeView = () => {
 
       // Add gap before exercise
       await new Promise(resolve => setTimeout(resolve, 800));
+      
+      wrongAnswerCount.current.clear();
       
       // Now start the first round
       startNewRound();

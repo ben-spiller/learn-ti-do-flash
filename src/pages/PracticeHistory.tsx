@@ -138,7 +138,7 @@ const PracticeHistory = () => {
       {/* Wrong Answers Visualization */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Most Frequent Wrong Answers (Recent Session)</CardTitle>
+          <CardTitle>Last session - most frequent wrong answers</CardTitle>
         </CardHeader>
         <CardContent>
           {wrongAnswerPairs.length > 0 ? (
@@ -216,7 +216,7 @@ const PracticeHistory = () => {
         return (
           <Card key={exerciseKey} className="mb-6">
             <CardHeader>
-              <CardTitle>Needs Practice - {exerciseKey}</CardTitle>
+              <CardTitle>{exerciseKey} sessions - intervals needing practice</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -251,7 +251,7 @@ const PracticeHistory = () => {
                         </div>
                       </div>
                       <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">
-                        {pair.count} {pair.count === 1 ? 'error' : 'errors'}
+                        {pair.count} {'severity'}
                       </span>
                     </div>
                   );
