@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,23 +44,21 @@ const PracticeView = () => {
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
   // Practice tracking: Maps "prevNote,note" -> count (use "null" for first note's prevNote)
-  const [wrongAnswerHistory, setWrongAnswerHistory] = useState<Map<string, number>>(() => {
+  const wrongAnswerHistory = useRef<Map<string, number>>((() => {
     const stored = localStorage.getItem('wrongAnswerHistory');
     return stored ? new Map(JSON.parse(stored)) : new Map();
-  });
-  const [needsPractice, setNeedsPractice] = useState<Map<string, number>>(() => {
+  })());
+  
+  const needsPractice = useRef<Map<string, number>>((() => {
     const stored = localStorage.getItem('needsPractice');
     return stored ? new Map(JSON.parse(stored)) : new Map();
-  });
+  })());
 
-  // Persist practice data to localStorage
-  useEffect(() => {
-    localStorage.setItem('wrongAnswerHistory', JSON.stringify(Array.from(wrongAnswerHistory.entries())));
-  }, [wrongAnswerHistory]);
-
-  useEffect(() => {
-    localStorage.setItem('needsPractice', JSON.stringify(Array.from(needsPractice.entries())));
-  }, [needsPractice]);
+  // Helper to persist practice data to localStorage
+  const savePracticeData = () => {
+    localStorage.setItem('wrongAnswerHistory', JSON.stringify(Array.from(wrongAnswerHistory.current.entries())));
+    localStorage.setItem('needsPractice', JSON.stringify(Array.from(needsPractice.current.entries())));
+  };
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
@@ -249,19 +247,16 @@ const PracticeView = () => {
       playNote(correctNote);
 
       // Decrement needsPractice for correct answer
-      setNeedsPractice(prev => {
-        const updated = new Map(prev);
-        const currentCount = updated.get(pairKey) || 0;
-        if (currentCount > 0) {
-          const newCount = currentCount - 1;
-          if (newCount <= 0) {
-            updated.delete(pairKey);
-          } else {
-            updated.set(pairKey, newCount);
-          }
+      const currentCount = needsPractice.current.get(pairKey) || 0;
+      if (currentCount > 0) {
+        const newCount = currentCount - 1;
+        if (newCount <= 0) {
+          needsPractice.current.delete(pairKey);
+        } else {
+          needsPractice.current.set(pairKey, newCount);
         }
-        return updated;
-      });
+      }
+      savePracticeData();
 
       // once we completed this question, add to the elapsed time 
       if (currentPosition+1 === settings.numberOfNotes) {
@@ -286,18 +281,12 @@ const PracticeView = () => {
       playNote(scaleNote);
 
       // Update wrong answer history
-      setWrongAnswerHistory(prev => {
-        const updated = new Map(prev);
-        updated.set(pairKey, (updated.get(pairKey) || 0) + 1);
-        return updated;
-      });
+      wrongAnswerHistory.current.set(pairKey, (wrongAnswerHistory.current.get(pairKey) || 0) + 1);
 
       // Add to needsPractice (+3 for wrong answer)
-      setNeedsPractice(prev => {
-        const updated = new Map(prev);
-        updated.set(pairKey, (updated.get(pairKey) || 0) + 3);
-        return updated;
-      });
+      needsPractice.current.set(pairKey, (needsPractice.current.get(pairKey) || 0) + 3);
+      
+      savePracticeData();
 
       // Clear feedback after animation
       setTimeout(() => {
@@ -367,7 +356,7 @@ const PracticeView = () => {
   function pickFromNeedsPractice(pool: SemitoneOffset[], prevNote: SemitoneOffset | null): SemitoneOffset | null {
     // Filter needsPractice entries that match the current prevNote and are in the pool
     const validPairs: [string, number][] = [];
-    for (const [pairKey, count] of needsPractice.entries()) {
+    for (const [pairKey, count] of needsPractice.current.entries()) {
       const [storedPrev, storedNote] = pairKey.split(',');
       const storedPrevNum = storedPrev === 'null' ? null : parseInt(storedPrev);
       const storedNoteNum = parseInt(storedNote);
