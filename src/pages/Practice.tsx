@@ -45,11 +45,10 @@ const PracticeView = () => {
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
   /** Count of wrong answers: Maps "prevNote,note" -> count (prevNote="" for note at start of sequence) */
-  const wrongAnswerCount = useRef<Map<string, number>>(new Map);
-  // (() => {
-  //   const stored = localStorage.getItem('wrongAnswerHistory:'+settings.getExerciseKey());
-  //   return stored ? new Map(JSON.parse(stored)) : new Map();
-  // })());  
+  const wrongAnswerCount = useRef<Map<string, number>>((() => {
+    const stored = localStorage.getItem('wrongAnswerHistory:'+settings.getExerciseKey());
+    return stored ? new Map(JSON.parse(stored)) : new Map();
+  })());  
   /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
     const stored = localStorage.getItem('needsPracticeNotePairs:'+settings.getExerciseKey());
@@ -58,7 +57,7 @@ const PracticeView = () => {
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
-    //localStorage.setItem('wrongAnswerHistory:'+settings.getExerciseKey(), JSON.stringify(Array.from(wrongAnswerHistory.current.entries())));
+    localStorage.setItem('wrongAnswerHistory:'+settings.getExerciseKey(), JSON.stringify(Array.from(wrongAnswerCount.current.entries())));
     localStorage.setItem('needsPracticeNotePairs:'+settings.getExerciseKey(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
@@ -321,7 +320,28 @@ const PracticeView = () => {
 
   const handleFinish = () => {
     saveCurrentConfiguration(settings);
-    navigate("/");
+    
+    // Save session data if at least one question was answered
+    if (totalAttempts > 0) {
+      const session = {
+        sessionDate: Date.now(),
+        score: Math.round((correctAttempts / totalAttempts) * 100),
+        totalAttempts,
+        correctAttempts,
+        elapsedMinutes,
+        exerciseKey: settings.getExerciseKey()
+      };
+      
+      // Append to sessions array
+      const sessionsStr = localStorage.getItem('practiceSessions');
+      const sessions = sessionsStr ? JSON.parse(sessionsStr) : [];
+      sessions.push(session);
+      localStorage.setItem('practiceSessions', JSON.stringify(sessions));
+      
+      navigate("/history");
+    } else {
+      navigate("/");
+    }
   };
 
   const handleDroneVolumeChange = (value: number[]) => {

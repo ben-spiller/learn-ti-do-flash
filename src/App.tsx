@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import SettingsView from "./pages/Settings";
 import PracticeView from "./pages/Practice";
+import PracticeHistory from "./pages/PracticeHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<SettingsView />} />
           <Route path="/practice" element={<PracticeView />} />
+          <Route path="/history" element={<PracticeHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

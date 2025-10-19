@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, History } from "lucide-react";
 import appIcon from "@/assets/app-icon.png";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -250,6 +250,16 @@ const SettingsView = () => {
           </div>
           <CardTitle className="text-3xl font-bold">LearnTiDo</CardTitle>
           <CardDescription>Configure your practice settings</CardDescription>
+          <div className="pt-4">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => navigate("/history")}
+            >
+              <History className="h-4 w-4 mr-2" />
+              View Practice History
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Saved Configurations - Card Grid */}
