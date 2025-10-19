@@ -4,6 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { semitonesToSolfege } from "@/utils/audio";
 
+// Solfege color classes matching Practice.tsx
+const SOLFEGE_COLOR_CLASSES: Record<string, string> = {
+  do: "bg-solfege-do",
+  re: "bg-solfege-re",
+  mi: "bg-solfege-mi",
+  fa: "bg-solfege-fa",
+  sol: "bg-solfege-sol",
+  la: "bg-solfege-la",
+  ti: "bg-solfege-ti",
+  semitone: "bg-solfege-semitone",
+};
+
+const getNoteButtonColor = (note: string) => {
+  const n = (note || "").toLowerCase();
+  return SOLFEGE_COLOR_CLASSES[n] ?? "bg-muted";
+};
+
+const getScoreColor = (score: number): string => {
+  if (score >= 80) return "text-success";
+  if (score >= 60) return "text-amber-600";
+  return "text-destructive";
+};
+
 interface PracticeSession {
   sessionDate: number;
   score: number;
@@ -70,12 +93,15 @@ const PracticeHistory = () => {
       const [prevNote, note] = pairKey.split(',');
       const prevNoteName = prevNote === '' ? 'Start' : semitonesToSolfege(parseInt(prevNote));
       const noteName = semitonesToSolfege(parseInt(note));
+      const prevNoteValue = prevNote === '' ? null : parseInt(prevNote);
+      const noteValue = parseInt(note);
       return {
         pairKey,
         prevNoteName,
         noteName,
+        prevNoteValue,
+        noteValue,
         count,
-        display: prevNote === '' ? `Start → ${noteName}` : `${prevNoteName} → ${noteName}`
       };
     })
     .sort((a, b) => b.count - a.count)
@@ -106,7 +132,7 @@ const PracticeHistory = () => {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold text-primary">{recentSession.score}%</div>
+              <div className={`text-3xl font-bold ${getScoreColor(recentSession.score)}`}>{recentSession.score}%</div>
               <div className="text-sm text-muted-foreground mt-1">Score</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
@@ -135,25 +161,40 @@ const PracticeHistory = () => {
         </CardHeader>
         <CardContent>
           {wrongAnswerPairs.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {wrongAnswerPairs.map((pair, index) => {
                 const maxCount = wrongAnswerPairs[0].count;
                 const widthPercent = (pair.count / maxCount) * 100;
                 
                 return (
-                  <div key={pair.pairKey} className="space-y-1">
+                  <div key={pair.pairKey} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">
-                        {index + 1}. {pair.display}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-muted-foreground">{index + 1}.</span>
+                        <div className="flex items-center gap-1">
+                          {pair.prevNoteValue !== null ? (
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
+                              {pair.prevNoteName}
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
+                              Start
+                            </div>
+                          )}
+                          <span className="text-muted-foreground px-1">→</span>
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
+                            {pair.noteName}
+                          </div>
+                        </div>
+                      </div>
                       <span className="text-muted-foreground">{pair.count} wrong</span>
                     </div>
-                    <div className="h-8 bg-muted/30 rounded-lg overflow-hidden">
+                    <div className="h-6 bg-muted/30 rounded-lg overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-red-500/70 to-red-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                         style={{ width: `${widthPercent}%` }}
                       >
-                        {widthPercent > 20 && (
+                        {widthPercent > 15 && (
                           <span className="text-xs font-bold text-white">{pair.count}</span>
                         )}
                       </div>

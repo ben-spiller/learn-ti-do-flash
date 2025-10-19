@@ -463,6 +463,12 @@ const PracticeView = () => {
     return SOLFEGE_COLOR_CLASSES[n] ?? "bg-muted hover:bg-muted/90";
   };
 
+  const getScoreColor = (score: number): string => {
+    if (score >= 80) return "text-success";
+    if (score >= 60) return "text-amber-600";
+    return "text-destructive";
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-4">
@@ -541,7 +547,9 @@ const PracticeView = () => {
               )}
               <div className="flex gap-3 text-sm ml-2">
                 <div className="text-center">
-                  <div className="font-bold text-lg">{totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%</div>
+                  <div className={`font-bold text-lg ${getScoreColor(totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100)}`}>
+                    {totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%
+                  </div>
                   <div className="text-muted-foreground text-xs">Score</div>
                 </div>
                 <div className="text-center">
