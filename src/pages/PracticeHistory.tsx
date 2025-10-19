@@ -142,35 +142,30 @@ const PracticeHistory = () => {
         </CardHeader>
         <CardContent>
           {wrongAnswerPairs.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {wrongAnswerPairs.map((pair, index) => {
                 const maxCount = wrongAnswerPairs[0].count;
                 const widthPercent = (pair.count / maxCount) * 100;
                 
                 return (
-                  <div key={pair.pairKey} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-muted-foreground">{index + 1}.</span>
-                        <div className="flex items-center gap-1">
-                          {pair.prevNoteValue !== null ? (
-                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
-                              {pair.prevNoteName}
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
-                              Start
-                            </div>
-                          )}
-                          <span className="text-muted-foreground px-1">→</span>
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
-                            {pair.noteName}
-                          </div>
+                  <div key={pair.pairKey} className="flex items-center gap-3">
+                    <span className="font-medium text-muted-foreground w-6">{index + 1}.</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {pair.prevNoteValue !== null ? (
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
+                          {pair.prevNoteName}
                         </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
+                          Start
+                        </div>
+                      )}
+                      <span className="text-muted-foreground px-1">→</span>
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
+                        {pair.noteName}
                       </div>
-                      <span className="text-muted-foreground">{pair.count} wrong</span>
                     </div>
-                    <div className="h-6 bg-muted/30 rounded-lg overflow-hidden">
+                    <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-red-500/70 to-red-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                         style={{ width: `${widthPercent}%` }}
@@ -180,6 +175,7 @@ const PracticeHistory = () => {
                         )}
                       </div>
                     </div>
+                    <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">{pair.count} wrong</span>
                   </div>
                 );
               })}
@@ -215,6 +211,8 @@ const PracticeHistory = () => {
           })
           .sort((a, b) => b.count - a.count);
 
+        const maxCount = needsPracticePairs[0]?.count || 1;
+
         return (
           <Card key={exerciseKey} className="mb-6">
             <CardHeader>
@@ -222,28 +220,42 @@ const PracticeHistory = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {needsPracticePairs.map((pair) => (
-                  <div key={pair.pairKey} className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-1">
-                      {pair.prevNoteValue !== null ? (
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
-                          {pair.prevNoteName}
+                {needsPracticePairs.map((pair) => {
+                  const widthPercent = (pair.count / maxCount) * 100;
+                  
+                  return (
+                    <div key={pair.pairKey} className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {pair.prevNoteValue !== null ? (
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
+                            {pair.prevNoteName}
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
+                            Start
+                          </div>
+                        )}
+                        <span className="text-muted-foreground px-1">→</span>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
+                          {pair.noteName}
                         </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
-                          Start
-                        </div>
-                      )}
-                      <span className="text-muted-foreground px-1">→</span>
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
-                        {pair.noteName}
                       </div>
+                      <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-amber-500/70 to-amber-600/70 transition-all duration-500 flex items-center justify-end pr-3"
+                          style={{ width: `${widthPercent}%` }}
+                        >
+                          {widthPercent > 15 && (
+                            <span className="text-xs font-bold text-white">{pair.count}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">
+                        {pair.count} {pair.count === 1 ? 'error' : 'errors'}
+                      </span>
                     </div>
-                    <span className="text-sm text-muted-foreground ml-auto">
-                      {pair.count} {pair.count === 1 ? 'error' : 'errors'}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -266,6 +278,7 @@ const PracticeHistory = () => {
                   <th className="text-right p-2 text-sm font-medium text-muted-foreground">Time (min)</th>
                   <th className="text-right p-2 text-sm font-medium text-muted-foreground">Avg/Answer</th>
                   <th className="text-right p-2 text-sm font-medium text-muted-foreground">Attempts</th>
+                  <th className="text-right p-2 text-sm font-medium text-muted-foreground">Needs Practice</th>
                 </tr>
               </thead>
               <tbody>
@@ -273,11 +286,18 @@ const PracticeHistory = () => {
                   const avgTime = session.totalAttempts > 0 
                     ? (session.elapsedMinutes * 60 / session.totalAttempts).toFixed(1)
                     : '0.0';
-                  const date = new Date(session.sessionDate).toLocaleDateString();
+                  const date = new Date(session.sessionDate);
+                  const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+                  const dayMonth = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+                  const formattedDate = `${dayOfWeek} ${dayMonth}`;
+                  
+                  // Get needs practice count for this session's exercise key at the time
+                  const sessionNeedsPractice = getNeedsPractice(session.exerciseKey);
+                  const needsPracticeCount = sessionNeedsPractice.size;
                   
                   return (
                     <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="p-2 text-sm">{date}</td>
+                      <td className="p-2 text-sm">{formattedDate}</td>
                       <td className="p-2 text-sm text-muted-foreground">{session.exerciseKey}</td>
                       <td className={`p-2 text-sm text-right font-bold ${getScoreColor(session.score)}`}>
                         {session.score}%
@@ -286,6 +306,9 @@ const PracticeHistory = () => {
                       <td className="p-2 text-sm text-right text-muted-foreground">{avgTime}s</td>
                       <td className="p-2 text-sm text-right text-muted-foreground">
                         {session.correctAttempts}/{session.totalAttempts}
+                      </td>
+                      <td className="p-2 text-sm text-right text-amber-600 font-medium">
+                        {needsPracticeCount}
                       </td>
                     </tr>
                   );
