@@ -15,6 +15,8 @@ export class ConfigData {
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug
 
+  function foo() {};
+
   constructor(partial?: Partial<ConfigData>) {
     if (partial) {
       Object.assign(this, partial);

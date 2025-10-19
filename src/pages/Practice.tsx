@@ -43,21 +43,22 @@ const PracticeView = () => {
   const [droneVolume, setDroneVolumeState] = useState(-8); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
-  // Practice tracking: Maps "prevNote,note" -> count (use "null" for first note's prevNote)
-  const wrongAnswerHistory = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem('wrongAnswerHistory');
-    return stored ? new Map(JSON.parse(stored)) : new Map();
-  })());
-  
+  /** Count of wrong answers: Maps "prevNote,note" -> count (prevNote="" for note at start of sequence) */
+  const wrongAnswerCount = useRef<Map<string, number>>(new Map);
+  // (() => {
+  //   const stored = localStorage.getItem('wrongAnswerHistory:'+settings.getExerciseKey());
+  //   return stored ? new Map(JSON.parse(stored)) : new Map();
+  // })());  
+  /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem('needsPractice');
+    const stored = localStorage.getItem('needsPracticeNotePairs:'+settings.getExerciseKey());
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
-    localStorage.setItem('wrongAnswerHistory', JSON.stringify(Array.from(wrongAnswerHistory.current.entries())));
-    localStorage.setItem('needsPractice', JSON.stringify(Array.from(needsPractice.current.entries())));
+    //localStorage.setItem('wrongAnswerHistory:'+settings.getExerciseKey(), JSON.stringify(Array.from(wrongAnswerHistory.current.entries())));
+    localStorage.setItem('needsPracticeNotePairs:'+settings.getExerciseKey(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
@@ -239,7 +240,7 @@ const PracticeView = () => {
 
     // Update practice tracking
     const correctInterval = correctNote - rootMidi;
-    const prevInterval = currentPosition === 0 ? null : sequence[currentPosition - 1] - rootMidi;
+    const prevInterval = currentPosition === 0 ? '' : sequence[currentPosition - 1] - rootMidi;
     const pairKey = `${prevInterval},${correctInterval}`;
 
     if (isCorrect) {
@@ -280,11 +281,13 @@ const PracticeView = () => {
       // Play the wrong note that was pressed
       playNote(scaleNote);
 
-      // Update wrong answer history
-      wrongAnswerHistory.current.set(pairKey, (wrongAnswerHistory.current.get(pairKey) || 0) + 1);
+      // Update wrong answer count
+      wrongAnswerCount.current.set(pairKey, (wrongAnswerCount.current.get(pairKey) || 0) + 1);
 
-      // Add to needsPractice (+3 for wrong answer)
-      needsPractice.current.set(pairKey, (needsPractice.current.get(pairKey) || 0) + 3);
+      // Add to needsPractice (+3 if first wrong answer or in the danger zone, +1 otherwise)
+      let needsPracticeCount = (needsPractice.current.get(pairKey) || 0);
+      needsPractice.current.set(pairKey, needsPracticeCount + (
+        (needsPracticeCount <3) ? +3 : +1));
       
       savePracticeData();
 
