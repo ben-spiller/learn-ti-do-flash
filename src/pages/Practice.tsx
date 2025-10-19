@@ -215,6 +215,23 @@ const PracticeView = () => {
     setIsPlaying(true);
     console.debug('Playing sequence:', { seq, noteGap, noteDuration });
     await playSequence(seq, noteGap, noteDuration);
+    
+    // Play extra notes if configured
+    if (settings.playExtraNotes > 0) {
+      const extraNotes: number[] = [];
+      let pool = [...settings.selectedNotes];
+      
+      // Add octave above root if root is in pool
+      if (pool.indexOf(0) !== -1) { pool.push(12); }
+      
+      for (let i = 0; i < settings.playExtraNotes; i++) {
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        extraNotes.push(rootMidi + pool[randomIndex]);
+      }
+      
+      await playSequence(extraNotes, noteGap, noteDuration);
+    }
+    
     setIsPlaying(false);
   };
 

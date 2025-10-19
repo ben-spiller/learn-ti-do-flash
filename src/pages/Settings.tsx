@@ -41,6 +41,7 @@ const SettingsView = () => {
   
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
+  const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
   const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
@@ -68,6 +69,7 @@ const SettingsView = () => {
     return new ConfigData({
       selectedNotes,
       numberOfNotes,
+      playExtraNotes,
       minInterval: intervalRange[0],
       maxInterval: intervalRange[1],
       tempo,
@@ -85,6 +87,7 @@ const SettingsView = () => {
     return (
       JSON.stringify(config.settings.selectedNotes.sort()) === JSON.stringify(current.selectedNotes.sort()) &&
       config.settings.numberOfNotes === current.numberOfNotes &&
+      config.settings.playExtraNotes === current.playExtraNotes &&
       config.settings.minInterval === current.minInterval &&
       config.settings.maxInterval === current.maxInterval &&
       config.settings.tempo === current.tempo &&
@@ -102,6 +105,7 @@ const SettingsView = () => {
     
     setSelectedNotes(settings.selectedNotes);
     setNumberOfNotes(settings.numberOfNotes);
+    setPlayExtraNotes(settings.playExtraNotes);
     setIntervalRange([settings.minInterval, settings.maxInterval]);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
@@ -183,6 +187,7 @@ const SettingsView = () => {
         state: { 
           selectedNotes, 
           numberOfNotes,
+          playExtraNotes,
           minInterval: intervalRange[0],
           maxInterval: intervalRange[1],
           tempo,
@@ -404,6 +409,32 @@ const SettingsView = () => {
                     +
                   </Button>
                 </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Play Extra Notes</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setPlayExtraNotes(Math.max(CONSTRAINTS.playExtraNotes.min, playExtraNotes - 1))}
+                  >
+                    -
+                  </Button>
+                  <div className="flex-1 text-center">
+                    <span className="text-2xl font-bold">{playExtraNotes}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setPlayExtraNotes(Math.min(CONSTRAINTS.playExtraNotes.max, playExtraNotes + 1))}
+                  >
+                    +
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Random notes played after the sequence (don't need to guess)
+                </p>
               </div>
 
               <div className="space-y-4">

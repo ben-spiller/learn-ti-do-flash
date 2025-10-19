@@ -6,6 +6,7 @@ import { MidiNoteName, SemitoneOffset } from "@/utils/audio";
 export class ConfigData {
   selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
   numberOfNotes: number = 3; // Number of notes per question (2-10)
+  playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
   minInterval: SemitoneOffset = 1;
   maxInterval: SemitoneOffset = 12; // default - go up to an octave 
   tempo: number = 200; 
@@ -31,6 +32,7 @@ export class ConfigData {
 // Constraints on valid values, used by the UI
 export const CONSTRAINTS = {
   numberOfNotes: { min: 1, max: 10 },
+  playExtraNotes: { min: 0, max: 5 },
   tempo: { min: 40, max: 300, step: 5 },
   interval: { min: 1, max: 12 },
 } as const;
