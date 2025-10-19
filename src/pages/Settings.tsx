@@ -255,16 +255,6 @@ const SettingsView = () => {
           </div>
           <CardTitle className="text-3xl font-bold">LearnTiDo</CardTitle>
           <CardDescription>Configure your practice settings</CardDescription>
-          <div className="pt-4">
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => navigate("/history")}
-            >
-              <History className="h-4 w-4 mr-2" />
-              View Practice History
-            </Button>
-          </div>
         </CardHeader>
         <CardContent>
           {/* Saved Configurations - Card Grid */}
@@ -613,6 +603,31 @@ const SettingsView = () => {
           >
             {showLoadingIndicator ? "Loading sounds..." : "Start Practice"}
           </Button>
+          
+          <div className="flex gap-2 mt-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="flex-1" 
+              onClick={() => navigate("/history")}
+            >
+              <History className="h-4 w-4 mr-2" />
+              Practice History
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="flex-1"
+              onClick={() => {
+                toast({
+                  title: "Help Documentation",
+                  description: "Documentation coming soon!",
+                });
+              }}
+            >
+              Help
+            </Button>
+          </div>
         </CardContent>
       </Card>
       </div>
