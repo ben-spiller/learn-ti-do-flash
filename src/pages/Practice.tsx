@@ -27,10 +27,11 @@ const PracticeView = () => {
   /** The MIDI note of the root/do note for this particular exercise (may be randomly selected based on the config) */  
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNotePitch)+(Math.floor(Math.random() * 6)-3));
 
-  const [sequence, setSequence] = useState<MidiNoteNumber[]>([]);
+  const prevSequence = useRef<SemitoneOffset[]>([]);
+  const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [lastPressedNote, setLastPressedNote] = useState<MidiNoteNumber | null>(null);
+  const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
   const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);
@@ -181,8 +182,7 @@ const PracticeView = () => {
       if (e.key in shiftedKeyToInterval) {
         console.log('Shifted key detected:', { key: e.key, code: e.code, shiftKey: e.shiftKey });
         e.preventDefault();
-        const midiNote = rootMidi + shiftedKeyToInterval[e.key];
-        handleNotePress(midiNote);
+        handleNotePress(shiftedKeyToInterval[e.key]);
       }
       // Then check regular keys
       else if (key in keyToInterval) {
@@ -192,22 +192,23 @@ const PracticeView = () => {
         if (e.shiftKey && /[drmfslt]/.test(key)) {
           interval += 1;
         }
-        const midiNote = rootMidi + interval;
-        handleNotePress(midiNote);
+        handleNotePress(interval);
       }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, started, isPlaying, isPlayingReference]);
 
-  const startNewRound = () => {    
-    const newSequence = generateNextNoteSequence().map(interval => rootMidi + interval);
+  const startNewRound = () => {
+    prevSequence.current = [...sequence];
+    //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
+    const newSequence = generateNextNoteSequence();
     setSequence(newSequence as number[]);
     setCurrentPosition(0);
     // measure each questions separately, so we can ignore times when the user left it for ages
     // start the timer just before we play the notes
     setQuestionStartTime(Date.now());
-    playSequenceWithDelay(newSequence as number[]);
+    playSequenceWithDelay(newSequence.map(interval => rootMidi + interval));
   };
 
   const playSequenceWithDelay = async (seq: number[]) => {
@@ -217,35 +218,30 @@ const PracticeView = () => {
     setIsPlaying(false);
   };
 
-  const handleNotePress = (scaleNote: number) => {
-    if (currentPosition >= settings.numberOfNotes) {
-      playNote(scaleNote);
+  const handleNotePress = (selectedNote: SemitoneOffset) => {
+    if (currentPosition >= settings.numberOfNotes) { // at the end, just play whatever they pressed
+      playNote(selectedNote+rootMidi);
       return;
     }
 
     const correctNote = sequence[currentPosition];
     setTotalAttempts(totalAttempts + 1);
 
-    // Check if the notes match exactly, or if both are "do" (same pitch class as root)
-    const rootPitchClass = rootMidi % 12;
-    const pressedPitchClass = scaleNote % 12;
-    const correctPitchClass = correctNote % 12;
-    
-    const isCorrect = scaleNote === correctNote || 
-      (pressedPitchClass === rootPitchClass && correctPitchClass === rootPitchClass);
+    // Check if the notes match
+    const isCorrect = selectedNote%12 === correctNote%12;
 
     // Store the pressed note and feedback
-    setLastPressedNote(scaleNote);
+    setLastPressedNote(selectedNote);
     setLastPressedWasCorrect(isCorrect);
 
     // Update practice tracking
-    const correctInterval = correctNote - rootMidi;
-    const prevInterval = currentPosition === 0 ? '' : sequence[currentPosition - 1] - rootMidi;
+    const correctInterval = correctNote;
+    const prevInterval = currentPosition === 0 ? '' : sequence[currentPosition - 1];
     const pairKey = `${prevInterval},${correctInterval}`;
 
     if (isCorrect) {
       // Play the correct note from the sequence (correct octave)
-      playNote(correctNote);
+      playNote(correctNote+rootMidi);
 
       // Decrement needsPractice for correct answer
       const currentCount = needsPractice.current.get(pairKey) || 0;
@@ -279,7 +275,7 @@ const PracticeView = () => {
       }, 600);
     } else {
       // Play the wrong note that was pressed
-      playNote(scaleNote);
+      playNote(selectedNote+rootMidi);
 
       // Update wrong answer count
       wrongAnswerCount.current.set(pairKey, (wrongAnswerCount.current.get(pairKey) || 0) + 1);
@@ -300,7 +296,7 @@ const PracticeView = () => {
   };
 
   const handlePlayAgain = () => {
-    playSequenceWithDelay(sequence);
+    playSequenceWithDelay(sequence.map(interval => rootMidi + interval));
   };
 
   const handlePlayReference = async () => {
@@ -342,11 +338,14 @@ const PracticeView = () => {
     if (pool.indexOf(0) !== -1) { pool.push(12); }
     
     const sequence: number[] = [];
+    const reason: string[] = [];
     for (let i = 0; i < settings.numberOfNotes; i++) {
-      sequence.push(generateNextNote(pool, sequence)[0]);
+      let [n, r] = pickNextNote(pool, sequence);
+      sequence.push(n);
+      reason.push(r);
     }
     
-    console.log("Note sequence is: "+JSON.stringify(sequence));
+    console.log("Note sequence is: "+JSON.stringify(sequence.map(n => semitonesToSolfege(n)))+" due to "+reason.join(','));
 
     return sequence;
   };
@@ -355,28 +354,58 @@ const PracticeView = () => {
     return Math.floor(Math.random() * max);
   }
 
-  /** Weighted random selection from needsPractice, biased towards higher counts */
+  /** Pick the next semitone for the current sequence, and a string explaining why it was chosen */
+  function pickNextNote(pool: SemitoneOffset[], currentSequence: SemitoneOffset[]): [SemitoneOffset, string] {
+      // Choices for this note. Start with the current pool
+      pool = [...pool];
+      //console.log("Initial pool: "+JSON.stringify(pool));
+
+      const prevNote = currentSequence.length === 0 ? null : currentSequence[currentSequence.length - 1];
+
+      if (prevNote === null) {
+          // Avoid same starting note as immediate previous exercise, so we can't end up with duplication
+          if (prevSequence.current.length > 0 && pool.length > 1) {
+            console.debug("Filtering out previous starting note: "+semitonesToSolfege(prevSequence.current[0]));
+            pool = pool.filter(note => note !== prevSequence.current[0]);
+          }
+      } 
+      else // not the first note, so filter by interval 
+      {
+        let intervalFiltered = pool.filter(note => {
+          const distance = Math.abs(note - prevNote);
+          return distance >= settings.minInterval && distance <= settings.maxInterval; 
+        });
+        if (intervalFiltered.length === 0) { console.log("No possible notes after "+semitonesToSolfege(prevNote)); }
+        else { pool = intervalFiltered; }
+      }
+
+      console.debug("Next note pool after filtering: "+JSON.stringify(pool));
+
+      // Pick a needs practice combination where possible
+      if (true || Math.random() < 0.7) {
+        const practiceNote = pickFromNeedsPractice(pool, prevNote);
+        if (practiceNote !== null) {
+          console.debug("  picked from needs-practice: "+ semitonesToSolfege(practiceNote));
+          return [practiceNote, "needs-practice"];
+        }
+      }
+      // Pick randomly if not
+      return [pool[randomInt(pool.length)], "random"];      
+  }
+
+  /** Weighted random selection from needsPractice, biased towards higher counts. Returns null if there's no suitable needsPractice note */
   function pickFromNeedsPractice(pool: SemitoneOffset[], prevNote: SemitoneOffset | null): SemitoneOffset | null {
     // Filter needsPractice entries that match the current prevNote and are in the pool
     const validPairs: [string, number][] = [];
     for (const [pairKey, count] of needsPractice.current.entries()) {
       const [storedPrev, storedNote] = pairKey.split(',');
-      const storedPrevNum = storedPrev === 'null' ? null : parseInt(storedPrev);
+      const storedPrevNum = storedPrev === '' ? null : parseInt(storedPrev);
       const storedNoteNum = parseInt(storedNote);
       
       if (storedPrevNum === prevNote && pool.includes(storedNoteNum)) {
-        // Check interval constraints if there's a previous note
-        if (prevNote !== null) {
-          const distance = Math.abs(storedNoteNum - prevNote);
-          if (distance >= settings.minInterval && distance <= settings.maxInterval) {
-            validPairs.push([pairKey, count]);
-          }
-        } else {
-          validPairs.push([pairKey, count]);
-        }
+        validPairs.push([pairKey, count]);
       }
     }
-
     if (validPairs.length === 0) return null;
 
     // Weight by count (higher count = more likely to be selected)
@@ -394,44 +423,6 @@ const PracticeView = () => {
     // Fallback to last item
     const [_, lastNote] = validPairs[validPairs.length - 1][0].split(',');
     return parseInt(lastNote);
-  }
-
-  /** Return the next semitone for the current sequence, and a string explaining why it was chosen */
-  function generateNextNote(pool: SemitoneOffset[], currentSequence: SemitoneOffset[]): [SemitoneOffset, string] {
-      // Choices for this note. Start with the current pool
-      let choices = [...pool];
-
-      if (currentSequence.length === 0) {
-        // For first note, try to pick from needsPractice 70% of the time
-        if (Math.random() < 0.7) {
-          const practiceNote = pickFromNeedsPractice(pool, null);
-          if (practiceNote !== null) {
-            return [practiceNote, "practice-first"];
-          }
-        }
-        // Pick the first note randomly
-        return [pool[randomInt(pool.length)], "random-first"];
-      } 
-
-      const prevNote = currentSequence[currentSequence.length - 1];
-      
-      // Try to pick from needsPractice 70% of the time
-      if (Math.random() < 0.7) {
-        const practiceNote = pickFromNeedsPractice(pool, prevNote);
-        if (practiceNote !== null) {
-          return [practiceNote, "practice"];
-        }
-      }
-
-      // Limit options based on interval constraints
-      let intervalFiltered = choices.filter(note => {
-        const distance = Math.abs(note - prevNote);
-        return distance >= settings.minInterval && distance <= settings.maxInterval; 
-      });
-      if (intervalFiltered.length === 0) { console.log("No possible notes after "+prevNote); }
-      else { choices = intervalFiltered; }
-            
-      return [ choices[randomInt(choices.length)], "random" ];      
   }
   
 
@@ -560,13 +551,12 @@ const PracticeView = () => {
                   // use rem-based inline margin so units match the chromatic column math
                   const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
                   
-                  const midiNote = pitch + rootMidi;
-                  const isLastPressed = lastPressedNote === midiNote;
+                  const isLastPressed = lastPressedNote === pitch;
                   
                   return (
                     <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
                       <Button
-                        onClick={() => handleNotePress(midiNote)}
+                        onClick={() => handleNotePress(pitch)}
                         className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))}`}
                         disabled={isPlayingReference}
                       >
@@ -608,13 +598,12 @@ const PracticeView = () => {
                   }
                   top += buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
                   
-                  const midiNote = pitch + rootMidi;
-                  const isLastPressed = lastPressedNote === midiNote;
+                  const isLastPressed = lastPressedNote === pitch;
                   
                   return (
                     <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
                       <Button
-                        onClick={() => handleNotePress(midiNote)}
+                        onClick={() => handleNotePress(pitch)}
                         className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
                         disabled={isPlayingReference}
                         title={semitonesToSolfege(pitch, true)}
@@ -678,7 +667,7 @@ const PracticeView = () => {
                 <div className="flex gap-2 justify-center flex-wrap">
                   {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
                     const isAnswered = index < currentPosition;
-                    const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index]-rootMidi)) : "?";
+                    const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index])) : "?";
                     const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
                     
                     return (

@@ -15,7 +15,10 @@ export class ConfigData {
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug
 
-  function foo() {};
+  getExerciseKey(): string {
+    if (this.selectedNotes.length === 1) return "Single note recognition";
+    return "Melody recognition"
+  }
 
   constructor(partial?: Partial<ConfigData>) {
     if (partial) {
