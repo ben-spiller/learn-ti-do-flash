@@ -30,6 +30,7 @@ const PracticeView = () => {
 
   const prevSequence = useRef<SemitoneOffset[]>([]);
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
+  const [sequenceDurations, setSequenceDurations] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
@@ -204,17 +205,48 @@ const PracticeView = () => {
     //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
     const newSequence = generateNextNoteSequence();
     setSequence(newSequence as number[]);
+    
+    // Generate durations for this sequence
+    const durations = generateSequenceDurations(newSequence.length + settings.playExtraNotes);
+    setSequenceDurations(durations);
+    
     setCurrentPosition(0);
     // measure each questions separately, so we can ignore times when the user left it for ages
     // start the timer just before we play the notes
     setQuestionStartTime(Date.now());
-    playSequenceWithDelay(newSequence.map(interval => rootMidi + interval));
+    playSequenceWithDelay(newSequence.map(interval => rootMidi + interval), durations);
   };
 
-  const playSequenceWithDelay = async (seq: number[]) => {
+  const generateSequenceDurations = (length: number): number[] => {
+    if (settings.rhythm !== "random") {
+      // Fixed rhythm - all notes same duration
+      return Array(length).fill(noteDuration);
+    }
+    
+    // Random rhythm - choose from 3 duration options
+    const durationOptions = [noteDuration, noteDuration * 1.5, noteDuration * 2];
+    return Array.from({ length }, () => {
+      const randomIndex = Math.floor(Math.random() * durationOptions.length);
+      return durationOptions[randomIndex];
+    });
+  };
+
+  const playSequenceWithDelay = async (seq: number[], durations: number[]) => {
     setIsPlaying(true);
-    console.debug('Playing sequence:', { seq, noteGap, noteDuration });
-    await playSequence(seq, noteGap, noteDuration);
+    console.debug('Playing sequence:', { seq, durations, noteGap });
+    
+    // Play main sequence with their durations
+    const mainSeq = seq.slice(0, settings.numberOfNotes);
+    const mainDurations = durations.slice(0, settings.numberOfNotes);
+    
+    // Create sequence items with individual durations
+    const mainSequenceItems = mainSeq.map((note, i) => ({
+      note,
+      duration: mainDurations[i],
+      gapAfter: noteGap
+    }));
+    
+    await playSequence(mainSequenceItems);
     
     // Play extra notes if configured
     if (settings.playExtraNotes > 0) {
@@ -229,7 +261,14 @@ const PracticeView = () => {
         extraNotes.push(rootMidi + pool[randomIndex]);
       }
       
-      await playSequence(extraNotes, noteGap, noteDuration);
+      const extraDurations = durations.slice(settings.numberOfNotes);
+      const extraSequenceItems = extraNotes.map((note, i) => ({
+        note,
+        duration: extraDurations[i],
+        gapAfter: noteGap
+      }));
+      
+      await playSequence(extraSequenceItems);
     }
     
     setIsPlaying(false);
@@ -313,7 +352,7 @@ const PracticeView = () => {
   };
 
   const handlePlayAgain = () => {
-    playSequenceWithDelay(sequence.map(interval => rootMidi + interval));
+    playSequenceWithDelay(sequence.map(interval => rootMidi + interval), sequenceDurations);
   };
 
   const handlePlayReference = async () => {
