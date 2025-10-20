@@ -4,21 +4,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { semitonesToSolfege } from "@/utils/audio";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
+import { ConfigData } from "@/config/ConfigData";
 
-interface PracticeSession {
+export interface SessionHistory {
   sessionDate: number;
+  
   score: number;
   totalAttempts: number;
   correctAttempts: number;
-  elapsedMinutes: number;
-  exerciseKey: string;
+
+  avgSecsPerAnswer: number;
+  totalSeconds: number;
+
+  needsPracticeCount: number;
+  needsPracticeTotalSeverity: number;
+
+  exerciseName: string;
+  settings: ConfigData;
 }
 
 const PracticeHistory = () => {
   const navigate = useNavigate();
 
   // Get all sessions from localStorage
-  const getAllSessions = (): PracticeSession[] => {
+  const getAllSessions = (): SessionHistory[] => {
     const sessionsStr = localStorage.getItem('practiceSessions');
     if (!sessionsStr) return [];
     return JSON.parse(sessionsStr);
@@ -26,7 +35,7 @@ const PracticeHistory = () => {
 
   // Get wrongAnswerHistory from localStorage
   const getWrongAnswerHistory = (exerciseKey: string): Map<string, number> => {
-    const stored = localStorage.getItem('wrongAnswerHistory:' + exerciseKey);
+    const stored = localStorage.getItem('wrongAnswerHistory:latest');
     return stored ? new Map(JSON.parse(stored)) : new Map();
   };
 
@@ -40,7 +49,7 @@ const PracticeHistory = () => {
   const recentSession = allSessions.length > 0 ? allSessions[allSessions.length - 1] : null;
   
   // Get unique exercise keys
-  const exerciseKeys = Array.from(new Set(allSessions.map(s => s.exerciseKey)));
+  const exerciseKeys = Array.from(new Set(allSessions.map(s => s.exerciseName))).sort();
   
   if (allSessions.length === 0) {
     return (
@@ -65,8 +74,8 @@ const PracticeHistory = () => {
     );
   }
 
-  const wrongAnswerHistory = getWrongAnswerHistory(recentSession.exerciseKey);
-  const needsPractice = getNeedsPractice(recentSession.exerciseKey);
+  const wrongAnswerHistory = getWrongAnswerHistory(recentSession.exerciseName);
+  const needsPractice = getNeedsPractice(recentSession.exerciseName);
 
   // Convert wrongAnswerHistory to sorted array for display
   const wrongAnswerPairs = Array.from(wrongAnswerHistory.entries())
@@ -87,10 +96,6 @@ const PracticeHistory = () => {
     })
     .sort((a, b) => b.count - a.count)
     .slice(0, 10); // Show top 10
-
-  const avgTimePerAnswer = recentSession.totalAttempts > 0 
-    ? (recentSession.elapsedMinutes * 60 / recentSession.totalAttempts).toFixed(1)
-    : '0.0';
 
   const needsPracticeCount = needsPractice.size;
 
@@ -117,15 +122,15 @@ const PracticeHistory = () => {
               <div className="text-sm text-muted-foreground mt-1">Score</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold">{recentSession.elapsedMinutes}</div>
+              <div className="text-3xl font-bold">{(recentSession.totalSeconds/60)?.toFixed(0)}</div>
               <div className="text-sm text-muted-foreground mt-1">Total Minutes</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold">{avgTimePerAnswer}s</div>
+              <div className="text-3xl font-bold">{recentSession.avgSecsPerAnswer?.toFixed(1)}s</div>
               <div className="text-sm text-muted-foreground mt-1">Avg per Answer</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold text-amber-600">{needsPracticeCount}</div>
+              <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
               <div className="text-sm text-muted-foreground mt-1">Needs Practice</div>
             </div>
           </div>
@@ -283,26 +288,20 @@ const PracticeHistory = () => {
               </thead>
               <tbody>
                 {allSessions.slice().reverse().map((session, index) => {
-                  const avgTime = session.totalAttempts > 0 
-                    ? (session.elapsedMinutes * 60 / session.totalAttempts).toFixed(1)
-                    : '0.0';
+                  const avgTime = session.avgSecsPerAnswer?.toFixed(1);
                   const date = new Date(session.sessionDate);
                   const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
                   const dayMonth = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                   const formattedDate = `${dayOfWeek} ${dayMonth}`;
                   
-                  // Get needs practice count for this session's exercise key at the time
-                  const sessionNeedsPractice = getNeedsPractice(session.exerciseKey);
-                  const needsPracticeCount = sessionNeedsPractice.size;
-                  
                   return (
                     <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="p-2 text-sm">{formattedDate}</td>
-                      <td className="p-2 text-sm text-muted-foreground">{session.exerciseKey}</td>
+                      <td className="p-2 text-sm text-muted-foreground">{session.exerciseName}</td>
                       <td className={`p-2 text-sm text-right font-bold ${getScoreColor(session.score)}`}>
                         {session.score}%
                       </td>
-                      <td className="p-2 text-sm text-right">{session.elapsedMinutes}</td>
+                      <td className="p-2 text-sm text-right">{(session.totalSeconds/60).toFixed(0)}</td>
                       <td className="p-2 text-sm text-right text-muted-foreground">{avgTime}s</td>
                       <td className="p-2 text-sm text-right text-muted-foreground">
                         {session.correctAttempts}/{session.totalAttempts}

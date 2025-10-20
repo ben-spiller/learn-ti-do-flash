@@ -16,8 +16,9 @@ export class ConfigData {
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug
 
-  getExerciseKey(): string {
-    if (this.selectedNotes.length === 1) return "Single note recognition";
+  /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results */
+  getExerciseName(): string {
+    if (this.numberOfNotes === 1) return "Single note recognition";
     return "Melody recognition"
   }
 

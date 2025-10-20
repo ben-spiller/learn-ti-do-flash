@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
+import { SessionHistory } from "./PracticeHistory";
 
 
 const PracticeView = () => {
@@ -29,16 +30,19 @@ const PracticeView = () => {
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNotePitch)+(Math.floor(Math.random() * 6)-3));
 
   const prevSequence = useRef<SemitoneOffset[]>([]);
+  const totalSequencesAnswered = useRef(0);
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
   const [sequenceDurations, setSequenceDurations] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
   const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
+  /** Number of note presses that were correct */
   const [correctAttempts, setCorrectAttempts] = useState(0);
+  /** Total number of note presses */
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
-  const [elapsedMinutes, setElapsedMinutes] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [started, setStarted] = useState(preloaded);
@@ -53,14 +57,14 @@ const PracticeView = () => {
   })());  
   /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem('needsPracticeNotePairs:'+settings.getExerciseKey());
+    const stored = localStorage.getItem('needsPracticeNotePairs:'+settings.getExerciseName());
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
     localStorage.setItem('wrongAnswerHistory:latest', JSON.stringify(Array.from(wrongAnswerCount.current.entries())));
-    localStorage.setItem('needsPracticeNotePairs:'+settings.getExerciseKey(), JSON.stringify(Array.from(needsPractice.current.entries())));
+    localStorage.setItem('needsPracticeNotePairs:'+settings.getExerciseName(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
@@ -80,7 +84,7 @@ const PracticeView = () => {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       wrongAnswerCount.current.clear();
-      
+
       // Now start the first round
       startNewRound();
       
@@ -311,17 +315,18 @@ const PracticeView = () => {
           needsPractice.current.set(pairKey, newCount);
         }
       }
-      savePracticeData();
 
       // once we completed this question, add to the elapsed time 
       if (currentPosition+1 === settings.numberOfNotes) {
+        totalSequencesAnswered.current += 1;
         if (Date.now() - questionStartTime > 60000) {
           // avoid counting up wildly big times
           console.log("Ignoring time spent on this question as user probably stepped away from the app");
         } else {
-          setElapsedMinutes(elapsedMinutes + (Math.floor((Date.now() - questionStartTime) / 60000)));
+          setElapsedSeconds(elapsedSeconds + (Math.floor((Date.now() - questionStartTime) / 1000)));
         }
       }
+      savePracticeData();
 
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
@@ -379,17 +384,22 @@ const PracticeView = () => {
 
   const handleFinish = () => {
     saveCurrentConfiguration(settings);
-    
     // Save session data if at least one question was answered
-    if (totalAttempts > 0) {
+    if (totalSequencesAnswered.current > 0) {
       const session = {
         sessionDate: Date.now(),
         score: Math.round((correctAttempts / totalAttempts) * 100),
+        avgSecsPerAnswer: totalSequencesAnswered.current > 0 ? (elapsedSeconds / totalSequencesAnswered.current) : 0,
         totalAttempts,
         correctAttempts,
-        elapsedMinutes,
-        exerciseKey: settings.getExerciseKey()
-      };
+        totalSeconds: elapsedSeconds,
+
+        needsPracticeCount: needsPractice.current.size,
+        needsPracticeTotalSeverity: Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0),
+
+        exerciseName: settings.getExerciseName(),
+        settings: settings // don't need to copy this because we won't be mutating it anyway
+      } satisfies SessionHistory;
       
       // Append to sessions array
       const sessionsStr = localStorage.getItem('practiceSessions');
@@ -590,7 +600,7 @@ const PracticeView = () => {
                   <div className="text-muted-foreground text-xs">Score</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-bold text-lg">{elapsedMinutes}</div>
+                  <div className="font-bold text-lg">{(elapsedSeconds/60).toFixed(0)}</div>
                   <div className="text-muted-foreground text-xs">Min</div>
                 </div>
               </div>
