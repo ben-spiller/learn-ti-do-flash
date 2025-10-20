@@ -35,7 +35,7 @@ export const CONSTRAINTS = {
   numberOfNotes: { min: 1, max: 10 },
   playExtraNotes: { min: 0, max: 5 },
   tempo: { min: 40, max: 300, step: 5 },
-  interval: { min: 1, max: 12 },
+  interval: { min: 1, max: 11 },
 } as const;
 
 // Instrument options

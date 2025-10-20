@@ -17,12 +17,19 @@ export type MidiNoteName = string;
 export const MAJOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
 
 const SOLFEGE_NAMES = ['Do (1)', 'Ra (b2)', 'Re (2)', 'Me (b3)', 'Mi (3)', 'Fa (4)', 'Se (b5)', 'Sol (5)', 'Le (b6)', 'La (6)', 'Te (b7)', 'Ti (7)'] as const;
+const INTERVAL_NAMES = ['unison', 'm2', 'M2', 'm3', 'M3', 'P4', 'P5', 'm6', 'M6', 'm7', 'M7', 'P8'] as const;
 
 export function semitonesToSolfege(semitoneOffset: SemitoneOffset, longVersion = false): string {
   const pc = ((semitoneOffset % 12) + 12) % 12; // normalize to 0..11
   const name = SOLFEGE_NAMES[pc];
   if (longVersion) return name;
   return name.split(' ')[0];
+}
+
+/** Return the display name of the musical interval (e.g. 2nd, 5th etc) for a (positive) semi-tone offset */
+export function semitonesToInterval(semitoneOffset: SemitoneOffset): string {
+  const pc = ((semitoneOffset % 12) + 12) % 12; // normalize to 0..11
+  return INTERVAL_NAMES[pc];
 }
 
 let audioContext: AudioContext | null = null;

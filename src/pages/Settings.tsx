@@ -16,6 +16,7 @@ import {
   setInstrument,
   preloadInstrumentWithGesture,
   SemitoneOffset,
+  semitonesToInterval,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -478,7 +479,7 @@ const SettingsView = () => {
 
               <div className="space-y-4">
                 <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
-                  Consecutive Notes Range (semitones): {intervalRange[0]} - {intervalRange[1]}</Label>
+                  Consecutive Notes Range: {semitonesToInterval(intervalRange[0])} - {semitonesToInterval(intervalRange[1])}</Label>
                 <Slider
                   value={intervalRange}
                   onValueChange={(values) => {
