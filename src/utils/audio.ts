@@ -302,38 +302,39 @@ const createToneInstrument = async (instrument?: string) => {
   const name = currentInstrument.toLowerCase();
 
   try {
-    if (name.includes('piano')) {
-      // Create a sampled piano using Tone.Sampler. We provide a small set of samples
-      // and let Tone's sampler pitch-shift them to other notes. This gives a
-      // much more realistic piano timbre than a basic synth while remaining
-      // lightweight (only a few sample files).
-      // Prefer instrument catalog if available (per-note files hosted under SAMPLE_BASE)
-      const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
-      if (catalogEntry && catalogEntry.urls && Object.keys(catalogEntry.urls).length > 0) {
-        toneInstrument = new Tone.Sampler({
-          urls: catalogEntry.urls,
-          baseUrl: SAMPLE_BASE,
-        }).toDestination();
-        // Wait for samples to finish loading
-        await Tone.loaded();
-      } else {
-        // No per-note catalog: use midi-js soundfonts hosted on jsDelivr (FluidR3_GM)
-        // createMidiJsPlayerUsingTone will load the instrument JS, decode embedded
-        // base64 sample blobs using Tone's AudioContext, and return a small player
-        // with triggerAttackRelease(note, duration).
-        toneInstrument = await createMidiJsPlayerUsingTone(currentInstrument);
-      }
-    } else if (name.includes('fm') || name.includes('electric')) {
-      toneInstrument = new Tone.PolySynth(Tone.FMSynth, { volume: -4 }).toDestination();
-    } else if (name.includes('am') || name.includes('voice')) {
-      toneInstrument = new Tone.PolySynth(Tone.AMSynth, { volume: -4 }).toDestination();
-    } else if (name.includes('saw') || name.includes('lead')) {
-      toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sawtooth' }, volume: -2 }).toDestination();
-    } else if (name.includes('organ')) {
-      toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'square' }, volume: -6 }).toDestination();
+    // Try to load midi-js soundfont for ALL instruments first
+    // Prefer instrument catalog if available (per-note files hosted under SAMPLE_BASE)
+    const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
+    if (catalogEntry && catalogEntry.urls && Object.keys(catalogEntry.urls).length > 0) {
+      toneInstrument = new Tone.Sampler({
+        urls: catalogEntry.urls,
+        baseUrl: SAMPLE_BASE,
+      }).toDestination();
+      // Wait for samples to finish loading
+      await Tone.loaded();
     } else {
-      // default: versatile poly synth
-      toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, volume: -8 }).toDestination();
+      // Use midi-js soundfonts hosted on jsDelivr (FluidR3_GM)
+      // createMidiJsPlayerUsingTone will load the instrument JS, decode embedded
+      // base64 sample blobs using Tone's AudioContext, and return a small player
+      // with triggerAttackRelease(note, duration).
+      try {
+        toneInstrument = await createMidiJsPlayerUsingTone(currentInstrument);
+      } catch (soundfontErr) {
+        console.warn('Failed to load midi-js soundfont for', currentInstrument, soundfontErr);
+        // Fallback to basic Tone.js synth if soundfont loading fails
+        if (name.includes('fm') || name.includes('electric')) {
+          toneInstrument = new Tone.PolySynth(Tone.FMSynth, { volume: -4 }).toDestination();
+        } else if (name.includes('am') || name.includes('voice')) {
+          toneInstrument = new Tone.PolySynth(Tone.AMSynth, { volume: -4 }).toDestination();
+        } else if (name.includes('saw') || name.includes('lead')) {
+          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sawtooth' }, volume: -2 }).toDestination();
+        } else if (name.includes('organ')) {
+          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'square' }, volume: -6 }).toDestination();
+        } else {
+          // default: versatile poly synth
+          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, volume: -8 }).toDestination();
+        }
+      }
     }
     return toneInstrument;
   } catch (err) {
