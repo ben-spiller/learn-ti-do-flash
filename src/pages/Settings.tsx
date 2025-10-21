@@ -209,15 +209,6 @@ const SettingsView = () => {
     }
   };
 
-  useEffect(() => {
-    // Ensure we propagate the saved selection to the audio module
-    (async () => {
-      try {
-        await setInstrument(selectedInstrument);
-      } catch (_) {}
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // TODO: this is a crazy way to do it - refactor this to something more compact
   const SOLFEGE_TO_INTERVAL: Record<string, SemitoneOffset> = {
@@ -510,9 +501,6 @@ const SettingsView = () => {
                       const v = e.target.value;
                       setSelectedInstrument(v);
                       setIsPreloading(true);
-                      try {
-                        localStorage.setItem('learn-ti-do.instrument', v);
-                      } catch (_) {}
                       try {
                         // Stop any currently playing sounds
                         stopSounds();
