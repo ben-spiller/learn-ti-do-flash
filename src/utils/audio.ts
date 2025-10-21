@@ -693,10 +693,12 @@ export const setDroneVolume = (volume: number) => {
 };
 
 /**
- * Stop currently playing instrument notes
+ * Stop all currently playing sounds (both instrument notes and drone).
  */
-export const stopSounds = () => {
-  
+export const stopAllSounds = () => {
+  // Stop drone
+  stopDrone();
+
   // Stop instrument notes (if using Tone.js PolySynth)
   if (toneInstrument) {
     try {
