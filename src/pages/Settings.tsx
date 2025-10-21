@@ -19,7 +19,7 @@ import {
   semitonesToInterval,
   playSequence,
   noteNameToMidi,
-  stopAllSounds,
+  stopSounds,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -515,7 +515,7 @@ const SettingsView = () => {
                       } catch (_) {}
                       try {
                         // Stop any currently playing sounds
-                        stopAllSounds();
+                        stopSounds();
                         await setInstrument(v);
                         // Play a C E G C arpeggio as a preview
                         const rootMidi = noteNameToMidi(rootNotePitch);

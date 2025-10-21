@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1, Check } from "lucide-react";
-import { MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
+import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
@@ -265,6 +265,7 @@ const PracticeView = () => {
   };
 
   const playSequenceWithDelay = async () => {
+    stopSounds();
     setIsPlaying(true);
     console.debug('Playing sequence:', sequenceItems.current);
     
@@ -275,6 +276,7 @@ const PracticeView = () => {
 
   const handleNotePress = (selectedNote: SemitoneOffset) => {
     if (currentPosition >= settings.numberOfNotes) { // at the end, just play whatever they pressed
+      stopSounds();
       playNote(selectedNote+rootMidi);
       return;
     }
@@ -296,6 +298,7 @@ const PracticeView = () => {
 
     if (isCorrect) {
       // Play the correct note from the sequence (correct octave)
+      stopSounds();
       playNote(correctNote+rootMidi);
 
       // Decrement needsPractice for correct answer
@@ -331,6 +334,7 @@ const PracticeView = () => {
       }, 600);
     } else {
       // Play the wrong note that was pressed
+      stopSounds();
       playNote(selectedNote+rootMidi);
 
       // Update wrong answer count
