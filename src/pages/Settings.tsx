@@ -17,6 +17,8 @@ import {
   preloadInstrumentWithGesture,
   SemitoneOffset,
   semitonesToInterval,
+  playSequence,
+  noteNameToMidi,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -510,6 +512,14 @@ const SettingsView = () => {
                     } catch (_) {}
                     try {
                       await setInstrument(v);
+                      // Play a C E G C arpeggio as a preview
+                      const rootMidi = noteNameToMidi(rootNotePitch);
+                      await playSequence([
+                        { note: rootMidi, duration: 0.3, gapAfter: 0.1 },      // C
+                        { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },  // E
+                        { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },  // G
+                        { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },   // C (octave)
+                      ]);
                     } catch (_) {}
                   }}
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
