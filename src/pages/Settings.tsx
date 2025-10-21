@@ -19,6 +19,7 @@ import {
   semitonesToInterval,
   playSequence,
   noteNameToMidi,
+  stopAllSounds,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -502,32 +503,44 @@ const SettingsView = () => {
             <TabsContent value="audio" className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Instrument</Label>
-                <select
-                  value={selectedInstrument}
-                  onChange={async (e) => {
-                    const v = e.target.value;
-                    setSelectedInstrument(v);
-                    try {
-                      localStorage.setItem('learn-ti-do.instrument', v);
-                    } catch (_) {}
-                    try {
-                      await setInstrument(v);
-                      // Play a C E G C arpeggio as a preview
-                      const rootMidi = noteNameToMidi(rootNotePitch);
-                      await playSequence([
-                        { note: rootMidi, duration: 0.3, gapAfter: 0.1 },      // C
-                        { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },  // E
-                        { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },  // G
-                        { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },   // C (octave)
-                      ]);
-                    } catch (_) {}
-                  }}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  {INSTRUMENT_OPTIONS.map((opt) => (
-                    <option key={opt.slug} value={opt.slug}>{opt.label}</option>
-                  ))}
-                </select>
+                <div className="space-y-2">
+                  <select
+                    value={selectedInstrument}
+                    onChange={async (e) => {
+                      const v = e.target.value;
+                      setSelectedInstrument(v);
+                      setIsPreloading(true);
+                      try {
+                        localStorage.setItem('learn-ti-do.instrument', v);
+                      } catch (_) {}
+                      try {
+                        // Stop any currently playing sounds
+                        stopAllSounds();
+                        await setInstrument(v);
+                        // Play a C E G C arpeggio as a preview
+                        const rootMidi = noteNameToMidi(rootNotePitch);
+                        await playSequence([
+                          { note: rootMidi, duration: 0.3, gapAfter: 0.1 },      // C
+                          { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },  // E
+                          { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },  // G
+                          { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },   // C (octave)
+                        ]);
+                      } catch (_) {}
+                      setIsPreloading(false);
+                    }}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2"
+                    disabled={isPreloading}
+                  >
+                    {INSTRUMENT_OPTIONS.map((opt) => (
+                      <option key={opt.slug} value={opt.slug}>{opt.label}</option>
+                    ))}
+                  </select>
+                  {isPreloading && (
+                    <p className="text-sm text-muted-foreground animate-pulse">
+                      Loading instrument...
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">
