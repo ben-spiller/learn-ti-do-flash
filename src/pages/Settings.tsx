@@ -19,7 +19,7 @@ import {
   semitonesToInterval,
   playSequence,
   noteNameToMidi,
-  stopAllSounds,
+  stopSounds,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -209,15 +209,6 @@ const SettingsView = () => {
     }
   };
 
-  useEffect(() => {
-    // Ensure we propagate the saved selection to the audio module
-    (async () => {
-      try {
-        await setInstrument(selectedInstrument);
-      } catch (_) {}
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // TODO: this is a crazy way to do it - refactor this to something more compact
   const SOLFEGE_TO_INTERVAL: Record<string, SemitoneOffset> = {
@@ -511,11 +502,8 @@ const SettingsView = () => {
                       setSelectedInstrument(v);
                       setIsPreloading(true);
                       try {
-                        localStorage.setItem('learn-ti-do.instrument', v);
-                      } catch (_) {}
-                      try {
                         // Stop any currently playing sounds
-                        stopAllSounds();
+                        stopSounds();
                         await setInstrument(v);
                         // Play a C E G C arpeggio as a preview
                         const rootMidi = noteNameToMidi(rootNotePitch);
@@ -525,7 +513,7 @@ const SettingsView = () => {
                           { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },  // G
                           { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },   // C (octave)
                         ]);
-                      } catch (e) {console.log("Failed to load sound: ", e);}
+                      } catch (_) {}
                       setIsPreloading(false);
                     }}
                     className="w-full rounded-md border border-input bg-background px-3 py-2"
