@@ -33,6 +33,7 @@ const PracticeView = () => {
   const totalSequencesAnswered = useRef(0);
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
   const [sequenceDurations, setSequenceDurations] = useState<number[]>([]);
+  const [extraNotes, setExtraNotes] = useState<SemitoneOffset[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
@@ -216,11 +217,25 @@ const PracticeView = () => {
     const durations = generateSequenceDurations(newSequence.length + settings.playExtraNotes);
     setSequenceDurations(durations);
     
+    // Generate extra notes deterministically
+    const newExtraNotes: SemitoneOffset[] = [];
+    if (settings.playExtraNotes > 0) {
+      let pool = [...settings.selectedNotes];
+      // Add octave above root if root is in pool
+      if (pool.indexOf(0) !== -1) { pool.push(12); }
+      
+      for (let i = 0; i < settings.playExtraNotes; i++) {
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        newExtraNotes.push(pool[randomIndex]);
+      }
+    }
+    setExtraNotes(newExtraNotes);
+    
     setCurrentPosition(0);
     // measure each questions separately, so we can ignore times when the user left it for ages
     // start the timer just before we play the notes
     setQuestionStartTime(Date.now());
-    playSequenceWithDelay(newSequence.map(interval => rootMidi + interval), durations);
+    playSequenceWithDelay(newSequence.map(interval => rootMidi + interval), durations, newExtraNotes);
   };
 
   const generateSequenceDurations = (length: number): number[] => {
@@ -237,7 +252,7 @@ const PracticeView = () => {
     });
   };
 
-  const playSequenceWithDelay = async (seq: number[], durations: number[]) => {
+  const playSequenceWithDelay = async (seq: number[], durations: number[], extraNotesOffsets: SemitoneOffset[]) => {
     setIsPlaying(true);
     console.debug('Playing sequence:', { seq, durations, noteGap });
     
@@ -254,22 +269,11 @@ const PracticeView = () => {
     
     await playSequence(mainSequenceItems);
     
-    // Play extra notes if configured
-    if (settings.playExtraNotes > 0) {
-      const extraNotes: number[] = [];
-      let pool = [...settings.selectedNotes];
-      
-      // Add octave above root if root is in pool
-      if (pool.indexOf(0) !== -1) { pool.push(12); }
-      
-      for (let i = 0; i < settings.playExtraNotes; i++) {
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        extraNotes.push(rootMidi + pool[randomIndex]);
-      }
-      
+    // Play extra notes if configured (using pre-generated extra notes)
+    if (extraNotesOffsets.length > 0) {
       const extraDurations = durations.slice(settings.numberOfNotes);
-      const extraSequenceItems = extraNotes.map((note, i) => ({
-        note,
+      const extraSequenceItems = extraNotesOffsets.map((offset, i) => ({
+        note: rootMidi + offset,
         duration: extraDurations[i],
         gapAfter: noteGap
       }));
@@ -359,7 +363,7 @@ const PracticeView = () => {
   };
 
   const handlePlayAgain = () => {
-    playSequenceWithDelay(sequence.map(interval => rootMidi + interval), sequenceDurations);
+    playSequenceWithDelay(sequence.map(interval => rootMidi + interval), sequenceDurations, extraNotes);
   };
 
   const handlePlayReference = async () => {
