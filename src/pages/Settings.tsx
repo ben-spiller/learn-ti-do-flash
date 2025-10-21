@@ -199,6 +199,7 @@ const SettingsView = () => {
           droneType,
           referenceType,
           rootNotePitch,
+          instrument: selectedInstrument,
           preloaded: true
         },
       });
