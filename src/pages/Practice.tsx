@@ -471,7 +471,7 @@ const PracticeView = () => {
       console.debug("Next note pool after filtering: "+JSON.stringify(pool));
 
       // Pick a needs practice combination where possible
-      if (true || Math.random() < 0.7) {
+      if (Math.random() < 0.7) {
         const practiceNote = pickFromNeedsPractice(pool, prevNote);
         if (practiceNote !== null) {
           console.debug("  picked from needs-practice: "+ semitonesToSolfege(practiceNote));
