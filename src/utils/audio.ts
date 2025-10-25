@@ -366,13 +366,23 @@ const ensureContextRunning = async () => {
 };
 
 /**
- * Set the instrument (General MIDI name understood by Soundfont.js) and preload it.
+ * Set the instrument and ensure it's properly loaded.
+ * This is the unified way to change instruments.
  */
 export const setInstrument = async (instrumentName: string) => {
-  currentInstrument = instrumentName;
-  toneInstrument = null;
+  // Only reset if instrument is changing
+  if (instrumentName !== currentInstrument) {
+    currentInstrument = instrumentName;
+    // Dispose old instrument
+    if (toneInstrument && typeof toneInstrument.dispose === 'function') {
+      try { toneInstrument.dispose(); } catch (_) {}
+    }
+    toneInstrument = null;
+  }
+  
+  // Create the new instrument (or return existing if unchanged)
   try {
-    await createToneInstrument();
+    await createToneInstrument(instrumentName);
   } catch (err) {
     console.error('Failed to create instrument', instrumentName, err);
     try { window.alert('Failed to initialize instrument. Check the console for details.'); } catch (_) {}
@@ -446,11 +456,11 @@ export const preloadInstrumentWithGesture = async (
   _preloadCallbacks[key] = progressCallback ? [progressCallback] : [];
 
   const promise = (async () => {
-    console.log('Preloading instrument', instrumentName || currentInstrument);
+    console.log('Preloading instrument', instrumentToUse);
     try {
       await ensureContextRunning();
-      if (instrumentName) currentInstrument = instrumentName;
-      await createToneInstrument(instrumentName);
+      // Use unified setInstrument to ensure proper loading
+      await setInstrument(instrumentToUse);
 
       // Determine whether we should pre-decode samples (only applicable for midi-js path)
       const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
@@ -554,7 +564,8 @@ export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, duration
 
   await ensureContextRunning();
   try {
-    const player = await createToneInstrument();
+    // Ensure we're using the current instrument
+    const player = await createToneInstrument(currentInstrument);
 
     // Usually this is what we use
     if (player && typeof player.triggerAttackRelease === 'function') {
