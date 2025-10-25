@@ -219,7 +219,7 @@ const PracticeHistory = () => {
       {/* Recent Session Stats */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Most Recent Session</CardTitle>
+          <CardTitle>Latest session results</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -249,7 +249,7 @@ const PracticeHistory = () => {
       {/* Wrong Answers Visualization */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Last session - most frequent wrong answers</CardTitle>
+          <CardTitle>Frequent wrong sequences (latest session)</CardTitle>
         </CardHeader>
         <CardContent>
           {wrongAnswerPairs.length > 0 ? (
@@ -293,7 +293,7 @@ const PracticeHistory = () => {
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-8">
-              No wrong answers yet - you're doing great! 🎉
+              No wrong answers yet - well done! 🎉
             </p>
           )}
         </CardContent>
@@ -302,7 +302,7 @@ const PracticeHistory = () => {
       {/* Confused Pairs Visualization */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Last session - most frequently confused notes</CardTitle>
+          <CardTitle>Frequently confused notes (latest session)</CardTitle>
         </CardHeader>
         <CardContent>
           {confusedPairs.size > 0 ? (
@@ -361,7 +361,7 @@ const PracticeHistory = () => {
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-8">
-              No confused note pairs yet - keep practicing! 🎵
+              No confused note pairs yet - well done! 🎵
             </p>
           )}
         </CardContent>
@@ -411,7 +411,7 @@ const PracticeHistory = () => {
               {/* Needs Practice Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Intervals Needing Practice</CardTitle>
+                  <CardTitle>Sequences needing more practice</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {needsPracticePairs.length > 0 ? (
@@ -464,7 +464,7 @@ const PracticeHistory = () => {
               {/* All Sessions for this Exercise */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Practice Sessions</CardTitle>
+                  <CardTitle>Session history</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
