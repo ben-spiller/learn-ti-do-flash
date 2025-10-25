@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
-import { SessionHistory } from "./PracticeHistory";
+import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES } from "./PracticeHistory";
 
 
 const PracticeView = () => {
@@ -51,20 +51,20 @@ const PracticeView = () => {
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
   /** Count of wrong answers: Maps "prevNote,note" -> count (prevNote="" for note at start of sequence) */
-  const wrongAnswerCount = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem('wrongAnswerHistory:latest');
+  const wrong2NoteSequences = useRef<Map<string, number>>((() => {
+    const stored = localStorage.getItem(STORED_WRONG_2_NOTE_SEQUENCES);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());  
   /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem('needsPracticeNotePairs:'+settings.getExerciseName());
+    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName());
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
-    localStorage.setItem('wrongAnswerHistory:latest', JSON.stringify(Array.from(wrongAnswerCount.current.entries())));
-    localStorage.setItem('needsPracticeNotePairs:'+settings.getExerciseName(), JSON.stringify(Array.from(needsPractice.current.entries())));
+    localStorage.setItem(STORED_WRONG_2_NOTE_SEQUENCES, JSON.stringify(Array.from(wrong2NoteSequences.current.entries())));
+    localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
   // Shared spacing constants used by both the solfege column and the chromatic column.
@@ -83,7 +83,7 @@ const PracticeView = () => {
       // Add gap before exercise
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      wrongAnswerCount.current.clear();
+      wrong2NoteSequences.current.clear();
 
       // Now start the first round
       startNewRound();
@@ -338,7 +338,7 @@ const PracticeView = () => {
       playNote(selectedNote+rootMidi);
 
       // Update wrong answer count
-      wrongAnswerCount.current.set(pairKey, (wrongAnswerCount.current.get(pairKey) || 0) + 1);
+      wrong2NoteSequences.current.set(pairKey, (wrong2NoteSequences.current.get(pairKey) || 0) + 1);
 
       // Add to needsPractice (+3 if first wrong answer or in the danger zone, +1 otherwise)
       let needsPracticeCount = (needsPractice.current.get(pairKey) || 0);

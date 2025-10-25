@@ -6,6 +6,12 @@ import { semitonesToSolfege } from "@/utils/audio";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
 import { ConfigData } from "@/config/ConfigData";
 
+export const STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES = "wrong2NoteSequences"
+/** Notes that are confused for each other (in either direction) */
+export const STORED_FREQUENTLY_CONFUSED_PAIRS = "wrongConfusedPairs"
+
+export const STORED_NEEDS_PRACTICE_SEQUENCES = "needsPracticeNotePairs:"
+
 export interface SessionHistory {
   sessionDate: number;
   
@@ -35,13 +41,13 @@ const PracticeHistory = () => {
 
   // Get wrongAnswerHistory from localStorage
   const getWrongAnswerHistory = (exerciseKey: string): Map<string, number> => {
-    const stored = localStorage.getItem('wrongAnswerHistory:latest');
+    const stored = localStorage.getItem(STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   };
 
   // Get needsPractice from localStorage
   const getNeedsPractice = (exerciseKey: string): Map<string, number> => {
-    const stored = localStorage.getItem('needsPracticeNotePairs:' + exerciseKey);
+    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES + exerciseKey);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   };
 
