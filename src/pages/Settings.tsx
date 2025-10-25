@@ -21,6 +21,7 @@ import {
   noteNameToMidi,
   stopSounds,
   MAJOR_SCALE_PITCH_CLASSES,
+  semitonesToSolfege,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -276,11 +277,12 @@ const SettingsView = () => {
   const formatQuestionRangeLabel = (semitones: number): string => {
     const octaveOffset = Math.floor(semitones / 12);
     const noteInOctave = ((semitones % 12) + 12) % 12;
-    const noteName = INTERVAL_TO_SOLFEGE[noteInOctave as SemitoneOffset] || "";
+    const noteName = semitonesToSolfege(noteInOctave as SemitoneOffset);
     
-    if (octaveOffset === -1) return `${noteName} (-1 oct)`;
-    if (octaveOffset === 1) return `${noteName} (+1 oct)`;
-    if (octaveOffset === 2) return `${noteName} (+2 oct)`;
+    if (octaveOffset === -1) return `${noteName} (-1 octave)`;
+    if (octaveOffset === 0) return `${noteName} (main octave)`;
+    if (octaveOffset === 1) return `${noteName} (+1 octave)`;
+    if (octaveOffset === 2) return `${noteName} (+2 octaves)`;
     return noteName;
   };
 
@@ -543,7 +545,7 @@ const SettingsView = () => {
 
               <div className="space-y-4">
                 <Label className="text-base font-semibold">
-                  Question Note Range: {formatQuestionRangeLabel(questionNoteRange[0])} - {formatQuestionRangeLabel(questionNoteRange[1])}
+                  Question note range: {formatQuestionRangeLabel(questionNoteRange[0])} ... {formatQuestionRangeLabel(questionNoteRange[1])}
                 </Label>
                 <Slider
                   value={[
@@ -562,14 +564,11 @@ const SettingsView = () => {
                   step={1}
                   minStepsBetweenThumbs={1}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Questions can span multiple octaves, but answers remain in the same octave
-                </p>
               </div>
 
               <div className="space-y-4">
                 <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
-                  Consecutive Notes Range: {semitonesToInterval(intervalRange[0])} - {semitonesToInterval(intervalRange[1])}</Label>
+                  Consecutive note intervals: {semitonesToInterval(intervalRange[0])} ... {semitonesToInterval(intervalRange[1])}</Label>
                 <Slider
                   value={intervalRange}
                   onValueChange={(values) => {

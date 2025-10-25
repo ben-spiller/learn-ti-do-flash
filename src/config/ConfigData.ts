@@ -9,7 +9,7 @@ export class ConfigData {
   playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
   minInterval: SemitoneOffset = 1;
   maxInterval: SemitoneOffset = 12; // default - go up to an octave
-  questionNoteRange: [SemitoneOffset, SemitoneOffset] = [-12, 24]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
+  questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
   tempo: number = 200; 
   rhythm: "fixed" | "random" = "fixed";
   droneType: "none" | "root" = "none";
