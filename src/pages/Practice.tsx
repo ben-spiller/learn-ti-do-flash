@@ -225,9 +225,7 @@ const PracticeView = () => {
     // Generate extra notes deterministically
     const extraNotesOffsets: SemitoneOffset[] = [];
     if (settings.playExtraNotes > 0) {
-      let pool = [...settings.selectedNotes];
-      // Add octave above root if root is in pool
-      if (pool.indexOf(0) !== -1) { pool.push(12); }
+      const pool = settings.getNotePool();
       
       for (let i = 0; i < settings.playExtraNotes; i++) {
         const randomIndex = Math.floor(Math.random() * pool.length);
@@ -435,11 +433,7 @@ const PracticeView = () => {
   };
 
   const generateNextNoteSequence = (): SemitoneOffset[] => {
-    let pool: SemitoneOffset[] = [...settings.selectedNotes];
-
-    // Special-case: add an octave above "do" (the root) if it's in the available notes
-    // (once we properly support compounds intervals we can do this without a special-case)
-    if (pool.indexOf(0) !== -1) { pool.push(12); }
+    const pool: SemitoneOffset[] = settings.getNotePool();
     
     const sequence: number[] = [];
     const reason: string[] = [];

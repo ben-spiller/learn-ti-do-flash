@@ -34,6 +34,30 @@ export class ConfigData {
     return this.instrument;
   }
 
+  /** Get the pool of all possible notes for questions, expanding selectedNotes across the questionNoteRange */
+  getNotePool(): SemitoneOffset[] {
+    const pool: SemitoneOffset[] = [];
+    const [minOffset, maxOffset] = this.questionNoteRange;
+    
+    for (const note of this.selectedNotes) {
+      // Find the lowest octave of this note within range
+      let current = note;
+      while (current - 12 >= minOffset) {
+        current -= 12;
+      }
+      
+      // Add all octaves of this note within range
+      while (current <= maxOffset) {
+        if (current >= minOffset) {
+          pool.push(current);
+        }
+        current += 12;
+      }
+    }
+    
+    return pool.sort((a, b) => a - b);
+  }
+
   constructor(partial?: Partial<ConfigData>) {
     if (partial) {
       Object.assign(this, partial);
