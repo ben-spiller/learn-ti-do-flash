@@ -450,7 +450,7 @@ export const preloadInstrumentWithGesture = async (
     try {
       await ensureContextRunning();
       if (instrumentName) currentInstrument = instrumentName;
-      await createToneInstrument();
+      await createToneInstrument(instrumentName);
 
       // Determine whether we should pre-decode samples (only applicable for midi-js path)
       const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
