@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { semitonesToSolfege } from "@/utils/audio";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
 import { ConfigData } from "@/config/ConfigData";
 
@@ -68,6 +69,45 @@ const PracticeHistory = () => {
   // Default tab to most recent exercise
   const [selectedTab, setSelectedTab] = useState(recentSession?.exerciseName || exerciseKeys[0] || "");
   
+  // Helper to detect settings changes
+  const getSettingsChanges = (current: ConfigData, previous: ConfigData | null): string[] => {
+    if (!previous) return [];
+    
+    const changes: string[] = [];
+    if (current.numberOfNotes !== previous.numberOfNotes) {
+      changes.push(`Notes: ${previous.numberOfNotes} → ${current.numberOfNotes}`);
+    }
+    if (current.tempo !== previous.tempo) {
+      changes.push(`Tempo: ${previous.tempo} → ${current.tempo}`);
+    }
+    if (current.minInterval !== previous.minInterval || current.maxInterval !== previous.maxInterval) {
+      changes.push(`Interval: ${previous.minInterval}-${previous.maxInterval} → ${current.minInterval}-${current.maxInterval}`);
+    }
+    if (current.rhythm !== previous.rhythm) {
+      changes.push(`Rhythm: ${previous.rhythm} → ${current.rhythm}`);
+    }
+    if (current.droneType !== previous.droneType) {
+      changes.push(`Drone: ${previous.droneType} → ${current.droneType}`);
+    }
+    if (current.referenceType !== previous.referenceType) {
+      changes.push(`Reference: ${previous.referenceType} → ${current.referenceType}`);
+    }
+    if (current.rootNotePitch !== previous.rootNotePitch) {
+      changes.push(`Root: ${previous.rootNotePitch} → ${current.rootNotePitch}`);
+    }
+    if (current.instrument !== previous.instrument) {
+      changes.push(`Instrument: ${previous.instrument} → ${current.instrument}`);
+    }
+    if (current.playExtraNotes !== previous.playExtraNotes) {
+      changes.push(`Extra notes: ${previous.playExtraNotes} → ${current.playExtraNotes}`);
+    }
+    if (JSON.stringify(current.selectedNotes) !== JSON.stringify(previous.selectedNotes)) {
+      changes.push(`Selected notes changed`);
+    }
+    
+    return changes;
+  };
+
   if (allSessions.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
@@ -389,9 +429,34 @@ const PracticeHistory = () => {
                           const dayMonth = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                           const formattedDate = `${dayOfWeek} ${dayMonth}`;
                           
+                          // Get previous session (next in reversed array)
+                          const previousSession = exerciseSessions.slice().reverse()[index + 1];
+                          const settingsChanges = getSettingsChanges(session.settings, previousSession?.settings || null);
+                          
                           return (
                             <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
-                              <td className="p-2 text-sm">{formattedDate}</td>
+                              <td className="p-2 text-sm">
+                                <div className="flex items-center gap-2">
+                                  {formattedDate}
+                                  {settingsChanges.length > 0 && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <Settings className="h-3.5 w-3.5 text-blue-500" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right" className="max-w-xs">
+                                          <div className="text-xs space-y-1">
+                                            <div className="font-semibold mb-1">Settings changed:</div>
+                                            {settingsChanges.map((change, i) => (
+                                              <div key={i}>• {change}</div>
+                                            ))}
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
+                              </td>
                               <td className={`p-2 text-sm text-right font-bold ${getScoreColor(session.score)}`}>
                                 {session.score}%
                               </td>
