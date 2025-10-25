@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Settings } from "lucide-react";
 import { semitonesToSolfege } from "@/utils/audio";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
+import { getNoteButtonColor, getScoreColor, getOctaveIndicator } from "@/utils/noteStyles";
 import { ConfigData } from "@/config/ConfigData";
 
 export const STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES = "wrong2NoteSequences"
@@ -264,8 +264,13 @@ const PracticeHistory = () => {
                     <span className="font-medium text-muted-foreground w-6">{index + 1}.</span>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {pair.prevNoteValue !== null ? (
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white relative ${getNoteButtonColor(pair.prevNoteName)}`}>
                           {pair.prevNoteName}
+                          {getOctaveIndicator(pair.prevNoteValue) && (
+                            <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                              {getOctaveIndicator(pair.prevNoteValue)}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
@@ -273,8 +278,13 @@ const PracticeHistory = () => {
                         </div>
                       )}
                       <span className="text-muted-foreground px-1">→</span>
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white relative ${getNoteButtonColor(pair.noteName)}`}>
                         {pair.noteName}
+                        {getOctaveIndicator(pair.noteValue) && (
+                          <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                            {getOctaveIndicator(pair.noteValue)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
@@ -338,12 +348,22 @@ const PracticeHistory = () => {
                     <div key={pair.pairKey} className="flex items-center gap-3">
                       <span className="font-medium text-muted-foreground w-6">{index + 1}.</span>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.note1Name)}`}>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white relative ${getNoteButtonColor(pair.note1Name)}`}>
                           {pair.note1Name}
+                          {getOctaveIndicator(pair.note1Value) && (
+                            <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                              {getOctaveIndicator(pair.note1Value)}
+                            </span>
+                          )}
                         </div>
                         <span className="text-muted-foreground px-1">↔</span>
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.note2Name)}`}>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white relative ${getNoteButtonColor(pair.note2Name)}`}>
                           {pair.note2Name}
+                          {getOctaveIndicator(pair.note2Value) && (
+                            <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                              {getOctaveIndicator(pair.note2Value)}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
@@ -426,8 +446,13 @@ const PracticeHistory = () => {
                           <div key={pair.pairKey} className="flex items-center gap-3">
                             <div className="flex items-center gap-1 flex-shrink-0">
                               {pair.prevNoteValue !== null ? (
-                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.prevNoteName)}`}>
+                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white relative ${getNoteButtonColor(pair.prevNoteName)}`}>
                                   {pair.prevNoteName}
+                                  {getOctaveIndicator(pair.prevNoteValue) && (
+                                    <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                                      {getOctaveIndicator(pair.prevNoteValue)}
+                                    </span>
+                                  )}
                                 </div>
                               ) : (
                                 <div className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
@@ -435,8 +460,13 @@ const PracticeHistory = () => {
                                 </div>
                               )}
                               <span className="text-muted-foreground px-1">→</span>
-                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.noteName)}`}>
+                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white relative ${getNoteButtonColor(pair.noteName)}`}>
                                 {pair.noteName}
+                                {getOctaveIndicator(pair.noteValue) && (
+                                  <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                                    {getOctaveIndicator(pair.noteValue)}
+                                  </span>
+                                )}
                               </div>
                             </div>
                             <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">

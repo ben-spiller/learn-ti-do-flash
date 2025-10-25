@@ -21,3 +21,11 @@ export const getScoreColor = (score: number): string => {
   if (score >= 80) return "text-amber-600";
   return "text-destructive";
 };
+
+export const getOctaveIndicator = (semitones: number): string => {
+  const octaveOffset = Math.floor(semitones / 12);
+  if (octaveOffset === -1) return "-1";
+  if (octaveOffset === 1) return "+1";
+  if (octaveOffset === 2) return "+2";
+  return "";
+};
