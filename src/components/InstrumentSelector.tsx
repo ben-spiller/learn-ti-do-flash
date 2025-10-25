@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { INSTRUMENT_OPTIONS, formatInstrumentName } from "@/config/ConfigData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Shuffle } from "lucide-react";
+import { setInstrument, playNote, noteNameToMidi } from "@/utils/audio";
 
 interface InstrumentSelectorProps {
   open: boolean;
@@ -32,6 +33,20 @@ export function InstrumentSelector({
   const [localMode, setLocalMode] = useState(instrumentMode);
   const [localInstrument, setLocalInstrument] = useState(selectedInstrument);
   const [localFavourites, setLocalFavourites] = useState(favouriteInstruments);
+  const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const playPreview = async (instrumentSlug: string) => {
+    // Clear any pending preview
+    if (previewTimeoutRef.current) {
+      clearTimeout(previewTimeoutRef.current);
+    }
+    
+    // Debounce: schedule the preview to play after a short delay
+    previewTimeoutRef.current = setTimeout(async () => {
+      await setInstrument(instrumentSlug);
+      playNote(noteNameToMidi("C4"), 0.6); // Play middle C
+    }, 100);
+  };
 
   const handleSave = () => {
     onInstrumentModeChange(localMode);
@@ -41,6 +56,10 @@ export function InstrumentSelector({
   };
 
   const handleCancel = () => {
+    // Clear any pending preview
+    if (previewTimeoutRef.current) {
+      clearTimeout(previewTimeoutRef.current);
+    }
     // Reset to original values
     setLocalMode(instrumentMode);
     setLocalInstrument(selectedInstrument);
@@ -49,11 +68,17 @@ export function InstrumentSelector({
   };
 
   const toggleFavourite = (slug: string) => {
+    const willBeSelected = !localFavourites.includes(slug);
     setLocalFavourites(prev =>
       prev.includes(slug)
         ? prev.filter(f => f !== slug)
         : [...prev, slug]
     );
+    
+    // Play preview when selecting (but not when deselecting)
+    if (willBeSelected) {
+      playPreview(slug);
+    }
   };
 
   const selectAllFavourites = () => {

@@ -192,9 +192,8 @@ const SettingsView = () => {
     
     try {
       // Determine which instrument to preload based on mode
-      const instrumentToPreload = instrumentMode === "random" && favouriteInstruments.length > 0
-        ? favouriteInstruments[Math.floor(Math.random() * favouriteInstruments.length)]
-        : selectedInstrument;
+      const currentSettings = getCurrentSettings();
+      const instrumentToPreload = currentSettings.pickInstrument();
       
       await preloadInstrumentWithGesture(instrumentToPreload);
       clearTimeout(loadingTimer);
@@ -216,7 +215,7 @@ const SettingsView = () => {
           droneType,
           referenceType,
           rootNotePitch,
-          instrument: instrumentToPreload, // Pass the actual instrument to use
+          instrument: instrumentToPreload, // Pass the preloaded instrument
           instrumentMode,
           favouriteInstruments,
           preloaded: true

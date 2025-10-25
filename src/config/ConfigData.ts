@@ -24,6 +24,15 @@ export class ConfigData {
     return "Melody recognition"
   }
 
+  /** Pick the instrument to use for this session based on the instrument mode */
+  pickInstrument(): string {
+    if (this.instrumentMode === "random" && this.favouriteInstruments.length > 0) {
+      const randomIndex = Math.floor(Math.random() * this.favouriteInstruments.length);
+      return this.favouriteInstruments[randomIndex];
+    }
+    return this.instrument;
+  }
+
   constructor(partial?: Partial<ConfigData>) {
     if (partial) {
       Object.assign(this, partial);

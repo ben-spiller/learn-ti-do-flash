@@ -21,6 +21,9 @@ const PracticeView = () => {
   // Initialize settings with defaults, then override with any passed state
   const settings = new ConfigData(location.state as Partial<ConfigData>);
   const preloaded = (location.state as any)?.preloaded || false;
+  
+  // Pick the instrument to use for this session
+  const sessionInstrument = settings.pickInstrument();
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
@@ -125,7 +128,7 @@ const PracticeView = () => {
       setShowLoadingIndicator(true);
     }, 400);
     
-    const ok = await preloadInstrumentWithGesture();
+    const ok = await preloadInstrumentWithGesture(sessionInstrument);
     
     clearTimeout(loadingTimer);
     setShowLoadingIndicator(false);
