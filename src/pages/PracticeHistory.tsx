@@ -35,29 +35,72 @@ export interface SessionHistory {
 const PracticeHistory = () => {
   const navigate = useNavigate();
 
-  // Get all sessions from localStorage
+  // Get all sessions from localStorage with error handling
   const getAllSessions = (): SessionHistory[] => {
-    const sessionsStr = localStorage.getItem('practiceSessions');
-    if (!sessionsStr) return [];
-    return JSON.parse(sessionsStr);
+    try {
+      const sessionsStr = localStorage.getItem('practiceSessions');
+      if (!sessionsStr) return [];
+      
+      const allSessions = JSON.parse(sessionsStr);
+      
+      // Filter out any malformed sessions
+      const validSessions = allSessions.filter((session: any) => {
+        try {
+          // Validate essential fields exist
+          return (
+            typeof session.sessionDate === 'number' &&
+            typeof session.score === 'number' &&
+            typeof session.totalAttempts === 'number' &&
+            typeof session.exerciseName === 'string'
+          );
+        } catch {
+          return false;
+        }
+      });
+      
+      // If we filtered out any sessions, update localStorage
+      if (validSessions.length !== allSessions.length) {
+        localStorage.setItem('practiceSessions', JSON.stringify(validSessions));
+      }
+      
+      return validSessions;
+    } catch (error) {
+      console.error('Error reading practice sessions:', error);
+      return [];
+    }
   };
 
-  // Get wrongAnswerHistory from localStorage
+  // Get wrongAnswerHistory from localStorage with error handling
   const getWrongAnswerHistory = (exerciseKey: string): Map<string, number> => {
-    const stored = localStorage.getItem(STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES);
-    return stored ? new Map(JSON.parse(stored)) : new Map();
+    try {
+      const stored = localStorage.getItem(STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES);
+      return stored ? new Map(JSON.parse(stored)) : new Map();
+    } catch (error) {
+      console.error('Error reading wrong answer history:', error);
+      return new Map();
+    }
   };
 
-  // Get confusedPairs from localStorage
+  // Get confusedPairs from localStorage with error handling
   const getConfusedPairs = (): Map<string, number> => {
-    const stored = localStorage.getItem(STORED_FREQUENTLY_CONFUSED_PAIRS);
-    return stored ? new Map(JSON.parse(stored)) : new Map();
+    try {
+      const stored = localStorage.getItem(STORED_FREQUENTLY_CONFUSED_PAIRS);
+      return stored ? new Map(JSON.parse(stored)) : new Map();
+    } catch (error) {
+      console.error('Error reading confused pairs:', error);
+      return new Map();
+    }
   };
 
-  // Get needsPractice from localStorage
+  // Get needsPractice from localStorage with error handling
   const getNeedsPractice = (exerciseKey: string): Map<string, number> => {
-    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES + exerciseKey);
-    return stored ? new Map(JSON.parse(stored)) : new Map();
+    try {
+      const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES + exerciseKey);
+      return stored ? new Map(JSON.parse(stored)) : new Map();
+    } catch (error) {
+      console.error('Error reading needs practice data:', error);
+      return new Map();
+    }
   };
 
   const allSessions = getAllSessions();
@@ -135,23 +178,28 @@ const PracticeHistory = () => {
   const confusedPairs = getConfusedPairs();
   const needsPractice = getNeedsPractice(recentSession.exerciseName);
 
-  // Convert wrongAnswerHistory to sorted array for display
+  // Convert wrongAnswerHistory to sorted array for display with error handling
   const wrongAnswerPairs = Array.from(wrongAnswerHistory.entries())
     .map(([pairKey, count]) => {
-      const [prevNote, note] = pairKey.split(',');
-      const prevNoteName = prevNote === '' ? 'Start' : semitonesToSolfege(parseInt(prevNote));
-      const noteName = semitonesToSolfege(parseInt(note));
-      const prevNoteValue = prevNote === '' ? null : parseInt(prevNote);
-      const noteValue = parseInt(note);
-      return {
-        pairKey,
-        prevNoteName,
-        noteName,
-        prevNoteValue,
-        noteValue,
-        count,
-      };
+      try {
+        const [prevNote, note] = pairKey.split(',');
+        const prevNoteName = prevNote === '' ? 'Start' : semitonesToSolfege(parseInt(prevNote));
+        const noteName = semitonesToSolfege(parseInt(note));
+        const prevNoteValue = prevNote === '' ? null : parseInt(prevNote);
+        const noteValue = parseInt(note);
+        return {
+          pairKey,
+          prevNoteName,
+          noteName,
+          prevNoteValue,
+          noteValue,
+          count,
+        };
+      } catch {
+        return null;
+      }
     })
+    .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10); // Show top 10
 
@@ -261,18 +309,23 @@ const PracticeHistory = () => {
             <div className="space-y-3">
               {Array.from(confusedPairs.entries())
                 .map(([pairKey, count]) => {
-                  const [note1, note2] = pairKey.split(',').map(n => parseInt(n));
-                  const note1Name = semitonesToSolfege(note1);
-                  const note2Name = semitonesToSolfege(note2);
-                  return {
-                    pairKey,
-                    note1Name,
-                    note2Name,
-                    note1Value: note1,
-                    note2Value: note2,
-                    count,
-                  };
+                  try {
+                    const [note1, note2] = pairKey.split(',').map(n => parseInt(n));
+                    const note1Name = semitonesToSolfege(note1);
+                    const note2Name = semitonesToSolfege(note2);
+                    return {
+                      pairKey,
+                      note1Name,
+                      note2Name,
+                      note1Value: note1,
+                      note2Value: note2,
+                      count,
+                    };
+                  } catch {
+                    return null;
+                  }
                 })
+                .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 10)
                 .map((pair, index, arr) => {
@@ -330,20 +383,25 @@ const PracticeHistory = () => {
 
           const needsPracticePairs = Array.from(needsPracticeForKey.entries())
             .map(([pairKey, count]) => {
-              const [prevNote, note] = pairKey.split(',');
-              const prevNoteName = prevNote === '' ? 'Start' : semitonesToSolfege(parseInt(prevNote));
-              const noteName = semitonesToSolfege(parseInt(note));
-              const prevNoteValue = prevNote === '' ? null : parseInt(prevNote);
-              const noteValue = parseInt(note);
-              return {
-                pairKey,
-                prevNoteName,
-                noteName,
-                prevNoteValue,
-                noteValue,
-                count,
-              };
+              try {
+                const [prevNote, note] = pairKey.split(',');
+                const prevNoteName = prevNote === '' ? 'Start' : semitonesToSolfege(parseInt(prevNote));
+                const noteName = semitonesToSolfege(parseInt(note));
+                const prevNoteValue = prevNote === '' ? null : parseInt(prevNote);
+                const noteValue = parseInt(note);
+                return {
+                  pairKey,
+                  prevNoteName,
+                  noteName,
+                  prevNoteValue,
+                  noteValue,
+                  count,
+                };
+              } catch {
+                return null;
+              }
             })
+            .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
             .sort((a, b) => b.count - a.count);
 
           const maxCount = needsPracticePairs[0]?.count || 1;
