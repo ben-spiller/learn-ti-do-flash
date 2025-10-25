@@ -22,8 +22,8 @@ const PracticeView = () => {
   const settings = new ConfigData(location.state as Partial<ConfigData>);
   const preloaded = (location.state as any)?.preloaded || false;
   
-  // Pick the instrument to use for this session
-  const sessionInstrument = settings.pickInstrument();
+  // Get or pick the instrument to use for this session
+  const sessionInstrument = (location.state as any)?.sessionInstrument || settings.pickInstrument();
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds

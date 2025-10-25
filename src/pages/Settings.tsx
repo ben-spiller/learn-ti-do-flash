@@ -215,9 +215,7 @@ const SettingsView = () => {
           droneType,
           referenceType,
           rootNotePitch,
-          instrument: instrumentToPreload, // Pass the preloaded instrument
-          instrumentMode,
-          favouriteInstruments,
+          sessionInstrument: instrumentToPreload, // Pass the picked instrument for this session
           preloaded: true
         },
       });
