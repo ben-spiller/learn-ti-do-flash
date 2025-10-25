@@ -14,7 +14,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import appIcon from "@/assets/app-icon.png";
 import { toast } from "@/hooks/use-toast";
 import {
-  setInstrument,
   preloadInstrumentWithGesture,
   SemitoneOffset,
   semitonesToInterval,
@@ -566,7 +565,7 @@ const SettingsView = () => {
                       setIsPreloading(true);
                       try {
                         stopSounds();
-                        await setInstrument(instrument);
+                        await preloadInstrumentWithGesture(instrument);
                         const rootMidi = noteNameToMidi(rootNotePitch);
                         await playSequence([
                           { note: rootMidi, duration: 0.3, gapAfter: 0.1 },

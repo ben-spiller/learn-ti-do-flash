@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { INSTRUMENT_OPTIONS, formatInstrumentName } from "@/config/ConfigData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Shuffle } from "lucide-react";
-import { setInstrument, playNote, noteNameToMidi } from "@/utils/audio";
+import { preloadInstrumentWithGesture, playNote, noteNameToMidi } from "@/utils/audio";
 
 interface InstrumentSelectorProps {
   open: boolean;
@@ -43,7 +43,7 @@ export function InstrumentSelector({
     
     // Debounce: schedule the preview to play after a short delay
     previewTimeoutRef.current = setTimeout(async () => {
-      await setInstrument(instrumentSlug);
+      await preloadInstrumentWithGesture(instrumentSlug);
       playNote(noteNameToMidi("C4"), 0.6); // Play middle C
     }, 100);
   };

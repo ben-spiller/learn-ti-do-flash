@@ -365,35 +365,6 @@ const ensureContextRunning = async () => {
   }
 };
 
-/**
- * Set the instrument and ensure it's properly loaded.
- * This is the unified way to change instruments.
- */
-export const setInstrument = async (instrumentName: string) => {
-  // Only reset if instrument is changing
-  if (instrumentName !== currentInstrument) {
-    currentInstrument = instrumentName;
-    // Dispose old instrument
-    if (toneInstrument && typeof toneInstrument.dispose === 'function') {
-      try { toneInstrument.dispose(); } catch (_) {}
-    }
-    toneInstrument = null;
-  }
-  
-  // Create the new instrument (or return existing if unchanged)
-  try {
-    await createToneInstrument(instrumentName);
-  } catch (err) {
-    console.error('Failed to create instrument', instrumentName, err);
-    try { window.alert('Failed to initialize instrument. Check the console for details.'); } catch (_) {}
-    throw err;
-  }
-};
-
-/**
- * Prompt the user (this click satisfies browser gesture requirements) and preload the configured instrument.
- * Call this from the exercise start flow (e.g. on a "Start exercise" button click).
- */
 type NoteRange = { from: MidiNoteName; to: MidiNoteName };
 
 export const midiToNoteName = (midi: MidiNoteNumber) => {
@@ -417,8 +388,13 @@ const getNotesBetween = (from: MidiNoteName, to: MidiNoteName) => {
 };
 
 /**
- * Prompt the user (this click satisfies browser gesture requirements) and preload the configured instrument.
- * Optionally pre-decode a list of notes or a from/to range. If omitted, defaults to C3..C5.
+ * Unified function to set and preload an instrument.
+ * This is the ONLY exported function to use for instrument changes.
+ * 
+ * @param instrumentName The instrument to load (e.g., 'acoustic_grand_piano', 'violin')
+ * @param predecodeNotes Optional list of notes or range to pre-decode (defaults to C3..C5)
+ * @param progressCallback Optional callback for progress updates
+ * @returns Promise<boolean> indicating success
  */
 export const preloadInstrumentWithGesture = async (
   instrumentName?: string,
@@ -456,11 +432,27 @@ export const preloadInstrumentWithGesture = async (
   _preloadCallbacks[key] = progressCallback ? [progressCallback] : [];
 
   const promise = (async () => {
-    console.log('Preloading instrument', instrumentToUse);
+    // Log when changing instrument
+    if (instrumentToUse !== currentInstrument) {
+      console.info(`Changing instrument from ${currentInstrument} to ${instrumentToUse}`);
+    } else {
+      console.info(`Loading instrument ${instrumentToUse}`);
+    }
+    
     try {
       await ensureContextRunning();
-      // Use unified setInstrument to ensure proper loading
-      await setInstrument(instrumentToUse);
+      
+      // Dispose old instrument if changing
+      if (instrumentToUse !== currentInstrument) {
+        if (toneInstrument && typeof toneInstrument.dispose === 'function') {
+          try { toneInstrument.dispose(); } catch (_) {}
+        }
+        toneInstrument = null;
+        currentInstrument = instrumentToUse;
+      }
+      
+      // Create the new instrument
+      await createToneInstrument(instrumentToUse);
 
       // Determine whether we should pre-decode samples (only applicable for midi-js path)
       const catalogEntry = INSTRUMENT_CATALOG[currentInstrument];
@@ -526,9 +518,13 @@ export const preloadInstrumentWithGesture = async (
       // Signal completion if using catalog or midi-js path finished
       (_preloadCallbacks[key] || []).forEach(cb => cb(1, 1));
       _preloadedDone[key] = true;
+      
+      // Log successful loading
+      console.info(`Successfully loaded instrument ${instrumentToUse}`);
       return true;
     } catch (err) {
-      console.error('Preload failed', err);
+      // Log loading error
+      console.error(`Failed to load instrument ${instrumentToUse}:`, err);
       try {
         window.alert('Unable to initialize audio. Audio will not be available.');
       } catch (_) {}
