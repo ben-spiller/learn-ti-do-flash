@@ -20,6 +20,7 @@ import {
   playSequence,
   noteNameToMidi,
   stopSounds,
+  MAJOR_SCALE_PITCH_CLASSES,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -255,25 +256,33 @@ const SettingsView = () => {
     11: "Ti",
   };
 
-  // Generate question note range options from -12 to +24
-  const generateQuestionRangeOptions = () => {
-    const options: Array<{ value: number; label: string }> = [];
-    for (let semitones = -12; semitones <= 24; semitones++) {
-      const octaveOffset = Math.floor(semitones / 12);
-      const noteInOctave = ((semitones % 12) + 12) % 12;
-      const noteName = INTERVAL_TO_SOLFEGE[noteInOctave as SemitoneOffset] || "";
-      
-      let label = noteName;
-      if (octaveOffset === -1) label += " (-1 octave)";
-      else if (octaveOffset === 1) label += " (+1 octave)";
-      else if (octaveOffset === 2) label += " (+2 octaves)";
-      
-      options.push({ value: semitones, label });
+  // Generate question note range options from major scale notes spanning -12 to +24
+  const generateMajorScaleRangeOptions = () => {
+    const options: number[] = [];
+    for (let octave = -1; octave <= 2; octave++) {
+      for (const pitchClass of MAJOR_SCALE_PITCH_CLASSES) {
+        const semitones = octave * 12 + pitchClass;
+        if (semitones >= -12 && semitones <= 24) {
+          options.push(semitones);
+        }
+      }
     }
-    return options;
+    return options.sort((a, b) => a - b);
   };
 
-  const questionRangeOptions = generateQuestionRangeOptions();
+  const majorScaleRangeValues = generateMajorScaleRangeOptions();
+
+  // Format a semitone offset as a solfege label with octave
+  const formatQuestionRangeLabel = (semitones: number): string => {
+    const octaveOffset = Math.floor(semitones / 12);
+    const noteInOctave = ((semitones % 12) + 12) % 12;
+    const noteName = INTERVAL_TO_SOLFEGE[noteInOctave as SemitoneOffset] || "";
+    
+    if (octaveOffset === -1) return `${noteName} (-1 oct)`;
+    if (octaveOffset === 1) return `${noteName} (+1 oct)`;
+    if (octaveOffset === 2) return `${noteName} (+2 oct)`;
+    return noteName;
+  };
 
   // Root note pitch options
   const ROOT_NOTE_OPTIONS = [
@@ -533,45 +542,26 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Question Note Range</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">From</Label>
-                    <Select
-                      value={questionNoteRange[0].toString()}
-                      onValueChange={(value) => setQuestionNoteRange([parseInt(value) as SemitoneOffset, questionNoteRange[1]])}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {questionRangeOptions.map(option => (
-                          <SelectItem key={`from-${option.value}`} value={option.value.toString()}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">To</Label>
-                    <Select
-                      value={questionNoteRange[1].toString()}
-                      onValueChange={(value) => setQuestionNoteRange([questionNoteRange[0], parseInt(value) as SemitoneOffset])}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {questionRangeOptions.map(option => (
-                          <SelectItem key={`to-${option.value}`} value={option.value.toString()}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                <Label className="text-base font-semibold">
+                  Question Note Range: {formatQuestionRangeLabel(questionNoteRange[0])} - {formatQuestionRangeLabel(questionNoteRange[1])}
+                </Label>
+                <Slider
+                  value={[
+                    majorScaleRangeValues.indexOf(questionNoteRange[0]),
+                    majorScaleRangeValues.indexOf(questionNoteRange[1])
+                  ]}
+                  onValueChange={(values) => {
+                    const newRange: [SemitoneOffset, SemitoneOffset] = [
+                      majorScaleRangeValues[values[0]],
+                      majorScaleRangeValues[values[1]]
+                    ];
+                    setQuestionNoteRange(newRange);
+                  }}
+                  min={0}
+                  max={majorScaleRangeValues.length - 1}
+                  step={1}
+                  minStepsBetweenThumbs={1}
+                />
                 <p className="text-xs text-muted-foreground">
                   Questions can span multiple octaves, but answers remain in the same octave
                 </p>
