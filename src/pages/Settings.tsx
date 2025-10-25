@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, History } from "lucide-react";
+import { Plus, Trash2, History, MoreVertical, HelpCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -245,7 +246,29 @@ const SettingsView = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
       <Card className="w-full">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center relative">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate("/history")}>
+                <History className="h-4 w-4 mr-2" />
+                Practice History
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                toast({
+                  title: "Help Documentation",
+                  description: "Documentation coming soon!",
+                });
+              }}>
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Help
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="flex justify-center mb-4">
             <img src={appIcon} alt="LearnTiDo" className="w-16 h-16" />
           </div>
@@ -616,31 +639,6 @@ const SettingsView = () => {
           >
             {showLoadingIndicator ? "Loading sounds..." : "Start Practice"}
           </Button>
-          
-          <div className="flex gap-2 mt-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="flex-1" 
-              onClick={() => navigate("/history")}
-            >
-              <History className="h-4 w-4 mr-2" />
-              Practice History
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="flex-1"
-              onClick={() => {
-                toast({
-                  title: "Help Documentation",
-                  description: "Documentation coming soon!",
-                });
-              }}
-            >
-              Help
-            </Button>
-          </div>
         </CardContent>
       </Card>
       </div>
