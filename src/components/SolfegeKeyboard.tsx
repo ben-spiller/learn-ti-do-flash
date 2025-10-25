@@ -4,20 +4,21 @@ import { Check, X } from "lucide-react";
 import { SemitoneOffset, MAJOR_SCALE_PITCH_CLASSES, semitonesToSolfege } from "@/utils/audio";
 import { getNoteButtonColor } from "@/utils/noteStyles";
 
-interface SolfegeNoteButtonsProps {
+interface SolfegeKeyboardProps {
   rootMidi: number;
   onNotePress: (note: SemitoneOffset) => void;
-  lastPressedNote: SemitoneOffset | null;
-  lastPressedWasCorrect: boolean | null;
-  isPlayingReference: boolean;
+  /** If true, show a tick overlay icon, if false a cross, if null then nothing. */
+  overlayNoteTick: boolean | null;
+  overlayNote: SemitoneOffset | null;
+  disabled: boolean;
 }
 
-const SolfegeNoteButtons: React.FC<SolfegeNoteButtonsProps> = ({
+const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   rootMidi,
   onNotePress,
-  lastPressedNote,
-  lastPressedWasCorrect,
-  isPlayingReference,
+  overlayNote = null,
+  overlayNoteTick = null,
+  disabled = false,
 }) => {
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
@@ -37,20 +38,20 @@ const SolfegeNoteButtons: React.FC<SolfegeNoteButtonsProps> = ({
           // use rem-based inline margin so units match the chromatic column math
           const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
           
-          const isLastPressed = lastPressedNote === pitch;
+          const isLastPressed = overlayNote === pitch;
           
           return (
             <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
               <Button
                 onClick={() => onNotePress(pitch)}
                 className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))}`}
-                disabled={isPlayingReference}
+                disabled={disabled}
               >
                 {solfege}
-                {isLastPressed && lastPressedWasCorrect !== null && (
+                {isLastPressed && overlayNoteTick !== null && (
                   <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
-                      {lastPressedWasCorrect ? (
+                      {overlayNoteTick ? (
                         <Check className="w-8 h-8 text-green-500" strokeWidth={3} />
                       ) : (
                         <X className="w-8 h-8 text-red-500" strokeWidth={3} />
@@ -84,21 +85,21 @@ const SolfegeNoteButtons: React.FC<SolfegeNoteButtonsProps> = ({
           }
           top += buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
           
-          const isLastPressed = lastPressedNote === pitch;
+          const isLastPressed = overlayNote === pitch;
           
           return (
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
               <Button
                 onClick={() => onNotePress(pitch)}
                 className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
-                disabled={isPlayingReference}
+                disabled={disabled}
                 title={semitonesToSolfege(pitch, true)}
               >
                 # / b
-                {isLastPressed && lastPressedWasCorrect !== null && (
+                {isLastPressed && overlayNoteTick !== null && (
                   <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
-                      {lastPressedWasCorrect ? (
+                      {overlayNoteTick ? (
                         <Check className="w-7 h-7 text-green-500" strokeWidth={3} />
                       ) : (
                         <X className="w-7 h-7 text-red-500" strokeWidth={3} />
@@ -115,4 +116,4 @@ const SolfegeNoteButtons: React.FC<SolfegeNoteButtonsProps> = ({
   );
 };
 
-export default SolfegeNoteButtons;
+export default SolfegeKeyboard;

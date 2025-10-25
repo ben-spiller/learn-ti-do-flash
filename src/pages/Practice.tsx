@@ -11,7 +11,7 @@ import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./PracticeHistory";
-import SolfegeNoteButtons from "@/components/SolfegeNoteButtons";
+import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 
 
 const PracticeView = () => {
@@ -626,12 +626,12 @@ const PracticeView = () => {
         {started ? (
           <>
             {/* Musical note button div at the top */}
-            <SolfegeNoteButtons
+            <SolfegeKeyboard
               rootMidi={rootMidi}
               onNotePress={handleNotePress}
-              lastPressedNote={lastPressedNote}
-              lastPressedWasCorrect={lastPressedWasCorrect}
-              isPlayingReference={isPlayingReference}
+              overlayNote={lastPressedNote}
+              overlayNoteTick={lastPressedWasCorrect}
+              disabled={isPlayingReference}
             />
 
             {/* Progress card */}
