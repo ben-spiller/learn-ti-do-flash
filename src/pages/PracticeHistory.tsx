@@ -70,8 +70,8 @@ const PracticeHistory = () => {
   const [selectedTab, setSelectedTab] = useState(recentSession?.exerciseName || exerciseKeys[0] || "");
   
   // Helper to detect settings changes
-  const getSettingsChanges = (current: ConfigData, previous: ConfigData | null): string[] => {
-    if (!previous) return [];
+  const getSettingsChanges = (current: ConfigData | undefined, previous: ConfigData | undefined): string[] => {
+    if (!current || !previous) return [];
     
     const changes: string[] = [];
     if (current.numberOfNotes !== previous.numberOfNotes) {
@@ -431,7 +431,7 @@ const PracticeHistory = () => {
                           
                           // Get previous session (next in reversed array)
                           const previousSession = exerciseSessions.slice().reverse()[index + 1];
-                          const settingsChanges = getSettingsChanges(session.settings, previousSession?.settings || null);
+                          const settingsChanges = getSettingsChanges(session.settings, previousSession?.settings);
                           
                           return (
                             <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
