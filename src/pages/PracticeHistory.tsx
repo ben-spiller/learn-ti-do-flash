@@ -200,6 +200,7 @@ const PracticeHistory = () => {
       }
     })
     .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
+    .filter(pair => pair.count > 1) // Only show patterns (count > 1)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10); // Show top 10
 
@@ -326,6 +327,7 @@ const PracticeHistory = () => {
                   }
                 })
                 .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
+                .filter(pair => pair.count > 1) // Only show patterns (count > 1)
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 10)
                 .map((pair, index, arr) => {
@@ -402,6 +404,7 @@ const PracticeHistory = () => {
               }
             })
             .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
+            .filter(pair => pair.count > 1) // Only show patterns (count > 1)
             .sort((a, b) => b.count - a.count);
 
           const maxCount = needsPracticePairs[0]?.count || 1;
