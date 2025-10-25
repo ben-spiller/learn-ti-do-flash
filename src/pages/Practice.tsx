@@ -3,14 +3,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Play, Volume2, X, VolumeX, Volume1, Check } from "lucide-react";
-import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, MAJOR_SCALE_PITCH_CLASSES, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
+import { Play, Volume2, VolumeX, Volume1 } from "lucide-react";
+import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./PracticeHistory";
+import SolfegeNoteButtons from "@/components/SolfegeNoteButtons";
 
 
 const PracticeView = () => {
@@ -73,10 +74,6 @@ const PracticeView = () => {
     localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
-  // Shared spacing constants used by both the solfege column and the chromatic column.
-  // Units: rem for the layout math, and Tailwind margin classes for the button stack.
-  const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
-  const NARROW_GAP_REM = 0.2; // rem - used for smaller spacing
 
   async function doStart() {
       if (settings.droneType !== "none") {
@@ -629,94 +626,13 @@ const PracticeView = () => {
         {started ? (
           <>
             {/* Musical note button div at the top */}
-            <div className="flex gap-2">
-
-              {/* Main (major scale / solfege) notes column */}
-              <div className="flex-1 flex flex-col">
-                {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch, index) => {
-                  let solfege = semitonesToSolfege(pitch, true);
-                  
-                  // Calculate gap - wider except between Mi-Fa (natural semitone)
-                  const nextPitch = [...MAJOR_SCALE_PITCH_CLASSES].reverse()[index + 1];
-                  const hasChromatic = nextPitch !== undefined && Math.abs(pitch - nextPitch) === 2;
-                  // use rem-based inline margin so units match the chromatic column math
-                  const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
-                  
-                  const isLastPressed = lastPressedNote === pitch;
-                  
-                  return (
-                    <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
-                      <Button
-                        onClick={() => handleNotePress(pitch)}
-                        className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))}`}
-                        disabled={isPlayingReference}
-                      >
-                        {solfege}
-                        {isLastPressed && lastPressedWasCorrect !== null && (
-                          <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
-                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
-                              {lastPressedWasCorrect ? (
-                                <Check className="w-8 h-8 text-green-500" strokeWidth={3} />
-                              ) : (
-                                <X className="w-8 h-8 text-red-500" strokeWidth={3} />
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              {/* Chromatic notes column */}
-              <div className="w-24 relative">
-                {/* Chromatic notes positioned in gaps */}
-                {[10, 8, 6, 3, 1].map((pitch, index) => {
-                  // Calculate vertical position to center flat button in the gap
-                  const gapPositions = [0, 1, 2, 4, 5]; // Which gap after button index
-                  const gapIndex = gapPositions[index];
-                  
-                  const buttonHeight = 4; // rem (h-16)
-                  const flatButtonHeight = 3; // rem (h-12)
-                  const wideGap = WIDE_GAP_REM; // rem
-                  const narrowGap = NARROW_GAP_REM; // rem
-                  
-                  // Calculate top position: sum of buttons and gaps before, plus half current gap, minus half flat button
-                  let top = 0;
-                  for (let i = 0; i < gapIndex; i++) {
-                    top += buttonHeight + (i === 3 ? narrowGap : wideGap);
-                  }
-                  top += buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
-                  
-                  const isLastPressed = lastPressedNote === pitch;
-                  
-                  return (
-                    <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
-                      <Button
-                        onClick={() => handleNotePress(pitch)}
-                        className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
-                        disabled={isPlayingReference}
-                        title={semitonesToSolfege(pitch, true)}
-                      >
-                        # / b
-                        {isLastPressed && lastPressedWasCorrect !== null && (
-                          <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
-                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
-                              {lastPressedWasCorrect ? (
-                                <Check className="w-7 h-7 text-green-500" strokeWidth={3} />
-                              ) : (
-                                <X className="w-7 h-7 text-red-500" strokeWidth={3} />
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <SolfegeNoteButtons
+              rootMidi={rootMidi}
+              onNotePress={handleNotePress}
+              lastPressedNote={lastPressedNote}
+              lastPressedWasCorrect={lastPressedWasCorrect}
+              isPlayingReference={isPlayingReference}
+            />
 
             {/* Progress card */}
             <Card className="relative">
