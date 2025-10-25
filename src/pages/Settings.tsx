@@ -258,14 +258,9 @@ const SettingsView = () => {
                 <History className="h-4 w-4 mr-2" />
                 Practice History
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                toast({
-                  title: "Help Documentation",
-                  description: "Documentation coming soon!",
-                });
-              }}>
+              <DropdownMenuItem onClick={() => {location.href='https://github.com/ben-spiller/learn-ti-do-flash/blob/main/README.md';}}>
                 <HelpCircle className="h-4 w-4 mr-2" />
-                Help
+                Help / GitHub
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
