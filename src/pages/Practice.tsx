@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
-import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES } from "./PracticeHistory";
+import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./PracticeHistory";
 
 
 const PracticeView = () => {
@@ -55,6 +55,11 @@ const PracticeView = () => {
     const stored = localStorage.getItem(STORED_WRONG_2_NOTE_SEQUENCES);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());  
+  /** Pairs of notes that are confused with each other (bidirectional): Maps "noteA,noteB" -> count where noteA < noteB */
+  const confusedPairs = useRef<Map<string, number>>((() => {
+    const stored = localStorage.getItem(STORED_FREQUENTLY_CONFUSED_PAIRS);
+    return stored ? new Map(JSON.parse(stored)) : new Map();
+  })());
   /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
     const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName());
@@ -64,6 +69,7 @@ const PracticeView = () => {
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
     localStorage.setItem(STORED_WRONG_2_NOTE_SEQUENCES, JSON.stringify(Array.from(wrong2NoteSequences.current.entries())));
+    localStorage.setItem(STORED_FREQUENTLY_CONFUSED_PAIRS, JSON.stringify(Array.from(confusedPairs.current.entries())));
     localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
@@ -84,6 +90,7 @@ const PracticeView = () => {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       wrong2NoteSequences.current.clear();
+      confusedPairs.current.clear();
 
       // Now start the first round
       startNewRound();
@@ -339,6 +346,12 @@ const PracticeView = () => {
 
       // Update wrong answer count
       wrong2NoteSequences.current.set(pairKey, (wrong2NoteSequences.current.get(pairKey) || 0) + 1);
+
+      // Track confused pairs (bidirectional - normalize so smaller note comes first)
+      const note1 = Math.min(correctInterval, selectedNote);
+      const note2 = Math.max(correctInterval, selectedNote);
+      const confusedPairKey = `${note1},${note2}`;
+      confusedPairs.current.set(confusedPairKey, (confusedPairs.current.get(confusedPairKey) || 0) + 1);
 
       // Add to needsPractice (+3 if first wrong answer or in the danger zone, +1 otherwise)
       let needsPracticeCount = (needsPractice.current.get(pairKey) || 0);

@@ -45,6 +45,12 @@ const PracticeHistory = () => {
     return stored ? new Map(JSON.parse(stored)) : new Map();
   };
 
+  // Get confusedPairs from localStorage
+  const getConfusedPairs = (): Map<string, number> => {
+    const stored = localStorage.getItem(STORED_FREQUENTLY_CONFUSED_PAIRS);
+    return stored ? new Map(JSON.parse(stored)) : new Map();
+  };
+
   // Get needsPractice from localStorage
   const getNeedsPractice = (exerciseKey: string): Map<string, number> => {
     const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES + exerciseKey);
@@ -81,6 +87,7 @@ const PracticeHistory = () => {
   }
 
   const wrongAnswerHistory = getWrongAnswerHistory(recentSession.exerciseName);
+  const confusedPairs = getConfusedPairs();
   const needsPractice = getNeedsPractice(recentSession.exerciseName);
 
   // Convert wrongAnswerHistory to sorted array for display
@@ -194,6 +201,69 @@ const PracticeHistory = () => {
           ) : (
             <p className="text-muted-foreground text-center py-8">
               No wrong answers yet - you're doing great! 🎉
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Confused Pairs Visualization */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Last session - most frequently confused notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {confusedPairs.size > 0 ? (
+            <div className="space-y-3">
+              {Array.from(confusedPairs.entries())
+                .map(([pairKey, count]) => {
+                  const [note1, note2] = pairKey.split(',').map(n => parseInt(n));
+                  const note1Name = semitonesToSolfege(note1);
+                  const note2Name = semitonesToSolfege(note2);
+                  return {
+                    pairKey,
+                    note1Name,
+                    note2Name,
+                    note1Value: note1,
+                    note2Value: note2,
+                    count,
+                  };
+                })
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10)
+                .map((pair, index, arr) => {
+                  const maxCount = arr[0].count;
+                  const widthPercent = (pair.count / maxCount) * 100;
+                  
+                  return (
+                    <div key={pair.pairKey} className="flex items-center gap-3">
+                      <span className="font-medium text-muted-foreground w-6">{index + 1}.</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.note1Name)}`}>
+                          {pair.note1Name}
+                        </div>
+                        <span className="text-muted-foreground px-1">↔</span>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm text-white ${getNoteButtonColor(pair.note2Name)}`}>
+                          {pair.note2Name}
+                        </div>
+                      </div>
+                      <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-orange-500/70 to-orange-600/70 transition-all duration-500 flex items-center justify-end pr-3"
+                          style={{ width: `${widthPercent}%` }}
+                        >
+                          {widthPercent > 15 && (
+                            <span className="text-xs font-bold text-white">{pair.count}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">{pair.count} times</span>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              No confused note pairs yet - keep practicing! 🎵
             </p>
           )}
         </CardContent>
