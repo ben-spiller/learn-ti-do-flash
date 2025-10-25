@@ -49,6 +49,7 @@ const SettingsView = () => {
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
   const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
+  const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
   const [droneType, setDroneType] = useState(defaults.droneType);
@@ -81,6 +82,7 @@ const SettingsView = () => {
       playExtraNotes,
       minInterval: intervalRange[0],
       maxInterval: intervalRange[1],
+      questionNoteRange,
       tempo,
       rhythm,
       droneType,
@@ -101,6 +103,7 @@ const SettingsView = () => {
       config.settings.playExtraNotes === current.playExtraNotes &&
       config.settings.minInterval === current.minInterval &&
       config.settings.maxInterval === current.maxInterval &&
+      JSON.stringify(config.settings.questionNoteRange) === JSON.stringify(current.questionNoteRange) &&
       config.settings.tempo === current.tempo &&
       config.settings.rhythm === current.rhythm &&
       config.settings.droneType === current.droneType &&
@@ -120,6 +123,7 @@ const SettingsView = () => {
     setNumberOfNotes(settings.numberOfNotes);
     setPlayExtraNotes(settings.playExtraNotes);
     setIntervalRange([settings.minInterval, settings.maxInterval]);
+    setQuestionNoteRange(settings.questionNoteRange);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
     setDroneType(settings.droneType);
@@ -209,6 +213,7 @@ const SettingsView = () => {
           playExtraNotes,
           minInterval: intervalRange[0],
           maxInterval: intervalRange[1],
+          questionNoteRange,
           tempo,
           rhythm,
           droneType,
@@ -249,6 +254,26 @@ const SettingsView = () => {
     9: "La",
     11: "Ti",
   };
+
+  // Generate question note range options from -12 to +24
+  const generateQuestionRangeOptions = () => {
+    const options: Array<{ value: number; label: string }> = [];
+    for (let semitones = -12; semitones <= 24; semitones++) {
+      const octaveOffset = Math.floor(semitones / 12);
+      const noteInOctave = ((semitones % 12) + 12) % 12;
+      const noteName = INTERVAL_TO_SOLFEGE[noteInOctave as SemitoneOffset] || "";
+      
+      let label = noteName;
+      if (octaveOffset === -1) label += " (-1 octave)";
+      else if (octaveOffset === 1) label += " (+1 octave)";
+      else if (octaveOffset === 2) label += " (+2 octaves)";
+      
+      options.push({ value: semitones, label });
+    }
+    return options;
+  };
+
+  const questionRangeOptions = generateQuestionRangeOptions();
 
   // Root note pitch options
   const ROOT_NOTE_OPTIONS = [
@@ -505,6 +530,51 @@ const SettingsView = () => {
                     <Button onClick={() => setNotesDialogOpen(false)}>Done</Button>
                   </DialogContent>
                 </Dialog>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Question Note Range</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">From</Label>
+                    <Select
+                      value={questionNoteRange[0].toString()}
+                      onValueChange={(value) => setQuestionNoteRange([parseInt(value) as SemitoneOffset, questionNoteRange[1]])}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {questionRangeOptions.map(option => (
+                          <SelectItem key={`from-${option.value}`} value={option.value.toString()}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">To</Label>
+                    <Select
+                      value={questionNoteRange[1].toString()}
+                      onValueChange={(value) => setQuestionNoteRange([questionNoteRange[0], parseInt(value) as SemitoneOffset])}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {questionRangeOptions.map(option => (
+                          <SelectItem key={`to-${option.value}`} value={option.value.toString()}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Questions can span multiple octaves, but answers remain in the same octave
+                </p>
               </div>
 
               <div className="space-y-4">

@@ -8,7 +8,8 @@ export class ConfigData {
   numberOfNotes: number = 3; // Number of notes per question (2-10)
   playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
   minInterval: SemitoneOffset = 1;
-  maxInterval: SemitoneOffset = 12; // default - go up to an octave 
+  maxInterval: SemitoneOffset = 12; // default - go up to an octave
+  questionNoteRange: [SemitoneOffset, SemitoneOffset] = [-12, 24]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
   tempo: number = 200; 
   rhythm: "fixed" | "random" = "fixed";
   droneType: "none" | "root" = "none";
@@ -47,6 +48,7 @@ export const CONSTRAINTS = {
   playExtraNotes: { min: 0, max: 5 },
   tempo: { min: 40, max: 300, step: 5 },
   interval: { min: 1, max: 11 },
+  questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
 } as const;
 
 // All available instruments from FluidR3_GM soundfont
