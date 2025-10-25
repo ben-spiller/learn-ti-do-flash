@@ -14,7 +14,9 @@ export class ConfigData {
   droneType: "none" | "root" = "none";
   referenceType: "root" | "arpeggio" = "root";
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
-  instrument: string = "acoustic_grand_piano"; // Instrument slug
+  instrument: string = "acoustic_grand_piano"; // Instrument slug (used when instrumentMode is "single")
+  instrumentMode: "single" | "random" = "single"; // Whether to use a single instrument or random from favourites
+  favouriteInstruments: string[] = ["acoustic_grand_piano", "electric_piano_1", "violin"]; // Favourite instruments for random selection
 
   /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results */
   getExerciseName(): string {

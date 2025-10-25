@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, History, MoreVertical, HelpCircle } from "lucide-react";
+import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
 import { toast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ import {
   ConfigData,
   INSTRUMENT_OPTIONS,
   CONSTRAINTS,
+  formatInstrumentName,
 } from "@/config/ConfigData";
 import {
   getSavedConfigurations,
@@ -36,6 +37,7 @@ import {
   saveCurrentConfiguration,
   SavedConfiguration,
 } from "@/utils/settingsStorage";
+import { InstrumentSelector } from "@/components/InstrumentSelector";
 
 const SettingsView = () => {
   const navigate = useNavigate();
@@ -54,7 +56,10 @@ const SettingsView = () => {
   const [referenceType, setReferenceType] = useState(defaults.referenceType);
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
+  const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
+  const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(defaults.favouriteInstruments);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   
@@ -83,6 +88,8 @@ const SettingsView = () => {
       referenceType,
       rootNotePitch,
       instrument: selectedInstrument,
+      instrumentMode,
+      favouriteInstruments,
     });
   };
 
@@ -100,7 +107,9 @@ const SettingsView = () => {
       config.settings.droneType === current.droneType &&
       config.settings.referenceType === current.referenceType &&
       config.settings.rootNotePitch === current.rootNotePitch &&
-      config.settings.instrument === current.instrument
+      config.settings.instrument === current.instrument &&
+      config.settings.instrumentMode === current.instrumentMode &&
+      JSON.stringify(config.settings.favouriteInstruments.sort()) === JSON.stringify(current.favouriteInstruments.sort())
     );
   };
 
@@ -118,6 +127,8 @@ const SettingsView = () => {
     setReferenceType(settings.referenceType);
     setRootNotePitch(settings.rootNotePitch);
     setSelectedInstrument(settings.instrument);
+    setInstrumentMode(settings.instrumentMode);
+    setFavouriteInstruments(settings.favouriteInstruments);
   };
 
   const handleSaveConfig = () => {
@@ -180,7 +191,12 @@ const SettingsView = () => {
     }, 400);
     
     try {
-      await preloadInstrumentWithGesture(selectedInstrument);
+      // Determine which instrument to preload based on mode
+      const instrumentToPreload = instrumentMode === "random" && favouriteInstruments.length > 0
+        ? favouriteInstruments[Math.floor(Math.random() * favouriteInstruments.length)]
+        : selectedInstrument;
+      
+      await preloadInstrumentWithGesture(instrumentToPreload);
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
       setIsPreloading(false);
@@ -200,7 +216,9 @@ const SettingsView = () => {
           droneType,
           referenceType,
           rootNotePitch,
-          instrument: selectedInstrument,
+          instrument: instrumentToPreload, // Pass the actual instrument to use
+          instrumentMode,
+          favouriteInstruments,
           preloaded: true
         },
       });
@@ -513,41 +531,58 @@ const SettingsView = () => {
             <TabsContent value="audio" className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Instrument</Label>
-                <div className="space-y-2">
-                  <select
-                    value={selectedInstrument}
-                    onChange={async (e) => {
-                      const v = e.target.value;
-                      setSelectedInstrument(v);
+                <Button
+                  variant="outline"
+                  onClick={() => setInstrumentDialogOpen(true)}
+                  className="w-full justify-start h-auto py-3 px-4"
+                >
+                  <div className="flex items-start gap-3 w-full">
+                    {instrumentMode === "single" ? (
+                      <Music className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <Shuffle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex flex-col items-start text-left">
+                      <span className="font-semibold">
+                        {instrumentMode === "single" ? "Single Instrument" : "Random from Favourites"}
+                      </span>
+                      <span className="text-sm text-muted-foreground font-normal">
+                        {instrumentMode === "single" 
+                          ? formatInstrumentName(selectedInstrument)
+                          : `${favouriteInstruments.length} favourite${favouriteInstruments.length !== 1 ? 's' : ''}`
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </Button>
+
+                <InstrumentSelector
+                  open={instrumentDialogOpen}
+                  onOpenChange={setInstrumentDialogOpen}
+                  selectedInstrument={selectedInstrument}
+                  onInstrumentChange={async (instrument) => {
+                    setSelectedInstrument(instrument);
+                    if (instrumentMode === "single") {
                       setIsPreloading(true);
                       try {
-                        // Stop any currently playing sounds
                         stopSounds();
-                        await setInstrument(v);
-                        // Play a C E G C arpeggio as a preview
+                        await setInstrument(instrument);
                         const rootMidi = noteNameToMidi(rootNotePitch);
                         await playSequence([
-                          { note: rootMidi, duration: 0.3, gapAfter: 0.1 },      // C
-                          { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },  // E
-                          { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },  // G
-                          { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },   // C (octave)
+                          { note: rootMidi, duration: 0.3, gapAfter: 0.1 },
+                          { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },
+                          { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },
+                          { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },
                         ]);
                       } catch (_) {}
                       setIsPreloading(false);
-                    }}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    disabled={isPreloading}
-                  >
-                    {INSTRUMENT_OPTIONS.map((opt) => (
-                      <option key={opt.slug} value={opt.slug}>{opt.label}</option>
-                    ))}
-                  </select>
-                  {isPreloading && (
-                    <p className="text-sm text-muted-foreground animate-pulse">
-                      Loading instrument...
-                    </p>
-                  )}
-                </div>
+                    }
+                  }}
+                  instrumentMode={instrumentMode}
+                  onInstrumentModeChange={setInstrumentMode}
+                  favouriteInstruments={favouriteInstruments}
+                  onFavouriteInstrumentsChange={setFavouriteInstruments}
+                />
               </div>
 
               <div className="space-y-4">
