@@ -353,10 +353,15 @@ const PracticeView = () => {
       const confusedPairKey = `${note1},${note2}`;
       confusedPairs.current.set(confusedPairKey, (confusedPairs.current.get(confusedPairKey) || 0) + 1);
 
-      // Add to needsPractice (+3 if first wrong answer or in the danger zone, +1 otherwise)
+      // Add to needsPractice for the CORRECT note (+3 if first wrong answer or in the danger zone, +1 otherwise)
       let needsPracticeCount = (needsPractice.current.get(pairKey) || 0);
       needsPractice.current.set(pairKey, needsPracticeCount + (
         (needsPracticeCount <3) ? +3 : +1));
+      
+      // Also increment needsPractice for the INCORRECT note that was entered
+      const incorrectPairKey = `${prevInterval},${selectedNote}`;
+      const incorrectNeedsPracticeCount = (needsPractice.current.get(incorrectPairKey) || 0);
+      needsPractice.current.set(incorrectPairKey, incorrectNeedsPracticeCount + 1);
       
       savePracticeData();
 
