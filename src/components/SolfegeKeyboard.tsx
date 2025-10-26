@@ -11,6 +11,8 @@ interface SolfegeKeyboardProps {
   overlayNoteTick: boolean | null;
   overlayNote: SemitoneOffset | null;
   disabled: boolean;
+  /** Range of semitones to display [min, max]. Default [0, 12] for one octave. */
+  range?: [SemitoneOffset, SemitoneOffset];
 }
 
 const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
@@ -19,21 +21,84 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   overlayNote = null,
   overlayNoteTick = null,
   disabled = false,
+  range = [0, 12],
 }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
   const NARROW_GAP_REM = 0.2; // rem - used for smaller spacing
 
+  // Generate all major scale notes within the range
+  const generateMajorScaleNotes = () => {
+    const notes: SemitoneOffset[] = [];
+    const [minSemitone, maxSemitone] = range;
+    
+    // Generate notes for each octave in range
+    const minOctave = Math.floor(minSemitone / 12);
+    const maxOctave = Math.ceil(maxSemitone / 12);
+    
+    for (let octave = minOctave; octave <= maxOctave; octave++) {
+      for (const pitch of MAJOR_SCALE_PITCH_CLASSES) {
+        const semitone = octave * 12 + pitch;
+        if (semitone >= minSemitone && semitone <= maxSemitone) {
+          notes.push(semitone as SemitoneOffset);
+        }
+      }
+    }
+    
+    return notes.sort((a, b) => b - a); // Reverse for high-to-low display
+  };
+
+  // Generate all chromatic notes within the range
+  const generateChromaticNotes = () => {
+    const notes: SemitoneOffset[] = [];
+    const [minSemitone, maxSemitone] = range;
+    const chromaticPitches = [1, 3, 6, 8, 10];
+    
+    const minOctave = Math.floor(minSemitone / 12);
+    const maxOctave = Math.ceil(maxSemitone / 12);
+    
+    for (let octave = minOctave; octave <= maxOctave; octave++) {
+      for (const pitch of chromaticPitches) {
+        const semitone = octave * 12 + pitch;
+        if (semitone >= minSemitone && semitone <= maxSemitone) {
+          notes.push(semitone as SemitoneOffset);
+        }
+      }
+    }
+    
+    return notes.sort((a, b) => b - a); // Reverse for high-to-low display
+  };
+
+  const majorScaleNotes = generateMajorScaleNotes();
+  const chromaticNotes = generateChromaticNotes();
+
+  // Scroll to center the main octave (0-11) on mount
+  React.useEffect(() => {
+    if (containerRef.current && range[0] < 0) {
+      // Find the position of the root note (semitone 0)
+      const rootIndex = majorScaleNotes.findIndex(note => note === 0);
+      if (rootIndex !== -1) {
+        // Scroll to center the root note
+        const buttonHeight = 4; // rem (h-16)
+        const gap = WIDE_GAP_REM;
+        const scrollPosition = rootIndex * (buttonHeight + gap);
+        containerRef.current.scrollTop = scrollPosition * 16; // Convert rem to px (assuming 16px = 1rem)
+      }
+    }
+  }, []);
+
   return (
-    <div className="flex gap-2">
+    <div ref={containerRef} className="flex gap-2 max-h-[60vh] overflow-y-auto">
       {/* Main (major scale / solfege) notes column */}
       <div className="flex-1 flex flex-col">
-        {[...MAJOR_SCALE_PITCH_CLASSES].reverse().map((pitch, index) => {
+        {majorScaleNotes.map((pitch, index) => {
           let solfege = semitonesToSolfege(pitch, true);
           
           // Calculate gap - wider except between Mi-Fa (natural semitone)
-          const nextPitch = [...MAJOR_SCALE_PITCH_CLASSES].reverse()[index + 1];
+          const nextPitch = majorScaleNotes[index + 1];
           const hasChromatic = nextPitch !== undefined && Math.abs(pitch - nextPitch) === 2;
           // use rem-based inline margin so units match the chromatic column math
           const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
@@ -41,7 +106,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           const isLastPressed = overlayNote === pitch;
           
           return (
-            <div key={pitch} className="relative" style={index < MAJOR_SCALE_PITCH_CLASSES.length - 1 ? gapStyle : undefined}>
+            <div key={pitch} className="relative" style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
               <Button
                 onClick={() => onNotePress(pitch)}
                 className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))}`}
@@ -66,24 +131,21 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
       </div>
       
       {/* Chromatic notes column */}
-      <div className="w-24 relative">
+      <div className="w-24 relative" style={{ minHeight: `${majorScaleNotes.length * 5}rem` }}>
         {/* Chromatic notes positioned in gaps */}
-        {[10, 8, 6, 3, 1].map((pitch, index) => {
-          // Calculate vertical position to center flat button in the gap
-          const gapPositions = [0, 1, 2, 4, 5]; // Which gap after button index
-          const gapIndex = gapPositions[index];
+        {chromaticNotes.map((pitch) => {
+          // Find the major scale note just above this chromatic note
+          const noteAbove = majorScaleNotes.find(n => n > pitch);
+          if (!noteAbove) return null;
+          
+          const indexAbove = majorScaleNotes.indexOf(noteAbove);
           
           const buttonHeight = 4; // rem (h-16)
           const flatButtonHeight = 3; // rem (h-12)
           const wideGap = WIDE_GAP_REM; // rem
-          const narrowGap = NARROW_GAP_REM; // rem
           
-          // Calculate top position: sum of buttons and gaps before, plus half current gap, minus half flat button
-          let top = 0;
-          for (let i = 0; i < gapIndex; i++) {
-            top += buttonHeight + (i === 3 ? narrowGap : wideGap);
-          }
-          top += buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
+          // Calculate top position based on the note above
+          let top = indexAbove * (buttonHeight + wideGap) + buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
           
           const isLastPressed = overlayNote === pitch;
           

@@ -192,6 +192,7 @@ const SolfegeKeyboardPage = () => {
                 overlayNote={lastPressedNote}
                 overlayNoteTick={null}
                 disabled={false}
+                range={[-12, 24]}
               />
               <div className="mt-4 text-sm text-muted-foreground text-center">
                 {isSelectingRoot 
