@@ -40,6 +40,52 @@ export function semitonesToInterval(semitoneOffset: SemitoneOffset): string {
   return INTERVAL_NAMES[pc];
 }
 
+/** Gets the note indicated by the specified window keydown event */
+export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
+    // Map keys to solfege intervals (semitones from root)
+    const keyToInterval: Record<string, number> = {
+      '1': 0, 'd': 0,  // do
+      '2': 2, 'r': 2,  // re
+      '3': 4, 'm': 4,  // mi
+      '4': 5, 'f': 5,  // fa
+      '5': 7, 's': 7,  // sol
+      '6': 9, 'l': 9,  // la
+      '7': 11, 't': 11, // ti
+    };
+
+    // Map shifted number keys to sharp intervals
+    const shiftedKeyToInterval: Record<string, number> = {
+      '!': 1,  // SHIFT+1 → do#
+      '@': 3,  // SHIFT+2 → re#
+      '#': 5,  // SHIFT+3 → mi#
+      '$': 6,  // SHIFT+4 → fa#
+      '%': 8,  // SHIFT+5 → sol#
+      '^': 10, // SHIFT+6 → la#
+      '&': 12, // SHIFT+7 → ti#
+      '"': 3,  // UK layout SHIFT+2
+      '£': 5,  // UK layout SHIFT+3
+      '€': 6,  // Some layouts SHIFT+4
+    };
+
+    const key = e.key.toLowerCase();
+    
+    // Check for shifted number keys first
+    if (e.key in shiftedKeyToInterval) {
+      console.log('Shifted key detected:', { key: e.key, code: e.code, shiftKey: e.shiftKey });
+      return shiftedKeyToInterval[e.key];
+    }
+    // Then check regular keys
+    else if (key in keyToInterval) {
+      let interval = keyToInterval[key];
+      // If SHIFT is held with letter keys, play the sharp (semitone higher)
+      if (e.shiftKey && /[drmfslt]/.test(key)) {
+        interval += 1;
+      }
+      return interval;
+    }
+    return null;
+}
+
 let audioContext: AudioContext | null = null;
 let toneInstrument: any = null; // Tone.js synth / sampler instance
 let toneLoaded = false;
