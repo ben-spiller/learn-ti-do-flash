@@ -21,7 +21,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   overlayNote = null,
   overlayNoteTick = null,
   disabled = false,
-  range = [0, 12],
+  range = [0, 11],
 }) => {
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
@@ -157,10 +157,10 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
 
           return (
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
-              <div className={!inMainOctave ? 'flex justify-end' : ''}>
+              <div className={''}>
                 <Button
                   onClick={() => onNotePress(pitch)}
-                  className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
+                  className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'}`}
                   disabled={disabled}
                   title={semitonesToSolfege(pitch, true)}
                 >
