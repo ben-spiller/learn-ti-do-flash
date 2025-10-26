@@ -17,7 +17,8 @@ import {
   stopDrone, 
   setDroneVolume as setAudioDroneVolume,
   keypressToSemitones,
-  midiToNoteName
+  midiToNoteName,
+  isAudioInitialized
 } from "@/utils/audio";
 import { formatInstrumentName, INSTRUMENT_SLUGS } from "@/config/ConfigData";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
@@ -37,6 +38,18 @@ const SolfegeKeyboardPage = () => {
   useEffect(() => {
     saveKeyboardSettings(settings);
   }, [settings]);
+  
+  // Auto-start if audio is already initialized for this instrument
+  useEffect(() => {
+    if (!hasPreloaded && isAudioInitialized(settings.instrument)) {
+      setHasPreloaded(true);
+      
+      // Start drone if enabled
+      if (settings.droneEnabled) {
+        startDrone(rootMidi, settings.droneVolume);
+      }
+    }
+  }, []);
   
   // Cleanup drone on unmount
   useEffect(() => {

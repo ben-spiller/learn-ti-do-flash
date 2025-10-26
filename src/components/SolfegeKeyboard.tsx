@@ -114,7 +114,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
             <div key={pitch} className="relative" style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-40' : ''}`}
+                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-40 w-2/3 ml-auto' : 'w-full'}`}
                 disabled={disabled}
               >
                 {solfege}
@@ -159,7 +159,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-40' : ''}`}
+                className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-40 w-2/3 ml-auto' : 'w-full'}`}
                 disabled={disabled}
                 title={semitonesToSolfege(pitch, true)}
               >

@@ -596,6 +596,11 @@ export const preloadInstrumentWithGesture = async (
 
 export const getCurrentInstrument = () => currentInstrument;
 
+export const isAudioInitialized = (instrument?: string) => {
+  const targetInstrument = instrument || currentInstrument;
+  return toneLoaded && toneInstrument !== null && currentInstrument === targetInstrument;
+};
+
 export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, durationSecs: number = 0.7, when?: number) => {
   // note may be a MIDI number (preferred), or a note name like 'C4'
   let noteName: string | null = null;
