@@ -70,8 +70,26 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
     return notes.sort((a, b) => b - a); // Reverse for high-to-low display
   };
 
+  // Heights (rem)
+  const buttonHeightREM = 4; // matches h-16
+  const flatButtonHeightREM = 3; // matches h-12
+
   const majorScaleNotes = generateMajorScaleNotes();
   const chromaticNotes = generateChromaticNotes();
+
+  // Build a map from diatonic note -> top offset (rem), and compute total column height
+  const diatonicTopMap = new Map<SemitoneOffset, number>();
+  let accTop = 0;
+  for (let i = 0; i < majorScaleNotes.length; i++) {
+    const note = majorScaleNotes[i];
+    diatonicTopMap.set(note, accTop);
+    const next = majorScaleNotes[i + 1];
+    if (next !== undefined) {
+      const isWide = Math.abs(note - next) === 2;
+      accTop += buttonHeightREM + (isWide ? WIDE_GAP_REM : NARROW_GAP_REM);
+    }
+  }
+  const totalHeightRem = accTop + buttonHeightREM;
 
   // Check if a note is in the main octave (0-11)
   const isInMainOctave = (semitone: SemitoneOffset) => semitone >= 0 && semitone <= 11;
@@ -118,26 +136,25 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
       </div>
       
       {/* Chromatic notes column */}
-      <div className="w-24 relative">
+      <div className="w-24 relative" style={{ height: `${totalHeightRem}rem` }}>
         {/* Chromatic notes positioned in gaps */}
         {chromaticNotes.map((pitch) => {
-          // Find the major scale note just above this chromatic note
-          const noteAbove = majorScaleNotes.find(n => n > pitch);
-          
-          if (!noteAbove) return null;
-          
-          const indexAbove = majorScaleNotes.indexOf(noteAbove);
-          
-          const buttonHeight = 4; // rem (h-16)
-          const flatButtonHeight = 3; // rem (h-12)
-          const wideGap = WIDE_GAP_REM; // rem
-          
-          // Calculate top position based on the note above
-          let top = indexAbove * (buttonHeight + wideGap) + buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
-          
+          // Determine the diatonic note just above this chromatic note within the stack
+          const indexAbove = majorScaleNotes.findIndex((n, i) => n > pitch && (i === majorScaleNotes.length - 1 || majorScaleNotes[i + 1] <= pitch));
+          if (indexAbove === -1 || indexAbove >= majorScaleNotes.length - 1) return null;
+
+          const noteAbove = majorScaleNotes[indexAbove];
+          const noteBelow = majorScaleNotes[indexAbove + 1];
+
+          const gapWidth = Math.abs(noteAbove - noteBelow) === 2 ? WIDE_GAP_REM : NARROW_GAP_REM;
+
+          // Top position is centered in the gap between the two diatonic notes
+          const topOfAbove = diatonicTopMap.get(noteAbove) ?? 0;
+          const top = topOfAbove + buttonHeightREM + (gapWidth / 2) - (flatButtonHeightREM / 2);
+
           const isLastPressed = overlayNote === pitch;
           const inMainOctave = isInMainOctave(pitch);
-          
+
           return (
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
               <Button
