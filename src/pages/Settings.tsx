@@ -96,26 +96,6 @@ const SettingsView = () => {
     });
   };
 
-  const configMatches = (config: SavedConfiguration): boolean => {
-    const current = getCurrentSettings();
-    // TODO: move this to the ConfigData class
-    return (
-      JSON.stringify(config.settings.selectedNotes.sort()) === JSON.stringify(current.selectedNotes.sort()) &&
-      config.settings.numberOfNotes === current.numberOfNotes &&
-      config.settings.playExtraNotes === current.playExtraNotes &&
-      JSON.stringify(config.settings.consecutiveIntervals) === JSON.stringify(current.consecutiveIntervals) &&
-      JSON.stringify(config.settings.questionNoteRange) === JSON.stringify(current.questionNoteRange) &&
-      config.settings.tempo === current.tempo &&
-      config.settings.rhythm === current.rhythm &&
-      config.settings.droneType === current.droneType &&
-      config.settings.referenceType === current.referenceType &&
-      config.settings.rootNotePitch === current.rootNotePitch &&
-      config.settings.instrument === current.instrument &&
-      config.settings.instrumentMode === current.instrumentMode &&
-      JSON.stringify(config.settings.favouriteInstruments.sort()) === JSON.stringify(current.favouriteInstruments.sort())
-    );
-  };
-
   const loadConfig = (id: string) => {
     const settings = loadConfiguration(id);
     if (!settings) return;
@@ -391,7 +371,7 @@ const SettingsView = () => {
             {savedConfigs.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {savedConfigs.map((config) => {
-                  const isMatching = configMatches(config);
+                  const isMatching = getCurrentSettings().equals(config.settings);
                   return (
                   <Card 
                     key={config.id} 

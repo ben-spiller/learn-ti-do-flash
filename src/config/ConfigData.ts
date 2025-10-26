@@ -62,6 +62,24 @@ export class ConfigData {
       Object.assign(this, partial);
     }
   }
+
+  equals(other: ConfigData): boolean {
+    return (
+      JSON.stringify(other.selectedNotes.sort()) === JSON.stringify(this.selectedNotes.sort()) &&
+      other.numberOfNotes === this.numberOfNotes &&
+      other.playExtraNotes === this.playExtraNotes &&
+      JSON.stringify(other.consecutiveIntervals) === JSON.stringify(this.consecutiveIntervals) &&
+      JSON.stringify(other.questionNoteRange) === JSON.stringify(this.questionNoteRange) &&
+      other.tempo === this.tempo &&
+      other.rhythm === this.rhythm &&
+      other.droneType === this.droneType &&
+      other.referenceType === this.referenceType &&
+      other.rootNotePitch === this.rootNotePitch &&
+      other.instrument === this.instrument &&
+      other.instrumentMode === this.instrumentMode &&
+      JSON.stringify(other.favouriteInstruments.sort()) === JSON.stringify(this.favouriteInstruments.sort())
+    );
+  }
   
 }
 
