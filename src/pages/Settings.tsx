@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle } from "lucide-react";
+import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle, Piano } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
 import { toast } from "@/hooks/use-toast";
@@ -285,6 +285,10 @@ const SettingsView = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate("/keyboard")}>
+                <Piano className="h-4 w-4 mr-2" />
+                Solfege Keyboard
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/history")}>
                 <History className="h-4 w-4 mr-2" />
                 Practice History

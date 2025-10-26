@@ -6,6 +6,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import SettingsView from "./pages/Settings";
 import PracticeView from "./pages/Practice";
 import PracticeHistory from "./pages/PracticeHistory";
+import SolfegeKeyboardPage from "./pages/SolfegeKeyboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => {
           <Route path="/" element={<SettingsView />} />
           <Route path="/practice" element={<PracticeView />} />
           <Route path="/history" element={<PracticeHistory />} />
+          <Route path="/keyboard" element={<SolfegeKeyboardPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
