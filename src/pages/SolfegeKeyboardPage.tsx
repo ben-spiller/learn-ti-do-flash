@@ -102,8 +102,7 @@ const SolfegeKeyboardPage = () => {
   const handleNotePress = (note: SemitoneOffset) => {
     if (isSelectingRoot) {
       // Set the root note based on the selected semitone
-      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      const noteName = noteNames[note % 12];
+      const noteName = midiToNoteName(rootMidi+note);
       const currentOctave = parseInt(settings.rootNote.slice(-1));
       const newRootNote = `${noteName}${currentOctave}`;
       handleRootNoteChange(newRootNote);
@@ -228,7 +227,7 @@ const SolfegeKeyboardPage = () => {
           <CardContent className="pt-6 space-y-4">
             {/* Root Note and Octave */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Root Note</label>
+              <label className="text-sm font-medium">Root/Do Note</label>
               <div className="grid grid-cols-3 gap-2">
                 <Select 
                   value={currentNoteName} 
@@ -289,7 +288,7 @@ const SolfegeKeyboardPage = () => {
             
             {/* Drone Control */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Drone</label>
+              <label className="text-sm font-medium">Background root drone</label>
               <div className="flex items-center gap-2">
                 <Button
                   variant={settings.droneEnabled ? "default" : "outline"}
