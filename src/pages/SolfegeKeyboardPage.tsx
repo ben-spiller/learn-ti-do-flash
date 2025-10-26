@@ -264,7 +264,7 @@ const SolfegeKeyboardPage = () => {
                   disabled={!hasPreloaded}
                   className="h-10"
                 >
-                  Select
+                  Select from Keyboard
                 </Button>
               </div>
             </div>
