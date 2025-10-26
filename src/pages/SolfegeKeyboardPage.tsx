@@ -51,6 +51,13 @@ const SolfegeKeyboardPage = () => {
     }
   }, []);
   
+  // Auto-preload on mount since navigation is a gesture
+  useEffect(() => {
+    if (!hasPreloaded && !isPreloading) {
+      handleStart();
+    }
+  }, []);
+  
   // Cleanup drone on unmount
   useEffect(() => {
     return () => {

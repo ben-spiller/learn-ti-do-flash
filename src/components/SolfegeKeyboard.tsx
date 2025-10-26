@@ -111,10 +111,10 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           const inMainOctave = isInMainOctave(pitch);
           
           return (
-            <div key={pitch} className="relative" style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
+            <div key={pitch} className={`relative ${!inMainOctave ? 'flex justify-end' : ''}`} style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-40 w-2/3 ml-auto' : 'w-full'}`}
+                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
                 disabled={disabled}
               >
                 {solfege}
@@ -157,12 +157,13 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
 
           return (
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
-              <Button
-                onClick={() => onNotePress(pitch)}
-                className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-40 w-2/3 ml-auto' : 'w-full'}`}
-                disabled={disabled}
-                title={semitonesToSolfege(pitch, true)}
-              >
+              <div className={!inMainOctave ? 'flex justify-end' : ''}>
+                <Button
+                  onClick={() => onNotePress(pitch)}
+                  className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
+                  disabled={disabled}
+                  title={semitonesToSolfege(pitch, true)}
+                >
                 # / b
                 {isLastPressed && overlayNoteTick !== null && (
                   <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
@@ -174,8 +175,9 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                       )}
                     </div>
                   </div>
-                )}
-              </Button>
+                  )}
+                </Button>
+              </div>
             </div>
           );
         })}
