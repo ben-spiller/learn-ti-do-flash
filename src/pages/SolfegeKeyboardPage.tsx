@@ -31,6 +31,7 @@ const SolfegeKeyboardPage = () => {
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
   const [isPreloading, setIsPreloading] = useState(false);
   const [hasPreloaded, setHasPreloaded] = useState(false);
+  const [isSelectingRoot, setIsSelectingRoot] = useState(false);
   
   // Persist settings whenever they change
   useEffect(() => {
@@ -79,14 +80,25 @@ const SolfegeKeyboardPage = () => {
   };
   
   const handleNotePress = (note: SemitoneOffset) => {
-    stopSounds();
-    playNote(note + rootMidi);
-    setLastPressedNote(note);
-    
-    // Clear visual feedback after animation
-    setTimeout(() => {
-      setLastPressedNote(null);
-    }, 300);
+    if (isSelectingRoot) {
+      // Set the root note based on the selected semitone
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const noteName = noteNames[note % 12];
+      const currentOctave = parseInt(settings.rootNote.slice(-1));
+      const newRootNote = `${noteName}${currentOctave}`;
+      handleRootNoteChange(newRootNote);
+      setIsSelectingRoot(false);
+    } else {
+      // Normal note playing
+      stopSounds();
+      playNote(note + rootMidi);
+      setLastPressedNote(note);
+      
+      // Clear visual feedback after animation
+      setTimeout(() => {
+        setLastPressedNote(null);
+      }, 300);
+    }
   };
   
   const handleRootNoteChange = (noteName: string) => {
@@ -141,14 +153,6 @@ const SolfegeKeyboardPage = () => {
     }
   }
   
-  const handleRootNoteSelect = (note: SemitoneOffset) => {
-    // Map semitone offset to note name
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const noteName = noteNames[note % 12];
-    const currentOctave = parseInt(settings.rootNote.slice(-1));
-    const newRootNote = `${noteName}${currentOctave}`;
-    handleRootNoteChange(newRootNote);
-  };
   
   const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const currentNoteName = settings.rootNote.slice(0, -1);
@@ -184,13 +188,15 @@ const SolfegeKeyboardPage = () => {
             <CardContent className="pt-6">
               <SolfegeKeyboard
                 rootMidi={rootMidi}
-                onNotePress={handleRootNoteSelect}
+                onNotePress={handleNotePress}
                 overlayNote={lastPressedNote}
                 overlayNoteTick={null}
                 disabled={false}
               />
               <div className="mt-4 text-sm text-muted-foreground text-center">
-                Click any note to set as root, or use keyboard shortcuts
+                {isSelectingRoot 
+                  ? "Click a note to set as root note" 
+                  : "Click notes to play, or use keyboard shortcuts"}
               </div>
             </CardContent>
           </Card>
@@ -200,9 +206,9 @@ const SolfegeKeyboardPage = () => {
         <Card>
           <CardContent className="pt-6 space-y-4">
             {/* Root Note and Octave */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Root Note</label>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Root Note</label>
+              <div className="grid grid-cols-3 gap-2">
                 <Select 
                   value={currentNoteName} 
                   onValueChange={(note) => handleRootNoteChange(`${note}${currentOctave}`)}
@@ -216,10 +222,7 @@ const SolfegeKeyboardPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Octave</label>
+                
                 <Select 
                   value={currentOctave.toString()} 
                   onValueChange={(octave) => handleRootNoteChange(`${currentNoteName}${octave}`)}
@@ -233,6 +236,16 @@ const SolfegeKeyboardPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                <Button
+                  variant={isSelectingRoot ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setIsSelectingRoot(!isSelectingRoot)}
+                  disabled={!hasPreloaded}
+                  className="h-10"
+                >
+                  Select
+                </Button>
               </div>
             </div>
             
