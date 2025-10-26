@@ -1,56 +1,28 @@
-# Welcome to your Lovable project
+# Learn-ti-do Solfege Ear Trainer
 
-## Project info
+This project is a free and highly customizable tool for improving your functional / relative pitch. 
 
-**URL**: https://lovable.dev/projects/be1724ed-6adf-4dcc-91a5-f17967da9031
+## Features
 
-## How can I edit this code?
+## Design philosophy
+TODO
 
-There are several ways of editing your application.
+## Implementation
 
-**Use Lovable**
+Many thanks to the excellent [Loveable](https://lovable.dev) AI tooling for doing most of the heavy lifting in this project.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/be1724ed-6adf-4dcc-91a5-f17967da9031) and start prompting.
+Since this application runs entirely on the client, if you want any new features or changes you can simply clone it and make them in your own version. But do make a PR to share it back to this project if you think others would find it useful. 
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The only requirement for building is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
 npm i
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
 
 This project is built with:
 
@@ -60,14 +32,14 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## License
+Learn-ti-do is made available under the [MIT](https://mit-license.org/) license.  
+Copyright (C) Ben Spiller 2025-present. 
 
-Simply open [Lovable](https://lovable.dev/projects/be1724ed-6adf-4dcc-91a5-f17967da9031) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
+### Third party licenses and attributions
+Thanks and credit to some great third party tools and libraries that helped make this possible.
 
-Yes, you can!
+This project makes use of pre-rendered audio assets provided by [gleitz/midi-js-soundfonts](https://github.com/gleitz/midi-js-soundfonts).License is [MIT](https://mit-license.org/). Copyright (C) 2012 Benjamin Gleitzman (gleitz@mit.edu).
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The sound assets in midi-js-soundfonts are derived, pre-rendered assets created from the **FluidR3_GM.sf2** General MIDI soundfont. Changes were made by midi-js-soundfonts to convert the original SF2 format into WebAudio/JSON soundfont assets for use in browser-based MIDI playback. FluidR3_GM.sf2 is licensed under the [Creative Commons Attribution 3.0 (CC BY 3.0)](https://creativecommons.org/licenses/by/3.0/). Original source for that was packaged by Ubuntu in the `fluid-soundfont-gm` package, maintained by Toby Smithe `<tsmithe@ubuntu.com>`. 
