@@ -433,7 +433,7 @@ const PracticeView = () => {
       {
         let intervalFiltered = pool.filter(note => {
           const distance = Math.abs(note - prevNote);
-          return distance >= settings.minInterval && distance <= settings.maxInterval; 
+          return distance >= settings.consecutiveIntervals[0] && distance <= settings.consecutiveIntervals[1]; 
         });
         if (intervalFiltered.length === 0) { console.log("No possible notes after "+semitonesToSolfege(prevNote)); }
         else { pool = intervalFiltered; }
@@ -604,32 +604,7 @@ const PracticeView = () => {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {/* Temporary debug display */}
-                {/* {sequence.length > 0 && false && (
-                  <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
-                    <div className="font-semibold">Debug Info (Interval Range: {settings.minInterval}-{settings.maxInterval}):</div>
-                    <div>
-                      Sequence: {sequence.map((note, idx) => {
-                        const solfege = midiToSolfege(note) || midiToNoteName(note);
-                        const scaleDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(note % 12);
-                        return `${solfege}(${scaleDegree >= 0 ? scaleDegree + 1 : '?'})`;
-                      }).join(' → ')}
-                    </div>
-                    <div>
-                      Intervals: {sequence.slice(1).map((note, idx) => {
-                        const prevNote = sequence[idx];
-                        const prevDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(prevNote % 12);
-                        const currDegree = MAJOR_SCALE_PITCH_CLASSES.indexOf(note % 12);
-                        if (prevDegree === -1 || currDegree === -1) return '?';
-                        const distance = Math.abs(currDegree - prevDegree);
-                        const valid = distance >= settings.minInterval && distance <= settings.maxInterval;
-                        return `${distance}${valid ? '✓' : '✗'}`;
-                      }).join(', ')}
-                    </div>
-                  </div>
-                )} */}
-                
+              <CardContent>                
                 <div className="flex gap-2 justify-center flex-wrap">
                   {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
                     const isAnswered = index < currentPosition;

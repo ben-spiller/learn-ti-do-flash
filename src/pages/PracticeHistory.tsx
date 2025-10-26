@@ -123,8 +123,8 @@ const PracticeHistory = () => {
     if (current.tempo !== previous.tempo) {
       changes.push(`Tempo: ${previous.tempo} → ${current.tempo}`);
     }
-    if (current.minInterval !== previous.minInterval || current.maxInterval !== previous.maxInterval) {
-      changes.push(`Interval: ${previous.minInterval}-${previous.maxInterval} → ${current.minInterval}-${current.maxInterval}`);
+    if (current.consecutiveIntervals !== previous.consecutiveIntervals) {
+      changes.push(`Interval: ${previous.consecutiveIntervals[0]}-${previous.consecutiveIntervals[1]} → ${current.consecutiveIntervals[0]}-${current.consecutiveIntervals[1]}`);
     }
     if (current.rhythm !== previous.rhythm) {
       changes.push(`Rhythm: ${previous.rhythm} → ${current.rhythm}`);

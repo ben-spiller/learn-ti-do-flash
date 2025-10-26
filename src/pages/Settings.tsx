@@ -51,7 +51,7 @@ const SettingsView = () => {
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
-  const [intervalRange, setIntervalRange] = useState([defaults.minInterval, defaults.maxInterval]);
+  const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
@@ -83,8 +83,7 @@ const SettingsView = () => {
       selectedNotes,
       numberOfNotes,
       playExtraNotes,
-      minInterval: intervalRange[0],
-      maxInterval: intervalRange[1],
+      consecutiveIntervals,
       questionNoteRange,
       tempo,
       rhythm,
@@ -104,8 +103,7 @@ const SettingsView = () => {
       JSON.stringify(config.settings.selectedNotes.sort()) === JSON.stringify(current.selectedNotes.sort()) &&
       config.settings.numberOfNotes === current.numberOfNotes &&
       config.settings.playExtraNotes === current.playExtraNotes &&
-      config.settings.minInterval === current.minInterval &&
-      config.settings.maxInterval === current.maxInterval &&
+      JSON.stringify(config.settings.consecutiveIntervals) === JSON.stringify(current.consecutiveIntervals) &&
       JSON.stringify(config.settings.questionNoteRange) === JSON.stringify(current.questionNoteRange) &&
       config.settings.tempo === current.tempo &&
       config.settings.rhythm === current.rhythm &&
@@ -125,7 +123,7 @@ const SettingsView = () => {
     setSelectedNotes(settings.selectedNotes);
     setNumberOfNotes(settings.numberOfNotes);
     setPlayExtraNotes(settings.playExtraNotes);
-    setIntervalRange([settings.minInterval, settings.maxInterval]);
+    setConsecutiveIntervals(settings.consecutiveIntervals);
     setQuestionNoteRange(settings.questionNoteRange);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
@@ -214,8 +212,7 @@ const SettingsView = () => {
           selectedNotes, 
           numberOfNotes,
           playExtraNotes,
-          minInterval: intervalRange[0],
-          maxInterval: intervalRange[1],
+          consecutiveIntervals,
           questionNoteRange,
           tempo,
           rhythm,
@@ -569,18 +566,18 @@ const SettingsView = () => {
 
               <div className="space-y-4">
                 <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
-                  Consecutive note intervals: {semitonesToInterval(intervalRange[0])} ... {semitonesToInterval(intervalRange[1])}</Label>
+                  Consecutive intervals: {semitonesToInterval(consecutiveIntervals[0])} ... {semitonesToInterval(consecutiveIntervals[1])}</Label>
                 <Slider
-                  value={intervalRange}
+                  value={consecutiveIntervals}
                   onValueChange={(values) => {
                     // Ensure min and max are always different
                     if (values[0] === values[1]) {
                       return;
                     }
-                    setIntervalRange(values);
+                    setConsecutiveIntervals([values[0], values[1]]);
                   }}
-                  min={CONSTRAINTS.interval.min}
-                  max={CONSTRAINTS.interval.max}
+                  min={CONSTRAINTS.consecutiveIntervals.min}
+                  max={CONSTRAINTS.consecutiveIntervals.max}
                   step={1}
                   minStepsBetweenThumbs={1}
                 />
