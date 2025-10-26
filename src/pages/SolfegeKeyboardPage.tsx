@@ -141,36 +141,99 @@ const SolfegeKeyboardPage = () => {
     }
   }
   
+  const handleRootNoteSelect = (note: SemitoneOffset) => {
+    // Map semitone offset to note name
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const noteName = noteNames[note % 12];
+    const currentOctave = parseInt(settings.rootNote.slice(-1));
+    const newRootNote = `${noteName}${currentOctave}`;
+    handleRootNoteChange(newRootNote);
+  };
+  
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const currentNoteName = settings.rootNote.slice(0, -1);
+  const currentOctave = parseInt(settings.rootNote.slice(-1));
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Settings
+        {/* Compact Header */}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          <h1 className="text-lg font-semibold">Solfege Keyboard</h1>
         </div>
         
-        {/* Settings Card */}
+        {/* Start Button or Keyboard */}
+        {!hasPreloaded ? (
+          <Card>
+            <CardContent className="pt-6">
+              <Button 
+                onClick={handleStart} 
+                disabled={isPreloading}
+                className="w-full"
+                size="lg"
+              >
+                {isPreloading ? "Loading..." : "Start Playing"}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <SolfegeKeyboard
+                rootMidi={rootMidi}
+                onNotePress={handleRootNoteSelect}
+                overlayNote={lastPressedNote}
+                overlayNoteTick={null}
+                disabled={false}
+              />
+              <div className="mt-4 text-sm text-muted-foreground text-center">
+                Click any note to set as root, or use keyboard shortcuts
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Settings Card - Below Keyboard */}
         <Card>
-          <CardHeader>
-            <CardTitle>Solfege Keyboard</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Root Note Selector */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Root Note</label>
-              <Select value={settings.rootNote} onValueChange={handleRootNoteChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {noteOptions.map(note => (
-                    <SelectItem key={note} value={note}>{note}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="pt-6 space-y-4">
+            {/* Root Note and Octave */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Root Note</label>
+                <Select 
+                  value={currentNoteName} 
+                  onValueChange={(note) => handleRootNoteChange(`${note}${currentOctave}`)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {noteNames.map(note => (
+                      <SelectItem key={note} value={note}>{note}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Octave</label>
+                <Select 
+                  value={currentOctave.toString()} 
+                  onValueChange={(octave) => handleRootNoteChange(`${currentNoteName}${octave}`)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2, 3, 4, 5, 6].map(octave => (
+                      <SelectItem key={octave} value={octave.toString()}>{octave}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             {/* Instrument Selector */}
@@ -234,37 +297,6 @@ const SolfegeKeyboardPage = () => {
             </div>
           </CardContent>
         </Card>
-        
-        {/* Start Button or Keyboard */}
-        {!hasPreloaded ? (
-          <Card>
-            <CardContent className="pt-6">
-              <Button 
-                onClick={handleStart} 
-                disabled={isPreloading}
-                className="w-full"
-                size="lg"
-              >
-                {isPreloading ? "Loading..." : "Start Playing"}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <SolfegeKeyboard
-                rootMidi={rootMidi}
-                onNotePress={handleNotePress}
-                overlayNote={lastPressedNote}
-                overlayNoteTick={null}
-                disabled={false}
-              />
-              <div className="mt-4 text-sm text-muted-foreground text-center">
-                Use keyboard shortcuts: 1-7 or d/r/m/f/s/l/t for notes, Shift for sharps/flats
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
