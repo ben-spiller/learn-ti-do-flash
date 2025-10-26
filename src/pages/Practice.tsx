@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Play, Volume2, VolumeX, Volume1 } from "lucide-react";
-import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume } from "@/utils/audio";
+import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
@@ -290,7 +290,7 @@ const PracticeView = () => {
     setTotalAttempts(totalAttempts + 1);
 
     // Check if the notes match
-    const isCorrect = selectedNote%12 === correctNote%12;
+    const isCorrect = semitonesToOneOctave(selectedNote)=== semitonesToOneOctave(correctNote);
 
     // Store the pressed note and feedback
     setLastPressedNote(selectedNote);

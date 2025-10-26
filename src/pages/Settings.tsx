@@ -22,6 +22,7 @@ import {
   stopSounds,
   MAJOR_SCALE_PITCH_CLASSES,
   semitonesToSolfege,
+  semitonesToOneOctave,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -276,8 +277,8 @@ const SettingsView = () => {
   // Format a semitone offset as a solfege label with octave
   const formatQuestionRangeLabel = (semitones: number): string => {
     const octaveOffset = Math.floor(semitones / 12);
-    const noteInOctave = ((semitones % 12) + 12) % 12;
-    const noteName = semitonesToSolfege(noteInOctave as SemitoneOffset);
+    const noteInOctave = semitonesToOneOctave(semitones);
+    const noteName = semitonesToSolfege(noteInOctave);
     
     if (octaveOffset === -1) return `${noteName} (-1 octave)`;
     if (octaveOffset === 0) return `${noteName} (main octave)`;
