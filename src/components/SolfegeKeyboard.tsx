@@ -96,7 +96,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
             <div key={pitch} className="relative" style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-60' : ''}`}
+                className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-40' : ''}`}
                 disabled={disabled}
               >
                 {solfege}
@@ -121,11 +121,10 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
       <div className="w-24 relative">
         {/* Chromatic notes positioned in gaps */}
         {chromaticNotes.map((pitch) => {
-          // Find the major scale note just above and below this chromatic note
+          // Find the major scale note just above this chromatic note
           const noteAbove = majorScaleNotes.find(n => n > pitch);
-          const noteBelow = [...majorScaleNotes].reverse().find(n => n < pitch);
           
-          if (!noteAbove || !noteBelow) return null;
+          if (!noteAbove) return null;
           
           const indexAbove = majorScaleNotes.indexOf(noteAbove);
           
@@ -143,7 +142,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-60' : ''}`}
+                className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-40' : ''}`}
                 disabled={disabled}
                 title={semitonesToSolfege(pitch, true)}
               >
