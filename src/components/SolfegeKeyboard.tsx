@@ -23,8 +23,6 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   disabled = false,
   range = [0, 12],
 }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
@@ -75,23 +73,11 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   const majorScaleNotes = generateMajorScaleNotes();
   const chromaticNotes = generateChromaticNotes();
 
-  // Scroll to center the main octave (0-11) on mount
-  React.useEffect(() => {
-    if (containerRef.current && range[0] < 0) {
-      // Find the position of the root note (semitone 0)
-      const rootIndex = majorScaleNotes.findIndex(note => note === 0);
-      if (rootIndex !== -1) {
-        // Scroll to center the root note
-        const buttonHeight = 4; // rem (h-16)
-        const gap = WIDE_GAP_REM;
-        const scrollPosition = rootIndex * (buttonHeight + gap);
-        containerRef.current.scrollTop = scrollPosition * 16; // Convert rem to px (assuming 16px = 1rem)
-      }
-    }
-  }, []);
+  // Check if a note is in the main octave (0-11)
+  const isInMainOctave = (semitone: SemitoneOffset) => semitone >= 0 && semitone <= 11;
 
   return (
-    <div ref={containerRef} className="flex gap-2 max-h-[60vh] overflow-y-auto">
+    <div className="flex gap-2">
       {/* Main (major scale / solfege) notes column */}
       <div className="flex-1 flex flex-col">
         {majorScaleNotes.map((pitch, index) => {
@@ -104,12 +90,13 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
           
           const isLastPressed = overlayNote === pitch;
+          const inMainOctave = isInMainOctave(pitch);
           
           return (
             <div key={pitch} className="relative" style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))}`}
+                className={`h-16 w-full text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-60' : ''}`}
                 disabled={disabled}
               >
                 {solfege}
@@ -131,12 +118,14 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
       </div>
       
       {/* Chromatic notes column */}
-      <div className="w-24 relative" style={{ minHeight: `${majorScaleNotes.length * 5}rem` }}>
+      <div className="w-24 relative">
         {/* Chromatic notes positioned in gaps */}
         {chromaticNotes.map((pitch) => {
-          // Find the major scale note just above this chromatic note
+          // Find the major scale note just above and below this chromatic note
           const noteAbove = majorScaleNotes.find(n => n > pitch);
-          if (!noteAbove) return null;
+          const noteBelow = [...majorScaleNotes].reverse().find(n => n < pitch);
+          
+          if (!noteAbove || !noteBelow) return null;
           
           const indexAbove = majorScaleNotes.indexOf(noteAbove);
           
@@ -148,12 +137,13 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           let top = indexAbove * (buttonHeight + wideGap) + buttonHeight + (wideGap / 2) - (flatButtonHeight / 2);
           
           const isLastPressed = overlayNote === pitch;
+          const inMainOctave = isInMainOctave(pitch);
           
           return (
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
               <Button
                 onClick={() => onNotePress(pitch)}
-                className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")}`}
+                className={`h-12 w-full text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-60' : ''}`}
                 disabled={disabled}
                 title={semitonesToSolfege(pitch, true)}
               >
