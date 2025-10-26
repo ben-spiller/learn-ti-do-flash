@@ -47,6 +47,10 @@ const PracticeHistory = () => {
       const validSessions = allSessions.filter((session: any) => {
         try {
           // Validate essential fields exist
+          
+          // Calling this method should hopefully make it throw if something has changed
+          getSettingsChanges(session.settings, new ConfigData());
+          
           return (
             typeof session.sessionDate === 'number' &&
             typeof session.score === 'number' &&
@@ -66,6 +70,7 @@ const PracticeHistory = () => {
       return validSessions;
     } catch (error) {
       console.error('Error reading practice sessions:', error);
+      alert(`Error reading practice sessions: ${error}`);
       return [];
     }
   };
