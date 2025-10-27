@@ -102,9 +102,7 @@ const SolfegeKeyboardPage = () => {
   const handleNotePress = (note: SemitoneOffset) => {
     if (isSelectingRoot) {
       // Set the root note based on the selected semitone
-      const noteName = midiToNoteName(rootMidi+note);
-      const currentOctave = parseInt(settings.rootNote.slice(-1));
-      const newRootNote = `${noteName}${currentOctave}`;
+      const newRootNote = midiToNoteName(rootMidi + note);
       handleRootNoteChange(newRootNote);
       setIsSelectingRoot(false);
     } else {
@@ -174,8 +172,15 @@ const SolfegeKeyboardPage = () => {
   
   
   const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const currentNoteName = settings.rootNote.slice(0, -1);
-  const currentOctave = parseInt(settings.rootNote.slice(-1));
+  
+  // Parse note name properly to handle sharps and any octave number
+  const parseNoteName = (fullNote: string) => {
+    const match = fullNote.match(/^([A-G]#?)(-?\d+)$/);
+    if (!match) return { noteName: 'C', octave: 4 }; // Fallback
+    return { noteName: match[1], octave: parseInt(match[2]) };
+  };
+  
+  const { noteName: currentNoteName, octave: currentOctave } = parseNoteName(settings.rootNote);
 
   return (
     <div className="min-h-screen bg-background p-4">
