@@ -342,7 +342,7 @@ const SolfegeKeyboardPage = () => {
                         value={[settings.volume]}
                         onValueChange={handleVolumeChange}
                         min={-20}
-                        max={0}
+                        max={10}
                         step={1}
                         className="w-full"
                       />
