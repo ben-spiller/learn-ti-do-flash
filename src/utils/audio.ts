@@ -16,6 +16,8 @@ export type MidiNoteName = string;
 // Major scale intervals (semitones) from the root - do, re, me, etc
 export const MAJOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
 
+export const NOTE_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
 const SOLFEGE_NAMES = ['Do (1)', 'Ra (b2)', 'Re (2)', 'Me (b3)', 'Mi (3)', 'Fa (4)', 'Se (b5)', 'Sol (5)', 'Le (b6)', 'La (6)', 'Te (b7)', 'Ti (7)'] as const;
 const INTERVAL_NAMES = ['octave','min2', 'Maj2', 'min3', 'Maj3', '4', 'aug4', '5', 'min6', 'min6', 'min7', 'Maj7'] as const;
 
@@ -56,7 +58,7 @@ export const noteNameToMidi = (note: MidiNoteName) => {
 };
 
 export const midiToNoteName = (midi: MidiNoteNumber) => {
-  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const names = NOTE_NAMES;
   const name = names[midi % 12];
   const octave = Math.floor(midi / 12) - 1;
   return `${name}${octave}`;

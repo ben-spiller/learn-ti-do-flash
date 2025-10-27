@@ -18,7 +18,8 @@ import {
   setDroneVolume as setAudioDroneVolume,
   keypressToSemitones,
   midiToNoteName,
-  isAudioInitialized
+  isAudioInitialized,
+  NOTE_NAMES
 } from "@/utils/audio";
 import { formatInstrumentName, INSTRUMENT_SLUGS } from "@/config/ConfigData";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
@@ -103,7 +104,7 @@ const SolfegeKeyboardPage = () => {
     if (isSelectingRoot) {
       // Set the root note based on the selected semitone
       const newRootNote = midiToNoteName(rootMidi + note);
-      handleRootNoteChange(newRootNote);
+      handleRootNoteChange(parseNoteName(newRootNote).noteName+parseNoteName(settings.rootNote).octave);
       setIsSelectingRoot(false);
     } else {
       // Normal note playing
@@ -165,17 +166,15 @@ const SolfegeKeyboardPage = () => {
   // Generate note options from C2 to C6
   const noteOptions = [];
   for (let octave = 2; octave <= 6; octave++) {
-    for (const note of ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']) {
+    for (const note of NOTE_NAMES) {
       noteOptions.push(`${note}${octave}`);
     }
   }
   
   
-  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  
   // Parse note name properly to handle sharps and any octave number
   const parseNoteName = (fullNote: string) => {
-    const match = fullNote.match(/^([A-G]#?)(-?\d+)$/);
+    const match = fullNote.match(/^([A-G][#b]?)(-?\d+)$/);
     if (!match) return { noteName: 'C', octave: 4 }; // Fallback
     return { noteName: match[1], octave: parseInt(match[2]) };
   };
@@ -221,7 +220,7 @@ const SolfegeKeyboardPage = () => {
               <div className="mt-4 text-sm text-muted-foreground text-center">
                 {isSelectingRoot 
                   ? "Click a note to set as root note" 
-                  : "Click notes to play, or use keyboard shortcuts"}
+                  : "Click notes to play, or use keyboard shortcuts d/r/m/... or 1/2/3/..."}
               </div>
             </CardContent>
           </Card>
@@ -242,7 +241,7 @@ const SolfegeKeyboardPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {noteNames.map(note => (
+                    {NOTE_NAMES.map(note => (
                       <SelectItem key={note} value={note}>{note}</SelectItem>
                     ))}
                   </SelectContent>
