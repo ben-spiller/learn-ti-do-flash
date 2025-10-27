@@ -181,7 +181,6 @@ const PracticeHistory = () => {
 
   const wrongAnswerHistory = getWrongAnswerHistory(recentSession.exerciseName);
   const confusedPairs = getConfusedPairs();
-  const needsPractice = getNeedsPractice(recentSession.exerciseName);
 
   // Convert wrongAnswerHistory to sorted array for display with error handling
   const wrongAnswerPairs = Array.from(wrongAnswerHistory.entries())
@@ -208,8 +207,6 @@ const PracticeHistory = () => {
     .filter(pair => pair.count > 1) // Only show patterns (count > 1)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10); // Show top 10
-
-  const needsPracticeCount = needsPractice.size;
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
