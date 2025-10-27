@@ -59,7 +59,16 @@ const SolfegeKeyboardPage = () => {
   // Try to auto-preload on mount (navigation from another page is a gesture)
   useEffect(() => {
     if (!hasPreloaded && !isPreloading) {
-      handleStart(true); // true = silent auto-start, don't show alert on failure
+      // Add a timeout to prevent hanging forever
+      const timeoutId = setTimeout(() => {
+        if (isPreloading) {
+          setIsPreloading(false);
+        }
+      }, 2000); // Give it 2 seconds max
+      
+      handleStart(true).finally(() => {
+        clearTimeout(timeoutId);
+      });
     }
   }, []);
   
