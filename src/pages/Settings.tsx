@@ -302,7 +302,7 @@ const SettingsView = () => {
           <div className="flex justify-center mb-4">
             <img src={appIcon} alt="LearnTiDo" className="w-16 h-16" />
           </div>
-          <CardTitle className="text-3xl font-bold">LearnTiDo</CardTitle>
+          <CardTitle className="text-3xl font-bold" title="Copyright (C) Ben Spiller 2025-present">LearnTiDo</CardTitle>
           <CardDescription>Configure your practice settings</CardDescription>
         </CardHeader>
         <CardContent>
