@@ -117,6 +117,7 @@ let toneLoaded = false;
 let currentInstrument = 'acoustic_grand_piano';
 let droneSynth: any = null; // PolySynth for background drone
 let masterVolume: number = -8; // Master volume in dB
+let masterGainNode: GainNode | null = null; // Master gain node for midi-js player
 // Default sample base: point at the midi-js soundfonts on jsDelivr (FluidR3_GM)
 // We will load instrument JS files like `${instrument}-mp3.js` from this base.
 let SAMPLE_BASE = 'https://cdn.jsdelivr.net/gh/gleitz/midi-js-soundfonts@gh-pages/FluidR3_GM/';
@@ -227,6 +228,18 @@ const createMidiJsPlayerUsingTone = async (instrument: string) => {
   const toneRawCtx: BaseAudioContext | null = Tone && (Tone.getContext ? Tone.getContext().rawContext : Tone.context && Tone.context.rawContext) || null;
   const audioCtx = (toneRawCtx as any) || getAudioContext();
 
+  // Create master gain node for volume control if it doesn't exist
+  if (!masterGainNode) {
+    masterGainNode = audioCtx.createGain();
+    // Convert dB to gain: gain = 10^(dB/20)
+    masterGainNode.gain.value = Math.pow(10, masterVolume / 20);
+    if (toneRawCtx) {
+      masterGainNode.connect(toneRawCtx.destination);
+    } else {
+      masterGainNode.connect(audioCtx.destination);
+    }
+  }
+
   const player = {
     async triggerAttackRelease(noteName: string, duration: number, when?: number) {
       // soundfont keys are note names like 'C4'
@@ -258,9 +271,11 @@ const createMidiJsPlayerUsingTone = async (instrument: string) => {
       // Ensure gain starts at full volume at the scheduled start time
       gainNode.gain.setValueAtTime(1, startAt);
 
-      // Connect source -> gain -> destination (or Tone's destination when available)
+      // Connect source -> gain -> master gain -> destination
       source.connect(gainNode);
-      if (toneRawCtx) {
+      if (masterGainNode) {
+        gainNode.connect(masterGainNode);
+      } else if (toneRawCtx) {
         gainNode.connect(toneRawCtx.destination);
       } else {
         gainNode.connect(audioCtx.destination);
@@ -770,8 +785,16 @@ export const setDroneVolume = (volume: number) => {
  */
 export const setMasterVolume = (volume: number) => {
   masterVolume = volume;
+  
+  // Update Tone.js instrument volume if it has a volume property
   if (toneInstrument && toneInstrument.volume) {
     toneInstrument.volume.value = volume;
+  }
+  
+  // Update master gain node for midi-js player
+  // Convert dB to gain: gain = 10^(dB/20)
+  if (masterGainNode) {
+    masterGainNode.gain.value = Math.pow(10, volume / 20);
   }
 };
 
