@@ -216,7 +216,7 @@ const PracticeHistory = () => {
       <div className="flex items-center mb-4">
         <Button onClick={() => navigate("/")} variant="outline" size="sm">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Settings
+          Back to Home
         </Button>
       </div>
 
