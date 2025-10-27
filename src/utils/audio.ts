@@ -779,7 +779,7 @@ export const setDroneVolume = (volume: number) => {
 
 /**
  * Set the master volume for notes (not drone).
- * @param volume Volume in decibels (e.g., -8 for default, 0 for max, -20 for quiet)
+ * @param volume Volume in decibels (e.g., -8 for default, 0 for normal volume, -20 for quiet, +20 for quite a lot louder)
  */
 export const setMasterVolume = (volume: number) => {
   masterVolume = volume;

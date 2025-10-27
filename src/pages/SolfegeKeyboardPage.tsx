@@ -302,7 +302,7 @@ const SolfegeKeyboardPage = () => {
                   disabled={!hasPreloaded}
                   className="h-10"
                 >
-                  Select from Keyboard
+                  From Keyboard
                 </Button>
               </div>
             </div>
@@ -342,8 +342,8 @@ const SolfegeKeyboardPage = () => {
                         value={[settings.volume]}
                         onValueChange={handleVolumeChange}
                         min={-20}
-                        max={10}
-                        step={1}
+                        max={30}
+                        step={2}
                         className="w-full"
                       />
                       <div className="text-xs text-muted-foreground text-center">
