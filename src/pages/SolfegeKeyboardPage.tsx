@@ -16,6 +16,7 @@ import {
   startDrone, 
   stopDrone, 
   setDroneVolume as setAudioDroneVolume,
+  setMasterVolume,
   keypressToSemitones,
   midiToNoteName,
   isAudioInitialized,
@@ -44,6 +45,9 @@ const SolfegeKeyboardPage = () => {
   useEffect(() => {
     if (!hasPreloaded && isAudioInitialized(settings.instrument)) {
       setHasPreloaded(true);
+      
+      // Set master volume
+      setMasterVolume(settings.volume);
       
       // Start drone if enabled
       if (settings.droneEnabled) {
@@ -92,6 +96,9 @@ const SolfegeKeyboardPage = () => {
     
     if (ok) {
       setHasPreloaded(true);
+      
+      // Set master volume
+      setMasterVolume(settings.volume);
       
       // Start drone if enabled
       if (settings.droneEnabled) {
@@ -160,6 +167,14 @@ const SolfegeKeyboardPage = () => {
     setSettings({ ...settings, droneVolume: newVolume });
     if (settings.droneEnabled && hasPreloaded) {
       setAudioDroneVolume(newVolume);
+    }
+  };
+  
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0];
+    setSettings({ ...settings, volume: newVolume });
+    if (hasPreloaded) {
+      setMasterVolume(newVolume);
     }
   };
   
@@ -288,6 +303,37 @@ const SolfegeKeyboardPage = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Volume Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Keyboard Volume</label>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={!hasPreloaded} className="w-full">
+                      <Volume2 className="h-4 w-4 mr-2" />
+                      {settings.volume} dB
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Note Volume</label>
+                      <Slider
+                        value={[settings.volume]}
+                        onValueChange={handleVolumeChange}
+                        min={-20}
+                        max={0}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-muted-foreground text-center">
+                        {settings.volume} dB
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
             
             {/* Drone Control */}

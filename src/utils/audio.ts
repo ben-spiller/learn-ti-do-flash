@@ -116,6 +116,7 @@ let toneInstrument: any = null; // Tone.js synth / sampler instance
 let toneLoaded = false;
 let currentInstrument = 'acoustic_grand_piano';
 let droneSynth: any = null; // PolySynth for background drone
+let masterVolume: number = -8; // Master volume in dB
 // Default sample base: point at the midi-js soundfonts on jsDelivr (FluidR3_GM)
 // We will load instrument JS files like `${instrument}-mp3.js` from this base.
 let SAMPLE_BASE = 'https://cdn.jsdelivr.net/gh/gleitz/midi-js-soundfonts@gh-pages/FluidR3_GM/';
@@ -373,6 +374,7 @@ const createToneInstrument = async (instrument?: string) => {
       toneInstrument = new Tone.Sampler({
         urls: catalogEntry.urls,
         baseUrl: SAMPLE_BASE,
+        volume: masterVolume,
       }).toDestination();
       // Wait for samples to finish loading
       await Tone.loaded();
@@ -387,16 +389,16 @@ const createToneInstrument = async (instrument?: string) => {
         console.warn('Failed to load midi-js soundfont for', currentInstrument, soundfontErr);
         // Fallback to basic Tone.js synth if soundfont loading fails
         if (name.includes('fm') || name.includes('electric')) {
-          toneInstrument = new Tone.PolySynth(Tone.FMSynth, { volume: -4 }).toDestination();
+          toneInstrument = new Tone.PolySynth(Tone.FMSynth, { volume: masterVolume }).toDestination();
         } else if (name.includes('am') || name.includes('voice')) {
-          toneInstrument = new Tone.PolySynth(Tone.AMSynth, { volume: -4 }).toDestination();
+          toneInstrument = new Tone.PolySynth(Tone.AMSynth, { volume: masterVolume }).toDestination();
         } else if (name.includes('saw') || name.includes('lead')) {
-          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sawtooth' }, volume: -2 }).toDestination();
+          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sawtooth' }, volume: masterVolume }).toDestination();
         } else if (name.includes('organ')) {
-          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'square' }, volume: -6 }).toDestination();
+          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'square' }, volume: masterVolume }).toDestination();
         } else {
           // default: versatile poly synth
-          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, volume: -8 }).toDestination();
+          toneInstrument = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, volume: masterVolume }).toDestination();
         }
       }
     }
@@ -761,6 +763,22 @@ export const setDroneVolume = (volume: number) => {
     droneSynth.volume.value = volume;
   }
 };
+
+/**
+ * Set the master volume for notes (not drone).
+ * @param volume Volume in decibels (e.g., -8 for default, 0 for max, -20 for quiet)
+ */
+export const setMasterVolume = (volume: number) => {
+  masterVolume = volume;
+  if (toneInstrument && toneInstrument.volume) {
+    toneInstrument.volume.value = volume;
+  }
+};
+
+/**
+ * Get the current master volume setting.
+ */
+export const getMasterVolume = () => masterVolume;
 
 /**
  * Stop currently playing instrument notes

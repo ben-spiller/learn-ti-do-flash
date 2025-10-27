@@ -5,6 +5,7 @@ export interface KeyboardSettings {
   instrument: string;
   droneEnabled: boolean;
   droneVolume: number;
+  volume: number;
 }
 
 const KEYBOARD_SETTINGS_KEY = "solfege-keyboard-settings";
@@ -14,6 +15,7 @@ const DEFAULT_SETTINGS: KeyboardSettings = {
   instrument: "acoustic_grand_piano",
   droneEnabled: false,
   droneVolume: -8,
+  volume: -8,
 };
 
 export const getKeyboardSettings = (): KeyboardSettings => {
