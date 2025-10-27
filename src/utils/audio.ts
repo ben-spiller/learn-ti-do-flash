@@ -40,6 +40,29 @@ export function semitonesToInterval(semitoneOffset: SemitoneOffset): string {
   return INTERVAL_NAMES[pc];
 }
 
+//returns MidiNoteNumber
+export const noteNameToMidi = (note: MidiNoteName) => {
+  if (!note || typeof note !== 'string') throw new Error('Invalid note name: ' + note);
+  const match = note.match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
+  if (!match) throw new Error('Invalid note name: ' + note);
+  const [, pitch, accidental, octaveStr] = match;
+  const octave = parseInt(octaveStr, 10);
+  const semitoneFromC: Record<string, SemitoneOffset> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  let semis = semitoneFromC[pitch];
+  if (accidental === '#') semis += 1;
+  if (accidental === 'b') semis -= 1;
+  const midiNumber = 12 + semis + (octave * 12);
+  return midiNumber; // standard MIDI note number (C4 == 60)
+};
+
+export const midiToNoteName = (midi: MidiNoteNumber) => {
+  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const name = names[midi % 12];
+  const octave = Math.floor(midi / 12) - 1;
+  return `${name}${octave}`;
+};
+
+
 /** Gets the note indicated by the specified window keydown event */
 export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
     // Map keys to solfege intervals (semitones from root)
@@ -284,21 +307,6 @@ export const registerInstrument = (slug: string, data: { label?: string; urls: R
 
 // WebAudioFont support removed: unused in current flow. Kept midi-js (jsDelivr) and Tone paths.
 
-//returns MidiNoteNumber
-export const noteNameToMidi = (note: MidiNoteName) => {
-  if (!note || typeof note !== 'string') throw new Error('Invalid note name: ' + note);
-  const match = note.match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
-  if (!match) throw new Error('Invalid note name: ' + note);
-  const [, pitch, accidental, octaveStr] = match;
-  const octave = parseInt(octaveStr, 10);
-  const semitoneFromC: Record<string, SemitoneOffset> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  let semis = semitoneFromC[pitch];
-  if (accidental === '#') semis += 1;
-  if (accidental === 'b') semis -= 1;
-  const midiNumber = 12 + semis + (octave * 12);
-  return midiNumber; // standard MIDI note number (C4 == 60)
-};
-
 
 const getAudioContext = () => {
   if (!audioContext) {
@@ -421,12 +429,6 @@ const ensureContextRunning = async () => {
 
 type NoteRange = { from: MidiNoteName; to: MidiNoteName };
 
-export const midiToNoteName = (midi: MidiNoteNumber) => {
-  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const name = names[midi % 12];
-  const octave = Math.floor(midi / 12) - 1;
-  return `${name}${octave}`;
-};
 
 const getNotesBetween = (from: MidiNoteName, to: MidiNoteName) => {
   const start = noteNameToMidi(from);
