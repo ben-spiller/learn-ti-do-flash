@@ -56,10 +56,10 @@ const SolfegeKeyboardPage = () => {
     }
   }, []);
   
-  // Auto-preload on mount since navigation is a gesture
+  // Try to auto-preload on mount (navigation from another page is a gesture)
   useEffect(() => {
     if (!hasPreloaded && !isPreloading) {
-      handleStart();
+      handleStart(true); // true = silent auto-start, don't show alert on failure
     }
   }, []);
   
@@ -87,22 +87,41 @@ const SolfegeKeyboardPage = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [hasPreloaded, rootMidi]);
   
-  const handleStart = async () => {
+  const handleStart = async (silent = false) => {
     if (hasPreloaded) return;
     
     setIsPreloading(true);
-    const ok = await preloadInstrumentWithGesture(settings.instrument);
-    setIsPreloading(false);
     
-    if (ok) {
-      setHasPreloaded(true);
+    try {
+      // Try to start audio context - this will fail silently if no gesture
+      const Tone = (window as any).Tone;
+      if (Tone && typeof Tone.start === 'function') {
+        await Tone.start();
+      }
       
-      // Set master volume
-      setMasterVolume(settings.volume);
+      const ok = await preloadInstrumentWithGesture(settings.instrument);
+      setIsPreloading(false);
       
-      // Start drone if enabled
-      if (settings.droneEnabled) {
-        startDrone(rootMidi, settings.droneVolume);
+      if (ok) {
+        setHasPreloaded(true);
+        
+        // Set master volume
+        setMasterVolume(settings.volume);
+        
+        // Start drone if enabled
+        if (settings.droneEnabled) {
+          startDrone(rootMidi, settings.droneVolume);
+        }
+      } else if (!silent) {
+        // Only show alert if this was an explicit user action
+        window.alert('Unable to initialize audio. Please try again.');
+      }
+    } catch (err) {
+      setIsPreloading(false);
+      // Silent auto-start: don't show alert, just leave start button visible
+      if (!silent) {
+        console.error('Failed to start audio:', err);
+        window.alert('Unable to initialize audio. Audio will not be available.');
       }
     }
   };
@@ -212,7 +231,7 @@ const SolfegeKeyboardPage = () => {
           <Card>
             <CardContent className="pt-6">
               <Button 
-                onClick={handleStart} 
+                onClick={() => handleStart(false)} 
                 disabled={isPreloading}
                 className="w-full"
                 size="lg"

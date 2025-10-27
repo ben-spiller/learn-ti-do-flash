@@ -600,9 +600,7 @@ export const preloadInstrumentWithGesture = async (
     } catch (err) {
       // Log loading error
       console.error(`Failed to load instrument ${instrumentToUse}:`, err);
-      try {
-        window.alert('Unable to initialize audio. Audio will not be available.');
-      } catch (_) {}
+      // Don't show alert here - let the caller decide
       return false;
     } finally {
       // cleanup in-flight promise and callbacks (keep _preloadedDone if succeeded)
