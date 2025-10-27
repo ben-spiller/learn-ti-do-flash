@@ -30,6 +30,7 @@ import {
   CONSTRAINTS,
   formatInstrumentName,
 } from "@/config/ConfigData";
+import { getFavouriteInstruments, saveFavouriteInstruments } from "@/utils/instrumentStorage";
 import {
   getSavedConfigurations,
   saveConfiguration,
@@ -60,7 +61,7 @@ const SettingsView = () => {
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
   const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
-  const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(defaults.favouriteInstruments);
+  const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(getFavouriteInstruments());
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
@@ -92,7 +93,6 @@ const SettingsView = () => {
       rootNotePitch,
       instrument: selectedInstrument,
       instrumentMode,
-      favouriteInstruments,
     });
   };
 
@@ -112,7 +112,6 @@ const SettingsView = () => {
     setRootNotePitch(settings.rootNotePitch);
     setSelectedInstrument(settings.instrument);
     setInstrumentMode(settings.instrumentMode);
-    setFavouriteInstruments(settings.favouriteInstruments);
   };
 
   const handleSaveConfig = () => {
@@ -177,7 +176,7 @@ const SettingsView = () => {
     try {
       // Determine which instrument to preload based on mode
       const currentSettings = getCurrentSettings();
-      const instrumentToPreload = currentSettings.pickInstrument();
+      const instrumentToPreload = currentSettings.pickInstrument(favouriteInstruments);
       
       await preloadInstrumentWithGesture(instrumentToPreload);
       clearTimeout(loadingTimer);
@@ -201,7 +200,6 @@ const SettingsView = () => {
           rootNotePitch,
           instrument: selectedInstrument,
           instrumentMode,
-          favouriteInstruments,
           sessionInstrument: instrumentToPreload, // Pass the picked instrument for this session
           preloaded: true
         },
@@ -621,7 +619,10 @@ const SettingsView = () => {
                   instrumentMode={instrumentMode}
                   onInstrumentModeChange={setInstrumentMode}
                   favouriteInstruments={favouriteInstruments}
-                  onFavouriteInstrumentsChange={setFavouriteInstruments}
+                  onFavouriteInstrumentsChange={(favourites) => {
+                    setFavouriteInstruments(favourites);
+                    saveFavouriteInstruments(favourites);
+                  }}
                 />
               </div>
 

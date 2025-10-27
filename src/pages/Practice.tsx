@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
+import { getFavouriteInstruments } from "@/utils/instrumentStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
@@ -23,7 +24,7 @@ const PracticeView = () => {
   const preloaded = (location.state as any)?.preloaded || false;
   
   // Get or pick the instrument to use for this session
-  const sessionInstrument = (location.state as any)?.sessionInstrument || settings.pickInstrument();
+  const sessionInstrument = (location.state as any)?.sessionInstrument || settings.pickInstrument(getFavouriteInstruments());
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds

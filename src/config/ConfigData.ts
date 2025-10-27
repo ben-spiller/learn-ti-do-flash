@@ -16,7 +16,6 @@ export class ConfigData {
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug (used when instrumentMode is "single")
   instrumentMode: "single" | "random" = "single"; // Whether to use a single instrument or random from favourites
-  favouriteInstruments: string[] = ["acoustic_grand_piano", "electric_piano_1", "violin"]; // Favourite instruments for random selection
 
   /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results */
   getExerciseName(): string {
@@ -25,10 +24,10 @@ export class ConfigData {
   }
 
   /** Pick the instrument to use for this session based on the instrument mode */
-  pickInstrument(): string {
-    if (this.instrumentMode === "random" && this.favouriteInstruments.length > 0) {
-      const randomIndex = Math.floor(Math.random() * this.favouriteInstruments.length);
-      return this.favouriteInstruments[randomIndex];
+  pickInstrument(favouriteInstruments: string[]): string {
+    if (this.instrumentMode === "random" && favouriteInstruments.length > 0) {
+      const randomIndex = Math.floor(Math.random() * favouriteInstruments.length);
+      return favouriteInstruments[randomIndex];
     }
     return this.instrument;
   }
@@ -76,8 +75,7 @@ export class ConfigData {
       other.referenceType === this.referenceType &&
       other.rootNotePitch === this.rootNotePitch &&
       other.instrument === this.instrument &&
-      other.instrumentMode === this.instrumentMode &&
-      JSON.stringify(other.favouriteInstruments.sort()) === JSON.stringify(this.favouriteInstruments.sort())
+      other.instrumentMode === this.instrumentMode
     );
   }
 
