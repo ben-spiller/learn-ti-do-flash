@@ -49,7 +49,7 @@ const PracticeHistory = () => {
           // Validate essential fields exist
           
           // Calling this method should hopefully make it throw if something has changed
-          getSettingsChanges(session.settings, new ConfigData());
+          ConfigData.getSettingsChanges(session.settings, new ConfigData());
           
           return (
             typeof session.sessionDate === 'number' &&
@@ -57,14 +57,15 @@ const PracticeHistory = () => {
             typeof session.totalAttempts === 'number' &&
             typeof session.exerciseName === 'string'
           );
-        } catch {
+        } catch (e) {
+          console.warn('Invalid session data found and will be skipped:', session, e);
           return false;
         }
       });
       
       // If we filtered out any sessions, update localStorage
       if (validSessions.length !== allSessions.length) {
-        localStorage.setItem('practiceSessions', JSON.stringify(validSessions));
+        //localStorage.setItem('practiceSessions', JSON.stringify(validSessions));
       }
       
       return validSessions;
@@ -117,45 +118,6 @@ const PracticeHistory = () => {
   // Default tab to most recent exercise
   const [selectedTab, setSelectedTab] = useState(recentSession?.exerciseName || exerciseKeys[0] || "");
   
-  // Helper to detect settings changes
-  const getSettingsChanges = (current: ConfigData | undefined, previous: ConfigData | undefined): string[] => {
-    if (!current || !previous) return [];
-    
-    const changes: string[] = [];
-    if (current.numberOfNotes !== previous.numberOfNotes) {
-      changes.push(`Notes: ${previous.numberOfNotes} → ${current.numberOfNotes}`);
-    }
-    if (current.tempo !== previous.tempo) {
-      changes.push(`Tempo: ${previous.tempo} → ${current.tempo}`);
-    }
-    if (current.consecutiveIntervals !== previous.consecutiveIntervals) {
-      changes.push(`Interval: ${previous.consecutiveIntervals[0]}-${previous.consecutiveIntervals[1]} → ${current.consecutiveIntervals[0]}-${current.consecutiveIntervals[1]}`);
-    }
-    if (current.rhythm !== previous.rhythm) {
-      changes.push(`Rhythm: ${previous.rhythm} → ${current.rhythm}`);
-    }
-    if (current.droneType !== previous.droneType) {
-      changes.push(`Drone: ${previous.droneType} → ${current.droneType}`);
-    }
-    if (current.referenceType !== previous.referenceType) {
-      changes.push(`Reference: ${previous.referenceType} → ${current.referenceType}`);
-    }
-    if (current.rootNotePitch !== previous.rootNotePitch) {
-      changes.push(`Root: ${previous.rootNotePitch} → ${current.rootNotePitch}`);
-    }
-    if (current.instrument !== previous.instrument) {
-      changes.push(`Instrument: ${previous.instrument} → ${current.instrument}`);
-    }
-    if (current.playExtraNotes !== previous.playExtraNotes) {
-      changes.push(`Extra notes: ${previous.playExtraNotes} → ${current.playExtraNotes}`);
-    }
-    if (JSON.stringify(current.selectedNotes) !== JSON.stringify(previous.selectedNotes)) {
-      changes.push(`Selected notes changed`);
-    }
-    
-    return changes;
-  };
-
   if (allSessions.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
@@ -524,7 +486,7 @@ const PracticeHistory = () => {
                           
                           // Get previous session (next in reversed array)
                           const previousSession = exerciseSessions.slice().reverse()[index + 1];
-                          const settingsChanges = getSettingsChanges(session.settings, previousSession?.settings);
+                          const settingsChanges = ConfigData.getSettingsChanges(session.settings, previousSession?.settings);
                           
                           return (
                             <tr key={index} className="border-b last:border-0 hover:bg-muted/30">

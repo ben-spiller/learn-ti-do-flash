@@ -80,6 +80,51 @@ export class ConfigData {
       JSON.stringify(other.favouriteInstruments.sort()) === JSON.stringify(this.favouriteInstruments.sort())
     );
   }
+
+  /** Helper to get a human list of settings changes. */
+  static getSettingsChanges(current: ConfigData | undefined, previous: ConfigData | undefined): string[] {
+    if (!current || !previous) return [];
+    
+    try {
+      const changes: string[] = [];
+      if (current.numberOfNotes !== previous.numberOfNotes) {
+        changes.push(`Notes: ${previous.numberOfNotes} → ${current.numberOfNotes}`);
+      }
+      if (current.tempo !== previous.tempo) {
+        changes.push(`Tempo: ${previous.tempo} → ${current.tempo}`);
+      }
+      if (current.consecutiveIntervals !== previous.consecutiveIntervals) {
+        changes.push(`Interval: ${previous.consecutiveIntervals[0]}-${previous.consecutiveIntervals[1]} → ${current.consecutiveIntervals[0]}-${current.consecutiveIntervals[1]}`);
+      }
+      if (current.rhythm !== previous.rhythm) {
+        changes.push(`Rhythm: ${previous.rhythm} → ${current.rhythm}`);
+      }
+      if (current.droneType !== previous.droneType) {
+        changes.push(`Drone: ${previous.droneType} → ${current.droneType}`);
+      }
+      if (current.referenceType !== previous.referenceType) {
+        changes.push(`Reference: ${previous.referenceType} → ${current.referenceType}`);
+      }
+      if (current.rootNotePitch !== previous.rootNotePitch) {
+        changes.push(`Root: ${previous.rootNotePitch} → ${current.rootNotePitch}`);
+      }
+      if (current.instrument !== previous.instrument) {
+        changes.push(`Instrument: ${previous.instrument} → ${current.instrument}`);
+      }
+      if (current.playExtraNotes !== previous.playExtraNotes) {
+        changes.push(`Extra notes: ${previous.playExtraNotes} → ${current.playExtraNotes}`);
+      }
+      if (JSON.stringify(current.selectedNotes.sort()) !== JSON.stringify(previous.selectedNotes.sort())) {
+        changes.push(`Selected notes: [${previous.selectedNotes.join(", ")}] -> [${current.selectedNotes.join(", ")}]`);
+      }
+      
+      return changes;
+    } catch (e) {
+      console.error("Error computing settings changes:", e);
+      return ["Configuration options changed due to new app version"];
+    }
+  };
+
   
 }
 
