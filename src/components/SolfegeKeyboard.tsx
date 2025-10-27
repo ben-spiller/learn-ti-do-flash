@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { SemitoneOffset, MAJOR_SCALE_PITCH_CLASSES, semitonesToSolfege } from "@/utils/audio";
@@ -76,6 +76,19 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
 
   const majorScaleNotes = generateMajorScaleNotes();
   const chromaticNotes = generateChromaticNotes();
+  
+  // Ref for scrolling to the main octave center
+  const mainOctaveCenterRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to center the main octave on mount
+  useEffect(() => {
+    if (mainOctaveCenterRef.current) {
+      mainOctaveCenterRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, []);
 
   // Build a map from diatonic note -> top offset (rem), and compute total column height
   const diatonicTopMap = new Map<SemitoneOffset, number>();
@@ -109,9 +122,15 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           
           const isLastPressed = overlayNote === pitch;
           const inMainOctave = isInMainOctave(pitch);
+          const isCenterOfMainOctave = pitch === 5; // Fa is roughly in the center of main octave
           
           return (
-            <div key={pitch} className={`relative ${!inMainOctave ? 'flex justify-end' : ''}`} style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}>
+            <div 
+              key={pitch} 
+              ref={isCenterOfMainOctave ? mainOctaveCenterRef : null}
+              className={`relative ${!inMainOctave ? 'flex justify-end' : ''}`} 
+              style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}
+            >
               <Button
                 onClick={() => onNotePress(pitch)}
                 className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
