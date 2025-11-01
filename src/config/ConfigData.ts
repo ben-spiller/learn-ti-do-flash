@@ -113,7 +113,11 @@ export class ConfigData {
         changes.push(`Extra notes: ${previous.playExtraNotes} → ${current.playExtraNotes}`);
       }
       if (JSON.stringify(current.selectedNotes.sort()) !== JSON.stringify(previous.selectedNotes.sort())) {
-        changes.push(`Selected notes: [${previous.selectedNotes.join(", ")}] -> [${current.selectedNotes.join(", ")}]`);
+        // Import semitonesToSolfege at runtime to avoid circular dependency
+        const { semitonesToSolfege } = require("@/utils/audio");
+        const prevNotes = previous.selectedNotes.map(n => semitonesToSolfege(n)).join(", ");
+        const currNotes = current.selectedNotes.map(n => semitonesToSolfege(n)).join(", ");
+        changes.push(`Selected notes: [${prevNotes}] → [${currNotes}]`);
       }
       
       return changes;

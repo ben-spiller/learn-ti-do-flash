@@ -34,6 +34,7 @@ export interface SessionHistory {
 
 const PracticeHistory = () => {
   const navigate = useNavigate();
+  const [openTooltip, setOpenTooltip] = useState<string | null>(null);
 
   // Get all sessions from localStorage with error handling
   const getAllSessions = (): SessionHistory[] => {
@@ -487,6 +488,7 @@ const PracticeHistory = () => {
                           // Get previous session (next in reversed array)
                           const previousSession = exerciseSessions.slice().reverse()[index + 1];
                           const settingsChanges = ConfigData.getSettingsChanges(session.settings, previousSession?.settings);
+                          const tooltipId = `tooltip-${exerciseKey}-${index}`;
                           
                           return (
                             <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
@@ -495,9 +497,16 @@ const PracticeHistory = () => {
                                   {formattedDate}
                                   {settingsChanges.length > 0 && (
                                     <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger>
-                                          <Settings className="h-3.5 w-3.5 text-blue-500" />
+                                      <Tooltip open={openTooltip === tooltipId} onOpenChange={(open) => setOpenTooltip(open ? tooltipId : null)}>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            onClick={() => setOpenTooltip(openTooltip === tooltipId ? null : tooltipId)}
+                                            onMouseEnter={() => setOpenTooltip(tooltipId)}
+                                            onMouseLeave={() => setOpenTooltip(null)}
+                                            className="focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                                          >
+                                            <Settings className="h-3.5 w-3.5 text-blue-500" />
+                                          </button>
                                         </TooltipTrigger>
                                         <TooltipContent side="right" className="max-w-xs">
                                           <div className="text-xs space-y-1">
