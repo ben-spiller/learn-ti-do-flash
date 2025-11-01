@@ -1,7 +1,7 @@
 // Practice Settings Configuration
 // Central location for all practice-related settings, defaults, and constants
 
-import { MidiNoteName, SemitoneOffset } from "@/utils/audio";
+import { MidiNoteName, SemitoneOffset, semitonesToSolfege } from "@/utils/audio";
 
 export class ConfigData {
   selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
@@ -91,8 +91,8 @@ export class ConfigData {
       if (current.tempo !== previous.tempo) {
         changes.push(`Tempo: ${previous.tempo} → ${current.tempo}`);
       }
-      if (current.consecutiveIntervals !== previous.consecutiveIntervals) {
-        changes.push(`Interval: ${previous.consecutiveIntervals[0]}-${previous.consecutiveIntervals[1]} → ${current.consecutiveIntervals[0]}-${current.consecutiveIntervals[1]}`);
+      if (JSON.stringify(current.consecutiveIntervals) !== JSON.stringify(previous.consecutiveIntervals)) {
+        changes.push(`Consecutive intervals: ${previous.consecutiveIntervals[0]}-${previous.consecutiveIntervals[1]} → ${current.consecutiveIntervals[0]}-${current.consecutiveIntervals[1]}`);
       }
       if (current.rhythm !== previous.rhythm) {
         changes.push(`Rhythm: ${previous.rhythm} → ${current.rhythm}`);
@@ -100,21 +100,10 @@ export class ConfigData {
       if (current.droneType !== previous.droneType) {
         changes.push(`Drone: ${previous.droneType} → ${current.droneType}`);
       }
-      if (current.referenceType !== previous.referenceType) {
-        changes.push(`Reference: ${previous.referenceType} → ${current.referenceType}`);
-      }
-      if (current.rootNotePitch !== previous.rootNotePitch) {
-        changes.push(`Root: ${previous.rootNotePitch} → ${current.rootNotePitch}`);
-      }
-      if (current.instrument !== previous.instrument) {
-        changes.push(`Instrument: ${previous.instrument} → ${current.instrument}`);
-      }
       if (current.playExtraNotes !== previous.playExtraNotes) {
         changes.push(`Extra notes: ${previous.playExtraNotes} → ${current.playExtraNotes}`);
       }
       if (JSON.stringify(current.selectedNotes.sort()) !== JSON.stringify(previous.selectedNotes.sort())) {
-        // Import semitonesToSolfege at runtime to avoid circular dependency
-        const { semitonesToSolfege } = require("@/utils/audio");
         const prevNotes = previous.selectedNotes.map(n => semitonesToSolfege(n)).join(", ");
         const currNotes = current.selectedNotes.map(n => semitonesToSolfege(n)).join(", ");
         changes.push(`Selected notes: [${prevNotes}] → [${currNotes}]`);
