@@ -172,22 +172,21 @@ const SolfegeKeyboardPage = () => {
         // I (0), IV (5), V (7) = Major (major 3rd, perfect 5th)
         // ii (2), iii (4), vi (9) = minor (minor 3rd, perfect 5th)
         // vii° (11) = diminished (minor 3rd, diminished 5th)
-        if (scaleDegree === 0 || scaleDegree === 5 || scaleDegree === 7) {
-          // Major chord
-          third = 4;
-          fifth = 7;
-        } else if (scaleDegree === 11) {
+        if (scaleDegree === 11) {
           // Diminished chord
           third = 3;
           fifth = 6;
-        } else {
+        } else if (scaleDegree === 2 || scaleDegree === 4 || scaleDegree === 9) {
           // minor chord (2, 4, 9)
           third = 3;
           fifth = 7;
+        } else { // 0,3,7 plus chromatic notes (e.g. bVII, bVI) are major
+          third = 4;
+          fifth = 7;
         }
         
-        const rootNote3 = noteNameToMidi("C3") + note;
-        const rootNote4 = noteNameToMidi("C4") + note;
+        const rootNote3 = (rootMidi-12) + note;
+        const rootNote4 = (rootMidi+12) + note;
         
         // Octave 3: root, 5th, octave
         playNote(rootNote3, 2);
@@ -351,7 +350,7 @@ const SolfegeKeyboardPage = () => {
                     overlayNote={lastPressedNote}
                     overlayNoteTick={null}
                     disabled={false}
-                    range={[0, 12]}
+                    range={[0, 11]}
                     showChordLabels={true}
                   />
                   <div className="mt-4 text-sm text-muted-foreground text-center">
@@ -411,7 +410,50 @@ const SolfegeKeyboardPage = () => {
                 </Button>
               </div>
             </div>
-            
+
+            {/* Drone Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Background root drone</label>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={settings.droneEnabled ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleDroneToggle}
+                  disabled={!hasPreloaded}
+                  className="w-24"
+                >
+                  {settings.droneEnabled ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+                  {settings.droneEnabled ? "On" : "Off"}
+                </Button>
+                
+                {settings.droneEnabled && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" disabled={!hasPreloaded}>
+                        Volume
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Drone Volume</label>
+                        <Slider
+                          value={[settings.droneVolume]}
+                          onValueChange={handleDroneVolumeChange}
+                          min={-20}
+                          max={0}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="text-xs text-muted-foreground text-center">
+                          {settings.droneVolume} dB
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+            </div>
+
             {/* Instrument Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">
@@ -466,48 +508,6 @@ const SolfegeKeyboardPage = () => {
               </div>
             </div>
             
-            {/* Drone Control */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Background root drone</label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={settings.droneEnabled ? "default" : "outline"}
-                  size="sm"
-                  onClick={handleDroneToggle}
-                  disabled={!hasPreloaded}
-                  className="w-24"
-                >
-                  {settings.droneEnabled ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
-                  {settings.droneEnabled ? "On" : "Off"}
-                </Button>
-                
-                {settings.droneEnabled && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={!hasPreloaded}>
-                        Volume
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Drone Volume</label>
-                        <Slider
-                          value={[settings.droneVolume]}
-                          onValueChange={handleDroneVolumeChange}
-                          min={-20}
-                          max={0}
-                          step={1}
-                          className="w-full"
-                        />
-                        <div className="text-xs text-muted-foreground text-center">
-                          {settings.droneVolume} dB
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

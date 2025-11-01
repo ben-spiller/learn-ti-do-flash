@@ -19,6 +19,9 @@ export const MAJOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11
 export const NOTE_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
 const SOLFEGE_NAMES = ['Do (1)', 'Ra (b2)', 'Re (2)', 'Me (b3)', 'Mi (3)', 'Fa (4)', 'Se (b5)', 'Sol (5)', 'Le (b6)', 'La (6)', 'Te (b7)', 'Ti (7)'] as const;
+const CHORD_NAMES = ['Do (I)', 'Ra (bII)', 'Re (ii)', 'Me (bIII)', 'Mi (iii)', 'Fa (IV)', 'Se (bV)', 'Sol (V)', 'Le (bVI)', 'La (vi)', 'Te (bVII)', 'Ti (vii°)'] as const;
+// not sure about bII and bV
+
 const INTERVAL_NAMES = ['octave','min2', 'Maj2', 'min3', 'Maj3', '4', 'aug4', '5', 'min6', 'min6', 'min7', 'Maj7'] as const;
 
 /** Normalize any semitone offset to a value from 0..11 */
@@ -29,9 +32,9 @@ export function semitonesToOneOctave(semitoneOffset: SemitoneOffset): SemitoneOf
   return semitoneOffset % 12;
 }
 
-export function semitonesToSolfege(semitoneOffset: SemitoneOffset, longVersion = false): string {
+export function semitonesToSolfege(semitoneOffset: SemitoneOffset, longVersion = false, chordVersion = false): string {
   const pc = semitonesToOneOctave(semitoneOffset); // normalize to 0..11
-  const name = SOLFEGE_NAMES[pc];
+  const name = (chordVersion ? CHORD_NAMES : SOLFEGE_NAMES)[pc];
   if (longVersion) return name;
   return name.split(' ')[0];
 }
