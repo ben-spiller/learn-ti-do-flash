@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { 
   stopSounds, 
@@ -35,19 +36,36 @@ const SolfegeKeyboardPage = () => {
   const [isPreloading, setIsPreloading] = useState(false);
   const [hasPreloaded, setHasPreloaded] = useState(false);
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
+  const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
+  
+  const currentInstrument = activeTab === "notes" ? settings.notesInstrument : settings.chordsInstrument;
+  const currentVolume = activeTab === "notes" ? settings.notesVolume : settings.chordsVolume;
   
   // Persist settings whenever they change
   useEffect(() => {
     saveKeyboardSettings(settings);
   }, [settings]);
   
+  // Reload instrument when switching tabs if needed
+  useEffect(() => {
+    if (hasPreloaded) {
+      const needsReload = activeTab === "notes" 
+        ? settings.notesInstrument 
+        : settings.chordsInstrument;
+      
+      preloadInstrumentWithGesture(needsReload).then(() => {
+        setMasterVolume(currentVolume);
+      });
+    }
+  }, [activeTab]);
+  
   // Auto-start if audio is already initialized for this instrument
   useEffect(() => {
-    if (!hasPreloaded && isAudioInitialized(settings.instrument)) {
+    if (!hasPreloaded && isAudioInitialized(currentInstrument)) {
       setHasPreloaded(true);
       
       // Set master volume
-      setMasterVolume(settings.volume);
+      setMasterVolume(currentVolume);
       
       // Start drone if enabled
       if (settings.droneEnabled) {
@@ -108,14 +126,14 @@ const SolfegeKeyboardPage = () => {
         await Tone.start();
       }
       
-      const ok = await preloadInstrumentWithGesture(settings.instrument);
+      const ok = await preloadInstrumentWithGesture(currentInstrument);
       setIsPreloading(false);
       
       if (ok) {
         setHasPreloaded(true);
         
         // Set master volume
-        setMasterVolume(settings.volume);
+        setMasterVolume(currentVolume);
         
         // Start drone if enabled
         if (settings.droneEnabled) {
@@ -142,9 +160,27 @@ const SolfegeKeyboardPage = () => {
       handleRootNoteChange(parseNoteName(newRootNote).noteName+parseNoteName(settings.rootNote).octave);
       setIsSelectingRoot(false);
     } else {
-      // Normal note playing
       stopSounds();
-      playNote(note + rootMidi);
+      
+      if (activeTab === "chords") {
+        // Play chord: root-5th-octave in octave 3, root-3rd-5th in octave 4
+        const rootNote3 = noteNameToMidi("C3") + note;
+        const rootNote4 = noteNameToMidi("C4") + note;
+        
+        // Octave 3: root, 5th (7 semitones), octave (12 semitones)
+        playNote(rootNote3, 2);
+        playNote(rootNote3 + 7, 2);
+        playNote(rootNote3 + 12, 2);
+        
+        // Octave 4: root, 3rd (4 semitones for major), 5th (7 semitones)
+        playNote(rootNote4, 2);
+        playNote(rootNote4 + 4, 2);
+        playNote(rootNote4 + 7, 2);
+      } else {
+        // Normal single note playing
+        playNote(note + rootMidi);
+      }
+      
       setLastPressedNote(note);
       
       // Clear visual feedback after animation
@@ -167,7 +203,11 @@ const SolfegeKeyboardPage = () => {
   };
   
   const handleInstrumentChange = async (instrument: string) => {
-    setSettings({ ...settings, instrument });
+    if (activeTab === "notes") {
+      setSettings({ ...settings, notesInstrument: instrument });
+    } else {
+      setSettings({ ...settings, chordsInstrument: instrument });
+    }
     
     // Reload instrument if already preloaded
     if (hasPreloaded) {
@@ -200,7 +240,11 @@ const SolfegeKeyboardPage = () => {
   
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
-    setSettings({ ...settings, volume: newVolume });
+    if (activeTab === "notes") {
+      setSettings({ ...settings, notesVolume: newVolume });
+    } else {
+      setSettings({ ...settings, chordsVolume: newVolume });
+    }
     if (hasPreloaded) {
       setMasterVolume(newVolume);
     }
@@ -250,23 +294,52 @@ const SolfegeKeyboardPage = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <SolfegeKeyboard
-                rootMidi={rootMidi}
-                onNotePress={handleNotePress}
-                overlayNote={lastPressedNote}
-                overlayNoteTick={null}
-                disabled={false}
-                range={[-12, 24]}
-              />
-              <div className="mt-4 text-sm text-muted-foreground text-center">
-                {isSelectingRoot 
-                  ? "Click a note to set as root note" 
-                  : "Click notes to play, or use keyboard shortcuts d/r/m/... or 1/2/3/..."}
-              </div>
-            </CardContent>
-          </Card>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "notes" | "chords")}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="chords">Chords</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="notes">
+              <Card>
+                <CardContent className="pt-6">
+                  <SolfegeKeyboard
+                    rootMidi={rootMidi}
+                    onNotePress={handleNotePress}
+                    overlayNote={lastPressedNote}
+                    overlayNoteTick={null}
+                    disabled={false}
+                    range={[-12, 24]}
+                  />
+                  <div className="mt-4 text-sm text-muted-foreground text-center">
+                    {isSelectingRoot 
+                      ? "Click a note to set as root note" 
+                      : "Click notes to play, or use keyboard shortcuts d/r/m/... or 1/2/3/..."}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="chords">
+              <Card>
+                <CardContent className="pt-6">
+                  <SolfegeKeyboard
+                    rootMidi={rootMidi}
+                    onNotePress={handleNotePress}
+                    overlayNote={lastPressedNote}
+                    overlayNoteTick={null}
+                    disabled={false}
+                    range={[0, 12]}
+                  />
+                  <div className="mt-4 text-sm text-muted-foreground text-center">
+                    {isSelectingRoot 
+                      ? "Click a note to set as root note" 
+                      : "Click chords to play major triads"}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         )}
         
         {/* Settings Card - Below Keyboard */}
@@ -318,8 +391,10 @@ const SolfegeKeyboardPage = () => {
             
             {/* Instrument Selector */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Instrument</label>
-              <Select value={settings.instrument} onValueChange={handleInstrumentChange}>
+              <label className="text-sm font-medium">
+                {activeTab === "notes" ? "Notes" : "Chords"} Instrument
+              </label>
+              <Select value={currentInstrument} onValueChange={handleInstrumentChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -335,20 +410,24 @@ const SolfegeKeyboardPage = () => {
             
             {/* Volume Control */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Keyboard Volume</label>
+              <label className="text-sm font-medium">
+                {activeTab === "notes" ? "Notes" : "Chords"} Volume
+              </label>
               <div className="flex items-center gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" disabled={!hasPreloaded} className="w-full">
                       <Volume2 className="h-4 w-4 mr-2" />
-                      {settings.volume} dB
+                      {currentVolume} dB
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Note Volume</label>
+                      <label className="text-sm font-medium">
+                        {activeTab === "notes" ? "Note" : "Chord"} Volume
+                      </label>
                       <Slider
-                        value={[settings.volume]}
+                        value={[currentVolume]}
                         onValueChange={handleVolumeChange}
                         min={-20}
                         max={30}
@@ -356,7 +435,7 @@ const SolfegeKeyboardPage = () => {
                         className="w-full"
                       />
                       <div className="text-xs text-muted-foreground text-center">
-                        {settings.volume} dB
+                        {currentVolume} dB
                       </div>
                     </div>
                   </PopoverContent>

@@ -2,20 +2,24 @@ import { MidiNoteName } from "@/utils/audio";
 
 export interface KeyboardSettings {
   rootNote: MidiNoteName;
-  instrument: string;
+  notesInstrument: string;
+  notesVolume: number;
+  chordsInstrument: string;
+  chordsVolume: number;
   droneEnabled: boolean;
   droneVolume: number;
-  volume: number;
 }
 
 const KEYBOARD_SETTINGS_KEY = "solfege-keyboard-settings";
 
 const DEFAULT_SETTINGS: KeyboardSettings = {
   rootNote: "C4",
-  instrument: "acoustic_grand_piano",
+  notesInstrument: "acoustic_grand_piano",
+  notesVolume: -8,
+  chordsInstrument: "acoustic_grand_piano",
+  chordsVolume: -8,
   droneEnabled: false,
   droneVolume: -8,
-  volume: -8,
 };
 
 export const getKeyboardSettings = (): KeyboardSettings => {
