@@ -163,19 +163,41 @@ const SolfegeKeyboardPage = () => {
       stopSounds();
       
       if (activeTab === "chords") {
-        // Play chord: root-5th-octave in octave 3, root-3rd-5th in octave 4
+        // Determine chord quality based on scale degree
+        const scaleDegree = note % 12;
+        let third: number;
+        let fifth: number;
+        
+        // Major scale chord qualities:
+        // I (0), IV (5), V (7) = Major (major 3rd, perfect 5th)
+        // ii (2), iii (4), vi (9) = minor (minor 3rd, perfect 5th)
+        // vii° (11) = diminished (minor 3rd, diminished 5th)
+        if (scaleDegree === 0 || scaleDegree === 5 || scaleDegree === 7) {
+          // Major chord
+          third = 4;
+          fifth = 7;
+        } else if (scaleDegree === 11) {
+          // Diminished chord
+          third = 3;
+          fifth = 6;
+        } else {
+          // minor chord (2, 4, 9)
+          third = 3;
+          fifth = 7;
+        }
+        
         const rootNote3 = noteNameToMidi("C3") + note;
         const rootNote4 = noteNameToMidi("C4") + note;
         
-        // Octave 3: root, 5th (7 semitones), octave (12 semitones)
+        // Octave 3: root, 5th, octave
         playNote(rootNote3, 2);
-        playNote(rootNote3 + 7, 2);
+        playNote(rootNote3 + fifth, 2);
         playNote(rootNote3 + 12, 2);
         
-        // Octave 4: root, 3rd (4 semitones for major), 5th (7 semitones)
+        // Octave 4: root, 3rd, 5th
         playNote(rootNote4, 2);
-        playNote(rootNote4 + 4, 2);
-        playNote(rootNote4 + 7, 2);
+        playNote(rootNote4 + third, 2);
+        playNote(rootNote4 + fifth, 2);
       } else {
         // Normal single note playing
         playNote(note + rootMidi);
@@ -330,11 +352,12 @@ const SolfegeKeyboardPage = () => {
                     overlayNoteTick={null}
                     disabled={false}
                     range={[0, 12]}
+                    showChordLabels={true}
                   />
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
                       ? "Click a note to set as root note" 
-                      : "Click chords to play major triads"}
+                      : "Click to play chords built on each scale degree"}
                   </div>
                 </CardContent>
               </Card>

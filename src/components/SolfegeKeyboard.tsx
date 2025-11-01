@@ -13,6 +13,8 @@ interface SolfegeKeyboardProps {
   disabled: boolean;
   /** Range of semitones to display [min, max]. Default [0, 12] for one octave. */
   range?: [SemitoneOffset, SemitoneOffset];
+  /** If true, show chord labels with Roman numerals. */
+  showChordLabels?: boolean;
 }
 
 const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
@@ -22,7 +24,22 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   overlayNoteTick = null,
   disabled = false,
   range = [0, 11],
+  showChordLabels = false,
 }) => {
+  // Roman numeral mapping for chord labels
+  const getRomanNumeral = (semitone: SemitoneOffset): string => {
+    const scaleDegree = semitone % 12;
+    const romanNumerals: { [key: number]: string } = {
+      0: "I",      // Do - Major
+      2: "ii",     // Re - minor
+      4: "iii",    // Mi - minor
+      5: "IV",     // Fa - Major
+      7: "V",      // Sol - Major
+      9: "vi",     // La - minor
+      11: "vii°",  // Ti - diminished
+    };
+    return romanNumerals[scaleDegree] || "";
+  };
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
@@ -136,7 +153,14 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
                 disabled={disabled}
               >
-                {solfege}
+                {showChordLabels ? (
+                  <div className="flex flex-col items-center justify-center leading-tight">
+                    <span className="text-lg">{solfege}</span>
+                    <span className="text-sm opacity-90">({getRomanNumeral(pitch)})</span>
+                  </div>
+                ) : (
+                  solfege
+                )}
                 {isLastPressed && overlayNoteTick !== null && (
                   <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
