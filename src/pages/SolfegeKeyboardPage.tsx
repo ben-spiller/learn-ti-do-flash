@@ -112,7 +112,7 @@ const SolfegeKeyboardPage = () => {
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [hasPreloaded, rootMidi]);
+  }, [hasPreloaded, rootMidi,  activeTab]);
   
   const handleStart = async (silent = false) => {
     if (hasPreloaded) return;
@@ -161,7 +161,7 @@ const SolfegeKeyboardPage = () => {
       setIsSelectingRoot(false);
     } else {
       stopSounds();
-      
+      console.log(`Playing note: ${note + rootMidi} (semitone offset: ${note}) with activeTab=${activeTab}`);
       if (activeTab === "chords") {
         // Determine chord quality based on scale degree
         const scaleDegree = note % 12;
@@ -270,16 +270,7 @@ const SolfegeKeyboardPage = () => {
       setMasterVolume(newVolume);
     }
   };
-  
-  // Generate note options from C2 to C6
-  const noteOptions = [];
-  for (let octave = 2; octave <= 6; octave++) {
-    for (const note of NOTE_NAMES) {
-      noteOptions.push(`${note}${octave}`);
-    }
-  }
-  
-  
+    
   // Parse note name properly to handle sharps and any octave number
   const parseNoteName = (fullNote: string) => {
     const match = fullNote.match(/^([A-G][#b]?)(-?\d+)$/);
