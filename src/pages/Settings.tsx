@@ -64,8 +64,7 @@ const SettingsView = () => {
   const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(getFavouriteInstruments());
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
-  const [isPreloading, setIsPreloading] = useState(false);
-  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+  const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
   
   // Saved configurations state
   const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>([]);
@@ -166,37 +165,14 @@ const SettingsView = () => {
       return;
     }
     
-    setIsPreloading(true);
+    const currentSettings = getCurrentSettings();
     
-    // Show loading indicator only if preload takes more than 400ms
-    const loadingTimer = setTimeout(() => {
-      setShowLoadingIndicator(true);
-    }, 400);
+    // Save current configuration so practice can restore later
+    saveCurrentConfiguration(currentSettings);
     
-    try {
-      // Determine which instrument to preload based on mode
-      const currentSettings = getCurrentSettings();
-      const instrumentToPreload = currentSettings.pickInstrument(favouriteInstruments);
-      
-      await preloadInstrumentWithGesture(instrumentToPreload);
-      clearTimeout(loadingTimer);
-      setShowLoadingIndicator(false);
-      setIsPreloading(false);
-      
-      // Save current configuration so practice can restore later
-      saveCurrentConfiguration(currentSettings);
-      
-      // Encode settings as query params
-      const queryParams = currentSettings.toQueryParams();
-      queryParams.set('sessionInst', instrumentToPreload);
-      queryParams.set('preloaded', 'true');
-      
-      navigate(`/practice?${queryParams.toString()}`);
-    } catch (e) {
-      clearTimeout(loadingTimer);
-      setShowLoadingIndicator(false);
-      setIsPreloading(false);
-    }
+    // Encode settings as query params and navigate
+    const queryParams = currentSettings.toQueryParams();
+    navigate(`/practice?${queryParams.toString()}`);
   };
 
 
@@ -598,7 +574,7 @@ const SettingsView = () => {
                   onInstrumentChange={async (instrument) => {
                     setSelectedInstrument(instrument);
                     if (instrumentMode === "single") {
-                      setIsPreloading(true);
+                      setIsPreviewingInstrument(true);
                       try {
                         stopSounds();
                         await preloadInstrumentWithGesture(instrument);
@@ -610,7 +586,7 @@ const SettingsView = () => {
                           { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },
                         ]);
                       } catch (_) {}
-                      setIsPreloading(false);
+                      setIsPreviewingInstrument(false);
                     }
                   }}
                   instrumentMode={instrumentMode}
@@ -694,9 +670,9 @@ const SettingsView = () => {
           <Button
             className="w-full h-14 text-lg font-semibold mt-6"
             onClick={handleStart}
-            disabled={selectedNotes.length < 2 || isPreloading}
+            disabled={selectedNotes.length < 2}
           >
-            {showLoadingIndicator ? "Loading sounds..." : "Start Practice"}
+            Start Practice
           </Button>
         </CardContent>
       </Card>

@@ -27,10 +27,8 @@ const PracticeView = () => {
     ? ConfigData.fromQueryParams(searchParams)
     : new ConfigData(location.state as Partial<ConfigData>);
   
-  const preloaded = searchParams.get('preloaded') === 'true' || (location.state as any)?.preloaded || false;
-  
-  // Get or pick the instrument to use for this session
-  const sessionInstrument = searchParams.get('sessionInst') || (location.state as any)?.sessionInstrument || settings.pickInstrument(getFavouriteInstruments());
+  // Pick the instrument to use for this session based on settings
+  const sessionInstrument = settings.pickInstrument(getFavouriteInstruments());
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
@@ -56,8 +54,8 @@ const PracticeView = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [started, setStarted] = useState(preloaded);
-  const [hasPreloaded, setHasPreloaded] = useState(preloaded);
+  const [started, setStarted] = useState(false);
+  const [hasPreloaded, setHasPreloaded] = useState(false);
   const [droneVolume, setDroneVolumeState] = useState(-8); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
@@ -105,15 +103,6 @@ const PracticeView = () => {
       //playReferenceAndStart();
   }
   
-  // Auto-start if coming from Settings with preloaded samples
-  useEffect(() => {
-    if (started && preloaded) {
-      // Save current configuration when auto-starting from preloaded flow
-      saveCurrentConfiguration(settings);
-      doStart();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Cleanup drone on unmount
   useEffect(() => {
