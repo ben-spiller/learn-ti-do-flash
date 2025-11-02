@@ -10,7 +10,7 @@ export class ConfigData {
   consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [1, 11]; // default - go up to an octave
   questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
   tempo: number = 200; 
-  rhythm: "fixed" | "random" = "fixed";
+  rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
   referenceType: "root" | "arpeggio" = "root";
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"

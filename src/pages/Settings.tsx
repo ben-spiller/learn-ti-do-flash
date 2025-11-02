@@ -418,10 +418,9 @@ const SettingsView = () => {
             )}
           </div>
           <Tabs defaultValue="practice" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="practice">Practice</TabsTrigger>
               <TabsTrigger value="audio">Audio</TabsTrigger>
-              <TabsTrigger value="reference">Reference</TabsTrigger>
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
@@ -475,13 +474,25 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
+                <Label className="text-base font-semibold">
+                  Question note range: {formatQuestionRangeLabel(questionNoteRange[0])} ... {formatQuestionRangeLabel(questionNoteRange[1])}
+                </Label>
                 <Slider
-                  value={[tempo]}
-                  onValueChange={(v) => setTempo(v[0])}
-                  min={CONSTRAINTS.tempo.min}
-                  max={CONSTRAINTS.tempo.max}
-                  step={CONSTRAINTS.tempo.step}
+                  value={[
+                    majorScaleRangeValues.indexOf(questionNoteRange[0]),
+                    majorScaleRangeValues.indexOf(questionNoteRange[1])
+                  ]}
+                  onValueChange={(values) => {
+                    const newRange: [SemitoneOffset, SemitoneOffset] = [
+                      majorScaleRangeValues[values[0]],
+                      majorScaleRangeValues[values[1]]
+                    ];
+                    setQuestionNoteRange(newRange);
+                  }}
+                  min={0}
+                  max={majorScaleRangeValues.length - 1}
+                  step={1}
+                  minStepsBetweenThumbs={1}
                 />
               </div>
 
@@ -524,29 +535,6 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">
-                  Question note range: {formatQuestionRangeLabel(questionNoteRange[0])} ... {formatQuestionRangeLabel(questionNoteRange[1])}
-                </Label>
-                <Slider
-                  value={[
-                    majorScaleRangeValues.indexOf(questionNoteRange[0]),
-                    majorScaleRangeValues.indexOf(questionNoteRange[1])
-                  ]}
-                  onValueChange={(values) => {
-                    const newRange: [SemitoneOffset, SemitoneOffset] = [
-                      majorScaleRangeValues[values[0]],
-                      majorScaleRangeValues[values[1]]
-                    ];
-                    setQuestionNoteRange(newRange);
-                  }}
-                  min={0}
-                  max={majorScaleRangeValues.length - 1}
-                  step={1}
-                  minStepsBetweenThumbs={1}
-                />
-              </div>
-
-              <div className="space-y-4">
                 <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
                   Consecutive intervals: {semitonesToInterval(consecutiveIntervals[0])} ... {semitonesToInterval(consecutiveIntervals[1])}</Label>
                 <Slider
@@ -564,6 +552,27 @@ const SettingsView = () => {
                   minStepsBetweenThumbs={1}
                 />
               </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Background Drone</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={droneType === "none" ? "default" : "outline"}
+                    onClick={() => setDroneType("none")}
+                    className="flex-1"
+                  >
+                    Off
+                  </Button>
+                  <Button
+                    variant={droneType === "root" ? "default" : "outline"}
+                    onClick={() => setDroneType("root")}
+                    className="flex-1"
+                  >
+                    Root note (do)
+                  </Button>
+                </div>
+              </div>
+
             </TabsContent>
 
             <TabsContent value="audio" className="space-y-6">
@@ -627,41 +636,6 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Rhythm</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={rhythm === "fixed" ? "default" : "outline"}
-                    onClick={() => setRhythm("fixed")}
-                    className="flex-1"
-                  >
-                    Fixed
-                  </Button>
-                  <Button
-                    variant={rhythm === "random" ? "default" : "outline"}
-                    onClick={() => setRhythm("random")}
-                    className="flex-1"
-                  >
-                    Random
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Root Note Pitch</Label>
-                <select
-                  value={rootNotePitch}
-                  onChange={(e) => setRootNotePitch(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  {ROOT_NOTE_OPTIONS.map(pitch => (
-                    <option key={pitch} value={pitch}>{pitch}</option>
-                  ))}
-                </select>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="reference" className="space-y-6">
-              <div className="space-y-4">
                 <Label className="text-base font-semibold">Reference Type</Label>
                 <div className="flex gap-2">
                   <Button
@@ -682,24 +656,50 @@ const SettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Background Drone</Label>
+                <Label className="text-base font-semibold">Rhythm</Label>
                 <div className="flex gap-2">
                   <Button
-                    variant={droneType === "none" ? "default" : "outline"}
-                    onClick={() => setDroneType("none")}
+                    variant={rhythm === "fixed" ? "default" : "outline"}
+                    onClick={() => setRhythm("fixed")}
                     className="flex-1"
                   >
-                    None
+                    Fixed
                   </Button>
                   <Button
-                    variant={droneType === "root" ? "default" : "outline"}
-                    onClick={() => setDroneType("root")}
+                    variant={rhythm === "random" ? "default" : "outline"}
+                    onClick={() => setRhythm("random")}
                     className="flex-1"
                   >
-                    Root note
+                    Random
                   </Button>
                 </div>
               </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
+                <Slider
+                  value={[tempo]}
+                  onValueChange={(v) => setTempo(v[0])}
+                  min={CONSTRAINTS.tempo.min}
+                  max={CONSTRAINTS.tempo.max}
+                  step={CONSTRAINTS.tempo.step}
+                />
+              </div>
+
+              {/* <div className="space-y-4">
+                <Label className="text-base font-semibold">Root Note Pitch</Label>
+                <select
+                  value={rootNotePitch}
+                  onChange={(e) => setRootNotePitch(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                >
+                  {ROOT_NOTE_OPTIONS.map(pitch => (
+                    <option key={pitch} value={pitch}>{pitch}</option>
+                  ))}
+                </select>
+              </div> */}
+
+
             </TabsContent>
           </Tabs>
 
