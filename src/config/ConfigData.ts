@@ -116,6 +116,115 @@ export class ConfigData {
     }
   };
 
+  /** Encode non-default settings to URL query parameters */
+  toQueryParams(): URLSearchParams {
+    const defaults = new ConfigData();
+    const params = new URLSearchParams();
+
+    if (JSON.stringify(this.selectedNotes.sort()) !== JSON.stringify(defaults.selectedNotes.sort())) {
+      params.set('notes', this.selectedNotes.join(','));
+    }
+    if (this.numberOfNotes !== defaults.numberOfNotes) {
+      params.set('n', this.numberOfNotes.toString());
+    }
+    if (this.playExtraNotes !== defaults.playExtraNotes) {
+      params.set('extra', this.playExtraNotes.toString());
+    }
+    if (JSON.stringify(this.consecutiveIntervals) !== JSON.stringify(defaults.consecutiveIntervals)) {
+      params.set('int', this.consecutiveIntervals.join(','));
+    }
+    if (JSON.stringify(this.questionNoteRange) !== JSON.stringify(defaults.questionNoteRange)) {
+      params.set('range', this.questionNoteRange.join(','));
+    }
+    if (this.tempo !== defaults.tempo) {
+      params.set('tempo', this.tempo.toString());
+    }
+    if (this.rhythm !== defaults.rhythm) {
+      params.set('rhythm', this.rhythm);
+    }
+    if (this.droneType !== defaults.droneType) {
+      params.set('drone', this.droneType);
+    }
+    if (this.referenceType !== defaults.referenceType) {
+      params.set('ref', this.referenceType);
+    }
+    if (this.rootNotePitch !== defaults.rootNotePitch) {
+      params.set('root', this.rootNotePitch);
+    }
+    if (this.instrument !== defaults.instrument) {
+      params.set('inst', this.instrument);
+    }
+    if (this.instrumentMode !== defaults.instrumentMode) {
+      params.set('mode', this.instrumentMode);
+    }
+
+    return params;
+  }
+
+  /** Create ConfigData from URL query parameters, merging with defaults */
+  static fromQueryParams(searchParams: URLSearchParams): ConfigData {
+    const defaults = new ConfigData();
+    const partial: Partial<ConfigData> = {};
+
+    const notes = searchParams.get('notes');
+    if (notes) {
+      partial.selectedNotes = notes.split(',').map(n => parseInt(n, 10)) as SemitoneOffset[];
+    }
+
+    const n = searchParams.get('n');
+    if (n) partial.numberOfNotes = parseInt(n, 10);
+
+    const extra = searchParams.get('extra');
+    if (extra) partial.playExtraNotes = parseInt(extra, 10);
+
+    const int = searchParams.get('int');
+    if (int) {
+      const parts = int.split(',').map(n => parseInt(n, 10));
+      if (parts.length === 2) {
+        partial.consecutiveIntervals = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
+      }
+    }
+
+    const range = searchParams.get('range');
+    if (range) {
+      const parts = range.split(',').map(n => parseInt(n, 10));
+      if (parts.length === 2) {
+        partial.questionNoteRange = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
+      }
+    }
+
+    const tempo = searchParams.get('tempo');
+    if (tempo) partial.tempo = parseInt(tempo, 10);
+
+    const rhythm = searchParams.get('rhythm');
+    if (rhythm && (rhythm === 'fixed' || rhythm === 'random')) {
+      partial.rhythm = rhythm;
+    }
+
+    const drone = searchParams.get('drone');
+    if (drone && (drone === 'none' || drone === 'root')) {
+      partial.droneType = drone;
+    }
+
+    const ref = searchParams.get('ref');
+    if (ref && (ref === 'root' || ref === 'arpeggio')) {
+      partial.referenceType = ref;
+    }
+
+    const root = searchParams.get('root');
+    if (root) partial.rootNotePitch = root as MidiNoteName;
+
+    const inst = searchParams.get('inst');
+    if (inst) partial.instrument = inst;
+
+    const mode = searchParams.get('mode');
+    if (mode && (mode === 'single' || mode === 'random')) {
+      partial.instrumentMode = mode;
+    }
+
+    return new ConfigData({ ...defaults, ...partial });
+  }
+
   
 }
 

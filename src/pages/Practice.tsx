@@ -19,12 +19,18 @@ const PracticeView = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Initialize settings with defaults, then override with any passed state
-  const settings = new ConfigData(location.state as Partial<ConfigData>);
-  const preloaded = (location.state as any)?.preloaded || false;
+  // Initialize settings from query params (if present), otherwise from state or defaults
+  const searchParams = new URLSearchParams(location.search);
+  const hasQueryParams = searchParams.toString().length > 0;
+  
+  const settings = hasQueryParams 
+    ? ConfigData.fromQueryParams(searchParams)
+    : new ConfigData(location.state as Partial<ConfigData>);
+  
+  const preloaded = searchParams.get('preloaded') === 'true' || (location.state as any)?.preloaded || false;
   
   // Get or pick the instrument to use for this session
-  const sessionInstrument = (location.state as any)?.sessionInstrument || settings.pickInstrument(getFavouriteInstruments());
+  const sessionInstrument = searchParams.get('sessionInst') || (location.state as any)?.sessionInstrument || settings.pickInstrument(getFavouriteInstruments());
 
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds

@@ -184,26 +184,14 @@ const SettingsView = () => {
       setIsPreloading(false);
       
       // Save current configuration so practice can restore later
-      saveCurrentConfiguration(getCurrentSettings());
+      saveCurrentConfiguration(currentSettings);
       
-      navigate("/practice", {
-        state: { 
-          selectedNotes, 
-          numberOfNotes,
-          playExtraNotes,
-          consecutiveIntervals,
-          questionNoteRange,
-          tempo,
-          rhythm,
-          droneType,
-          referenceType,
-          rootNotePitch,
-          instrument: selectedInstrument,
-          instrumentMode,
-          sessionInstrument: instrumentToPreload, // Pass the picked instrument for this session
-          preloaded: true
-        },
-      });
+      // Encode settings as query params
+      const queryParams = currentSettings.toQueryParams();
+      queryParams.set('sessionInst', instrumentToPreload);
+      queryParams.set('preloaded', 'true');
+      
+      navigate(`/practice?${queryParams.toString()}`);
     } catch (e) {
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
