@@ -266,11 +266,11 @@ const SettingsView = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute right-16 top-4 h-10 w-10"
+            className="absolute right-16 top-3 h-12 w-12"
             onClick={() => navigate("/keyboard")}
             title="Solfege Keyboard"
           >
-            <Piano className="h-6 w-6 text-primary" />
+            <Piano className="h-7 w-7 text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.5)]" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
