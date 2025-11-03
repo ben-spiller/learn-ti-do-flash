@@ -265,12 +265,24 @@ const SettingsView = () => {
         <CardHeader className="text-center relative">
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="absolute right-16 top-3 h-12 w-12"
+            className="absolute right-16 top-2 h-14 w-14 hover:bg-accent/50"
             onClick={() => navigate("/keyboard")}
             title="Solfege Keyboard"
           >
-            <Piano className="h-7 w-7 text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.5)]" />
+            <Piano className="h-8 w-8" style={{
+              fill: 'url(#piano-gradient)',
+              stroke: 'url(#piano-gradient)',
+              filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.5))'
+            }} />
+            <svg width="0" height="0" style={{ position: 'absolute' }}>
+              <defs>
+                <linearGradient id="piano-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="50%" stopColor="#ec4899" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+              </defs>
+            </svg>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
