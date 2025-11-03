@@ -64,6 +64,11 @@ All colors MUST be HSL.
   --wide-gap: 0.75rem;
   --narrow-gap: 0.375rem;
 
+  /* Brand accent colors derived from app icon */
+  --brand-cyan: 195 100% 50%;     /* #00bfff */
+  --brand-magenta: 300 100% 50%;  /* #ff00ff */
+  --brand-lime: 90 100% 50%;      /* #7fff00 */
+
 
   /* TONIC (I) — distinct greens: do (deep), mi (yellow-green, brighter), sol (distinctive, bright but still related to green) */
   --solfege-do: 140 60% 30%;   /* deep, stable green (most consonant) */
