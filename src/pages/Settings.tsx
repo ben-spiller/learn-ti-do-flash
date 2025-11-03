@@ -266,15 +266,15 @@ const SettingsView = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute right-16 top-4"
+            className="absolute right-16 top-4 h-10 w-10"
             onClick={() => navigate("/keyboard")}
             title="Solfege Keyboard"
           >
-            <Piano className="h-5 w-5" />
+            <Piano className="h-6 w-6 text-primary" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+              <Button variant="ghost" size="icon" className="absolute right-4 top-4 h-10 w-10">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
