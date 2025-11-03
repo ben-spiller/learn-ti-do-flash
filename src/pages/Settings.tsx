@@ -263,6 +263,15 @@ const SettingsView = () => {
       <div className="w-full max-w-2xl">
       <Card className="w-full">
         <CardHeader className="text-center relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute right-16 top-4"
+            onClick={() => navigate("/keyboard")}
+            title="Solfege Keyboard"
+          >
+            <Piano className="h-5 w-5" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="absolute right-4 top-4">
@@ -270,10 +279,6 @@ const SettingsView = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate("/keyboard")}>
-                <Piano className="h-4 w-4 mr-2" />
-                Solfege Keyboard
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/history")}>
                 <History className="h-4 w-4 mr-2" />
                 Practice History
