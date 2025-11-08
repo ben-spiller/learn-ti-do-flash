@@ -170,7 +170,7 @@ const PracticeHistory = () => {
     .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
     .filter(pair => pair.count > 1) // Only show patterns (count > 1)
     .sort((a, b) => b.count - a.count)
-    .slice(0, 10); // Show top 10
+    .slice(0, 8); // Show top items
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
@@ -324,7 +324,7 @@ const PracticeHistory = () => {
                 .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
                 .filter(pair => pair.count > 1) // Only show patterns (count > 1)
                 .sort((a, b) => b.count - a.count)
-                .slice(0, 10)
+                .slice(0, 8)
                 .map((pair, index, arr) => {
                   const maxCount = arr[0].count;
                   const widthPercent = (pair.count / maxCount) * 100;
