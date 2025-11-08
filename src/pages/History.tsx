@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Settings } from "lucide-react";
-import { semitonesToSolfege } from "@/utils/audio";
+import { semitonesToSolfege, semitonesToInterval } from "@/utils/audio";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getNoteButtonColor, getScoreColor, getOctaveIndicator } from "@/utils/noteStyles";
 import { ConfigData } from "@/config/ConfigData";
@@ -251,6 +251,9 @@ const PracticeHistory = () => {
                           </span>
                         )}
                       </div>
+                      <span className="text-xs text-muted-foreground ml-1">
+                        ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : 'N/A'})
+                      </span>
                     </div>
                     <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
                       <div 
