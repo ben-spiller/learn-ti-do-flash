@@ -213,16 +213,17 @@ const PracticeHistory = () => {
           {recentSession.score < 70 && (
             <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
-                💡 Try making practice easier: Add a drone note for reference, reduce the number of notes, 
-                or focus on the specific intervals and note sequences shown above that you find most challenging.
+                💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
+                Add a drone note for reference, reduce the number of notes, 
+                or focus on the specific intervals and note sequences that you find most challenging.
               </p>
             </div>
           )}
           {recentSession.score >= 95 && (
             <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
-                🎉 Excellent work! Ready for more challenge? Try removing the drone, increasing the number of notes, 
-                expanding the note range, or speeding up the tempo.
+                🎉 Excellent work! This exercise seems to easy for you. Try removing the drone (if present), increasing the number of notes, 
+                or expanding the note range.
               </p>
             </div>
           )}
