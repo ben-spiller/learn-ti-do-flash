@@ -265,7 +265,7 @@ const SettingsView = () => {
         <CardHeader className="text-center relative">
           <Button 
             variant="ghost" 
-            className="absolute right-16 top-4 h-10 w-12 p-1.5 rounded-md hover:bg-accent/40"
+            className="absolute right-16 top-4 h-20 w-24 p-2 rounded-md hover:bg-accent/40"
             onClick={() => navigate("/keyboard")}
             aria-label="Open Solfege Keyboard"
             title="Solfege Keyboard"
