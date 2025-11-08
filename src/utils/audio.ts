@@ -22,7 +22,7 @@ const SOLFEGE_NAMES = ['Do (1)', 'Ra (b2)', 'Re (2)', 'Me (b3)', 'Mi (3)', 'Fa (
 const CHORD_NAMES = ['Do (I)', 'Ra (bII)', 'Re (ii)', 'Me (bIII)', 'Mi (iii)', 'Fa (IV)', 'Se (bV)', 'Sol (V)', 'Le (bVI)', 'La (vi)', 'Te (bVII)', 'Ti (vii°)'] as const;
 // not sure about bII and bV
 
-const INTERVAL_NAMES = ['octave','min2', 'Maj2', 'min3', 'Maj3', '4', 'aug4', '5', 'min6', 'min6', 'min7', 'Maj7'] as const;
+const INTERVAL_NAMES = ['root','min2', 'Maj2', 'min3', 'Maj3', '4', 'aug4', '5', 'min6', 'min6', 'min7', 'Maj7'] as const;
 
 /** Normalize any semitone offset to a value from 0..11 */
 export function semitonesToOneOctave(semitoneOffset: SemitoneOffset): SemitoneOffset {

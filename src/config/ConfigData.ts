@@ -7,7 +7,7 @@ export class ConfigData {
   selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
   numberOfNotes: number = 3; // Number of notes per question (2-10)
   playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
-  consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [1, 11]; // default - go up to an octave
+  consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [0, 11]; // default - allow duplicates (0) and go up to an octave
   questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
   tempo: number = 200; 
   rhythm: "fixed" | "random" = "random";
@@ -232,8 +232,8 @@ export class ConfigData {
 export const CONSTRAINTS = {
   numberOfNotes: { min: 1, max: 10 },
   playExtraNotes: { min: 0, max: 5 },
-  tempo: { min: 40, max: 300, step: 5 },
-  consecutiveIntervals: { min: 1, max: 12+12 },
+  tempo: { min: 40, max: 400, step: 10 },
+  consecutiveIntervals: { min: 0, max: 12+12 },
   questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
 } as const;
 
