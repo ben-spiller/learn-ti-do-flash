@@ -8,6 +8,7 @@ import { semitonesToSolfege, semitonesToInterval } from "@/utils/audio";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getNoteButtonColor, getScoreColor, getOctaveIndicator } from "@/utils/noteStyles";
 import { ConfigData } from "@/config/ConfigData";
+import { startOfWeek, endOfWeek, format } from "date-fns";
 
 export const STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES = "wrong2NoteSequences"
 /** Notes that are confused for each other (in either direction) */
@@ -494,66 +495,145 @@ const PracticeHistory = () => {
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Avg/Answer</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Attempts</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Needs Practice</th>
+                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Total Severity</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {exerciseSessions.slice().reverse().map((session, index) => {
-                          const avgTime = session.avgSecsPerAnswer?.toFixed(1);
-                          const date = new Date(session.sessionDate);
-                          const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
-                          const dayMonth = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
-                          const formattedDate = `${dayOfWeek} ${dayMonth}`;
+                        {(() => {
+                          const reversedSessions = exerciseSessions.slice().reverse();
+                          const recentSessions = reversedSessions.slice(0, 10);
+                          const olderSessions = reversedSessions.slice(10);
                           
-                          // Get previous session (next in reversed array)
-                          const previousSession = exerciseSessions.slice().reverse()[index + 1];
-                          const settingsChanges = ConfigData.getSettingsChanges(session.settings, previousSession?.settings);
-                          const tooltipId = `tooltip-${exerciseKey}-${index}`;
+                          // Group older sessions by week
+                          const weekGroups = new Map<string, SessionHistory[]>();
+                          olderSessions.forEach(session => {
+                            const sessionDate = new Date(session.sessionDate);
+                            const weekStart = startOfWeek(sessionDate, { weekStartsOn: 1 }); // Monday
+                            const weekKey = format(weekStart, 'yyyy-MM-dd');
+                            
+                            if (!weekGroups.has(weekKey)) {
+                              weekGroups.set(weekKey, []);
+                            }
+                            weekGroups.get(weekKey)!.push(session);
+                          });
+                          
+                          const weekGroupsArray = Array.from(weekGroups.entries()).map(([weekKey, sessions]) => {
+                            const weekStart = new Date(weekKey);
+                            const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+                            const avgScore = Math.round(sessions.reduce((sum, s) => sum + s.score, 0) / sessions.length);
+                            const totalMinutes = Math.round(sessions.reduce((sum, s) => sum + s.totalSeconds, 0) / 60);
+                            const totalAttempts = sessions.reduce((sum, s) => sum + s.totalAttempts, 0);
+                            const totalCorrect = sessions.reduce((sum, s) => sum + s.correctAttempts, 0);
+                            const totalNeedsPractice = sessions.reduce((sum, s) => sum + s.needsPracticeCount, 0);
+                            const totalSeverity = sessions.reduce((sum, s) => sum + s.needsPracticeTotalSeverity, 0);
+                            
+                            return {
+                              weekKey,
+                              weekStart,
+                              weekEnd,
+                              sessions,
+                              avgScore,
+                              totalMinutes,
+                              totalAttempts,
+                              totalCorrect,
+                              totalNeedsPractice,
+                              totalSeverity,
+                            };
+                          });
                           
                           return (
-                            <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
-                              <td className="p-2 text-sm">
-                                <div className="flex items-center gap-2">
-                                  {formattedDate}
-                                  {settingsChanges.length > 0 && (
-                                    <TooltipProvider>
-                                      <Tooltip open={openTooltip === tooltipId} onOpenChange={(open) => setOpenTooltip(open ? tooltipId : null)}>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            onClick={() => setOpenTooltip(openTooltip === tooltipId ? null : tooltipId)}
-                                            onMouseEnter={() => setOpenTooltip(tooltipId)}
-                                            onMouseLeave={() => setOpenTooltip(null)}
-                                            className="focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                                          >
-                                            <Settings className="h-3.5 w-3.5 text-blue-500" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="right" className="max-w-xs">
-                                          <div className="text-xs space-y-1">
-                                            <div className="font-semibold mb-1">Settings changed:</div>
-                                            {settingsChanges.map((change, i) => (
-                                              <div key={i}>• {change}</div>
-                                            ))}
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </div>
-                              </td>
-                              <td className={`p-2 text-sm text-right font-bold ${getScoreColor(session.score)}`}>
-                                {session.score}%
-                              </td>
-                              <td className="p-2 text-sm text-right">{(session.totalSeconds/60).toFixed(0)}</td>
-                              <td className="p-2 text-sm text-right text-muted-foreground">{avgTime}s</td>
-                              <td className="p-2 text-sm text-right text-muted-foreground">
-                                {session.correctAttempts}/{session.totalAttempts}
-                              </td>
-                              <td className="p-2 text-sm text-right text-amber-600 font-medium">
-                                {session.needsPracticeCount}
-                              </td>
-                            </tr>
+                            <>
+                              {/* Recent 10 sessions - detailed */}
+                              {recentSessions.map((session, index) => {
+                                const avgTime = session.avgSecsPerAnswer?.toFixed(1);
+                                const date = new Date(session.sessionDate);
+                                const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+                                const dayMonth = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+                                const formattedDate = `${dayOfWeek} ${dayMonth}`;
+                                
+                                // Get previous session (next in reversed array)
+                                const previousSession = reversedSessions[index + 1];
+                                const settingsChanges = ConfigData.getSettingsChanges(session.settings, previousSession?.settings);
+                                const tooltipId = `tooltip-${exerciseKey}-${index}`;
+                                
+                                return (
+                                  <tr key={index} className="border-b last:border-0 hover:bg-muted/30">
+                                    <td className="p-2 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        {formattedDate}
+                                        {settingsChanges.length > 0 && (
+                                          <TooltipProvider>
+                                            <Tooltip open={openTooltip === tooltipId} onOpenChange={(open) => setOpenTooltip(open ? tooltipId : null)}>
+                                              <TooltipTrigger asChild>
+                                                <button
+                                                  onClick={() => setOpenTooltip(openTooltip === tooltipId ? null : tooltipId)}
+                                                  onMouseEnter={() => setOpenTooltip(tooltipId)}
+                                                  onMouseLeave={() => setOpenTooltip(null)}
+                                                  className="focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                                                >
+                                                  <Settings className="h-3.5 w-3.5 text-blue-500" />
+                                                </button>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="right" className="max-w-xs">
+                                                <div className="text-xs space-y-1">
+                                                  <div className="font-semibold mb-1">Settings changed:</div>
+                                                  {settingsChanges.map((change, i) => (
+                                                    <div key={i}>• {change}</div>
+                                                  ))}
+                                                </div>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className={`p-2 text-sm text-right font-bold ${getScoreColor(session.score)}`}>
+                                      {session.score}%
+                                    </td>
+                                    <td className="p-2 text-sm text-right">{(session.totalSeconds/60).toFixed(0)}</td>
+                                    <td className="p-2 text-sm text-right text-muted-foreground">{avgTime}s</td>
+                                    <td className="p-2 text-sm text-right text-muted-foreground">
+                                      {session.correctAttempts}/{session.totalAttempts}
+                                    </td>
+                                    <td className="p-2 text-sm text-right text-amber-600 font-medium">
+                                      {session.needsPracticeCount}
+                                    </td>
+                                    <td className="p-2 text-sm text-right text-orange-600 font-medium">
+                                      {session.needsPracticeTotalSeverity || 0}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                              
+                              {/* Aggregated weeks */}
+                              {weekGroupsArray.map((weekGroup) => {
+                                const weekLabel = `${format(weekGroup.weekStart, 'dd MMM')} - ${format(weekGroup.weekEnd, 'dd MMM')}`;
+                                
+                                return (
+                                  <tr key={weekGroup.weekKey} className="border-b last:border-0 hover:bg-muted/30 bg-muted/20">
+                                    <td className="p-2 text-sm font-medium">
+                                      {weekLabel} <span className="text-xs text-muted-foreground">({weekGroup.sessions.length} sessions)</span>
+                                    </td>
+                                    <td className={`p-2 text-sm text-right font-bold ${getScoreColor(weekGroup.avgScore)}`}>
+                                      {weekGroup.avgScore}%
+                                    </td>
+                                    <td className="p-2 text-sm text-right">{weekGroup.totalMinutes}</td>
+                                    <td className="p-2 text-sm text-right text-muted-foreground">-</td>
+                                    <td className="p-2 text-sm text-right text-muted-foreground">
+                                      {weekGroup.totalCorrect}/{weekGroup.totalAttempts}
+                                    </td>
+                                    <td className="p-2 text-sm text-right text-amber-600 font-medium">
+                                      {weekGroup.totalNeedsPractice}
+                                    </td>
+                                    <td className="p-2 text-sm text-right text-orange-600 font-medium">
+                                      {weekGroup.totalSeverity}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </>
                           );
-                        })}
+                        })()}
                       </tbody>
                     </table>
                   </div>
