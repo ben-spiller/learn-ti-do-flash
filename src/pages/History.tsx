@@ -214,8 +214,9 @@ const PracticeHistory = () => {
             <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
                 💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
-                Add a drone note for reference, reduce the number of notes, 
-                or focus on the specific intervals and note sequences that you find most challenging.
+                Add a drone note to build a tonal mental model for hearing the notes,  
+                focus on the specific intervals and note sequences that you find most challenging, 
+                or try single note practice for a while.
               </p>
             </div>
           )}
@@ -270,7 +271,7 @@ const PracticeHistory = () => {
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground ml-1">
-                        ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : 'N/A'})
+                        ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : '(Start)'})
                       </span>
                     </div>
                     <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
