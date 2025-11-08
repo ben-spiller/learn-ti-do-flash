@@ -317,7 +317,7 @@ const SettingsView = () => {
             <img src={appIcon} alt="LearnTiDo" className="w-16 h-16" />
           </div>
           <CardTitle className="text-3xl font-bold" title="Copyright (C) Ben Spiller 2025-present">LearnTiDo</CardTitle>
-          <CardDescription>Configure your practice settings</CardDescription>
+          <CardDescription>Functional ear practice with solfege keyboard</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Saved Configurations - Card Grid */}
