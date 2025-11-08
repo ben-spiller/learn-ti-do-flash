@@ -524,8 +524,8 @@ const PracticeHistory = () => {
                             const totalMinutes = Math.round(sessions.reduce((sum, s) => sum + s.totalSeconds, 0) / 60);
                             const totalAttempts = sessions.reduce((sum, s) => sum + s.totalAttempts, 0);
                             const totalCorrect = sessions.reduce((sum, s) => sum + s.correctAttempts, 0);
-                            const totalNeedsPractice = sessions.reduce((sum, s) => sum + s.needsPracticeCount, 0);
-                            const totalSeverity = sessions.reduce((sum, s) => sum + s.needsPracticeTotalSeverity, 0);
+                            const totalNeedsPractice = Math.round(sessions.reduce((sum, s) => sum + s.needsPracticeCount, 0)/ sessions.length);
+                            const totalSeverity = Math.round(sessions.reduce((sum, s) => sum + s.needsPracticeTotalSeverity, 0)/ sessions.length);
                             
                             return {
                               weekKey,
