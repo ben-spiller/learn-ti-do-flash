@@ -39,9 +39,11 @@ export function semitonesToSolfege(semitoneOffset: SemitoneOffset, longVersion =
   return name.split(' ')[0];
 }
 
-/** Return the display name of the musical interval (e.g. 2nd, 5th etc) for a (positive) semi-tone offset */
+/** Return the display name of the musical interval (e.g. 2nd, 5th etc) for a (positive) semi-tone offset, 
+ * or a difference between two notes
+ */
 export function semitonesToInterval(semitoneOffset: SemitoneOffset): string {
-  const pc = semitonesToOneOctave(semitoneOffset); // normalize to 0..11
+  const pc = semitonesToOneOctave(Math.abs(semitoneOffset)); // normalize to 0..11
   return INTERVAL_NAMES[pc];
 }
 
