@@ -296,7 +296,6 @@ const PracticeView = () => {
           setElapsedSeconds(elapsedSeconds + (Math.floor((Date.now() - questionStartTime) / 1000)));
         }
       }
-      savePracticeData();
 
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
@@ -330,8 +329,6 @@ const PracticeView = () => {
       const incorrectNeedsPracticeCount = (needsPractice.current.get(incorrectPairKey) || 0);
       needsPractice.current.set(incorrectPairKey, incorrectNeedsPracticeCount + 1);
       
-      savePracticeData();
-
       // Clear feedback after animation
       setTimeout(() => {
         setLastPressedNote(null);
@@ -365,6 +362,7 @@ const PracticeView = () => {
   };
 
   const handleFinish = () => {
+    savePracticeData();
     saveCurrentConfiguration(settings);
     // Save session data if at least one question was answered
     if (totalSequencesAnswered.current > 0) {
