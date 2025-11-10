@@ -6,8 +6,7 @@ import { MidiNoteName, SemitoneOffset, semitonesToSolfege } from "@/utils/audio"
 export enum ExerciseType {
   MelodyRecognition = "Melody recognition",
   SingleNoteRecognition = "Single note recognition",
-  IntervalComparison = "Interval comparison",
-}
+} 
 
 export class ConfigData {
   exerciseType?: ExerciseType = ExerciseType.MelodyRecognition;
@@ -24,7 +23,6 @@ export class ConfigData {
   rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
   instrument: string = "acoustic_grand_piano"; // Instrument slug (used when instrumentMode is "single")
   instrumentMode: "single" | "random" = "single"; // Whether to use a single instrument or random from favourites
-  comparisonIntervals: [SemitoneOffset, SemitoneOffset] = [2, 3]; // Intervals to compare in interval comparison exercises (e.g. major 2nd vs minor 3rd)
 
   /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results. 
    * This accessor is included for compatibility with olders configs that didn't have this property actually saved
@@ -91,8 +89,7 @@ export class ConfigData {
       other.referenceType === this.referenceType &&
       other.rootNotePitch === this.rootNotePitch &&
       other.instrument === this.instrument &&
-      other.instrumentMode === this.instrumentMode &&
-      JSON.stringify(other.comparisonIntervals) === JSON.stringify(this.comparisonIntervals)
+      other.instrumentMode === this.instrumentMode
     );
   }
 
@@ -179,9 +176,6 @@ export class ConfigData {
     if (this.instrumentMode !== defaults.instrumentMode) {
       params.set('mode', this.instrumentMode);
     }
-    if (JSON.stringify(this.comparisonIntervals) !== JSON.stringify(defaults.comparisonIntervals)) {
-      params.set('comp', this.comparisonIntervals.join(','));
-    }
 
     return params;
   }
@@ -249,14 +243,6 @@ export class ConfigData {
       partial.instrumentMode = mode;
     }
 
-    const comp = searchParams.get('comp');
-    if (comp) {
-      const parts = comp.split(',').map(n => parseInt(n, 10));
-      if (parts.length === 2) {
-        partial.comparisonIntervals = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
-      }
-    }
-
     return new ConfigData({ ...defaults, ...partial });
   }
 
@@ -270,7 +256,6 @@ export const CONSTRAINTS = {
   tempo: { min: 40, max: 400, step: 10 },
   consecutiveIntervals: { min: 0, max: 12+12 },
   questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
-  comparisonIntervals: { min: 1, max: 12 }, // Semitones for interval comparison
 } as const;
 
 // All available instruments from FluidR3_GM soundfont
