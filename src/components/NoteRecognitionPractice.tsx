@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -26,11 +26,10 @@ interface NoteRecognitionPracticeProps {
   confusedPairs: React.MutableRefObject<Map<string, number>>;
   needsPractice: React.MutableRefObject<Map<string, number>>;
   handlePlayAgain: () => void;
-  handlePlayReference: () => Promise<void>;
-  ref: React.Ref<any>;
+  handlePlayReference: () => void;
 }
 
-export const NoteRecognitionPractice = forwardRef(function NoteRecognitionPractice({
+export function NoteRecognitionPractice({
   settings,
   rootMidi,
   noteDuration,
@@ -49,8 +48,8 @@ export const NoteRecognitionPractice = forwardRef(function NoteRecognitionPracti
   confusedPairs,
   needsPractice,
   handlePlayAgain,
-  handlePlayReference
-}: NoteRecognitionPracticeProps, ref) {
+  handlePlayReference,
+}: NoteRecognitionPracticeProps) {
   const prevSequence = useRef<SemitoneOffset[]>([]);
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
   const sequenceItems = useRef<Array<{ note: number; duration: number; gapAfter: number }>>([]);
@@ -64,21 +63,8 @@ export const NoteRecognitionPractice = forwardRef(function NoteRecognitionPracti
       || (settings.exerciseType === ExerciseType.SingleNoteRecognition && currentPosition >= 1); 
   };
 
-  useImperativeHandle(ref, () => ({
-    handlePlayAgain: () => {
-      playSequenceWithDelay();
-    },
-  }));
-
   useEffect(() => {
-    const doStart = async () => {
-        await handlePlayReference();
-        // Add gap before exercise
-        await new Promise(resolve => setTimeout(resolve, 800));
-      startNewRound();
-    }
-
-    doStart();
+    startNewRound();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -126,7 +112,6 @@ export const NoteRecognitionPractice = forwardRef(function NoteRecognitionPracti
       return durationOptions[randomIndex];
     });
   };
-
 
   const playSequenceWithDelay = async () => {
     stopSounds();
@@ -389,4 +374,4 @@ export const NoteRecognitionPractice = forwardRef(function NoteRecognitionPracti
       </Card>
     </>
   );
-});
+}

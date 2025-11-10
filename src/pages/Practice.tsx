@@ -85,6 +85,10 @@ const PracticeView = () => {
         startDrone(rootMidi, droneVolume);
       }
         
+      await handlePlayReference();
+
+      // Add gap before exercise
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       wrong2NoteSequences.current.clear();
       confusedPairs.current.clear();
@@ -135,10 +139,10 @@ const PracticeView = () => {
   };
 
   const handlePlayAgain = () => {
-    if (practiceComponent.current) {
-      practiceComponent.current?.handlePlayAgain();
-    }
-};
+    // This will be implemented differently by each child component
+    // For now, just a placeholder that stops sounds
+    stopSounds();
+  };
 
   const handlePlayReference = async () => {
     setIsPlayingReference(true);
@@ -290,7 +294,7 @@ const PracticeView = () => {
     return parseInt(lastNote);
   }
   
-  const practiceComponent = useRef<any>();
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
@@ -390,7 +394,7 @@ const PracticeView = () => {
           <>
             {(settings.getExerciseType() === ExerciseType.MelodyRecognition || 
               settings.getExerciseType() === ExerciseType.SingleNoteRecognition) && (
-              <NoteRecognitionPractice 
+              <NoteRecognitionPractice
                 settings={settings}
                 rootMidi={rootMidi}
                 noteDuration={noteDuration}
@@ -410,7 +414,6 @@ const PracticeView = () => {
                 needsPractice={needsPractice}
                 handlePlayAgain={handlePlayAgain}
                 handlePlayReference={handlePlayReference}
-                ref={practiceComponent}
               />
             )}
 
