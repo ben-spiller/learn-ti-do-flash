@@ -3,7 +3,14 @@
 
 import { MidiNoteName, SemitoneOffset, semitonesToSolfege } from "@/utils/audio";
 
+export enum ExerciseType {
+  MelodyRecognition = "Melody recognition",
+  SingleNoteRecognition = "Single note recognition",
+} 
+
 export class ConfigData {
+  exerciseType?: ExerciseType = ExerciseType.MelodyRecognition;
+
   selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
   numberOfNotes: number = 3; // Number of notes per question (2-10)
   playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
@@ -17,10 +24,13 @@ export class ConfigData {
   instrument: string = "acoustic_grand_piano"; // Instrument slug (used when instrumentMode is "single")
   instrumentMode: "single" | "random" = "single"; // Whether to use a single instrument or random from favourites
 
-  /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results */
-  getExerciseName(): string {
-    if (this.numberOfNotes === 1) return "Single note recognition";
-    return "Melody recognition"
+  /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results. 
+   * This accessor is included for compatibility with olders configs that didn't have this property actually saved
+   */
+  getExerciseType(): ExerciseType {
+    if (this.exerciseType) return this.exerciseType;
+    if (this.numberOfNotes === 1) return ExerciseType.SingleNoteRecognition;
+    return ExerciseType.MelodyRecognition;
   }
 
   /** Pick the instrument to use for this session based on the instrument mode */
@@ -36,7 +46,6 @@ export class ConfigData {
   getNotePool(): SemitoneOffset[] {
     const pool: SemitoneOffset[] = [];
     const [minOffset, maxOffset] = this.questionNoteRange;
-    
     for (const note of this.selectedNotes) {
       // Find the lowest octave of this note within range
       let current = note;
@@ -52,6 +61,10 @@ export class ConfigData {
         current += 12;
       }
     }
+    if (pool.length === 0) {
+      // TODO: really we should validate this in the Settings page
+      throw new Error("There are no notes that match both the selectedNotes and questionNoteRange settings.");
+    }
     
     return pool.sort((a, b) => a - b);
   }
@@ -64,6 +77,7 @@ export class ConfigData {
 
   equals(other: ConfigData): boolean {
     return (
+      other.exerciseType === this.exerciseType &&
       JSON.stringify(other.selectedNotes.sort()) === JSON.stringify(this.selectedNotes.sort()) &&
       other.numberOfNotes === this.numberOfNotes &&
       other.playExtraNotes === this.playExtraNotes &&
@@ -85,6 +99,9 @@ export class ConfigData {
     
     try {
       const changes: string[] = [];
+      if (current.getExerciseType() !== previous.getExerciseType()) {
+        changes.push(`Exercise: ${previous.getExerciseType()} → ${current.getExerciseType()}`);
+      }
       if (current.numberOfNotes !== previous.numberOfNotes) {
         changes.push(`Notes: ${previous.numberOfNotes} → ${current.numberOfNotes}`);
       }
@@ -120,6 +137,8 @@ export class ConfigData {
   toQueryParams(): URLSearchParams {
     const defaults = new ConfigData();
     const params = new URLSearchParams();
+
+    params.set('exercise', this.getExerciseType());
 
     if (JSON.stringify(this.selectedNotes.sort()) !== JSON.stringify(defaults.selectedNotes.sort())) {
       params.set('notes', this.selectedNotes.join(','));
@@ -165,6 +184,8 @@ export class ConfigData {
   static fromQueryParams(searchParams: URLSearchParams): ConfigData {
     const defaults = new ConfigData();
     const partial: Partial<ConfigData> = {};
+
+    partial.exerciseType = searchParams.get('exercise') as ExerciseType || defaults.getExerciseType();
 
     const notes = searchParams.get('notes');
     if (notes) {

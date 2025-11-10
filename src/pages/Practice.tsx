@@ -7,7 +7,7 @@ import { Play, Volume2, VolumeX, Volume1 } from "lucide-react";
 import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones } from "@/utils/audio";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ConfigData } from "@/config/ConfigData";
+import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getFavouriteInstruments } from "@/utils/instrumentStorage";
 import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
@@ -73,15 +73,20 @@ const PracticeView = () => {
   })());
   /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName());
+    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseType());
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
+
+ const isQuestionComplete = (): boolean => {
+    return currentPosition >= settings.numberOfNotes 
+      || (settings.exerciseType === ExerciseType.SingleNoteRecognition && currentPosition >= 1); 
+  }
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
     localStorage.setItem(STORED_WRONG_2_NOTE_SEQUENCES, JSON.stringify(Array.from(wrong2NoteSequences.current.entries())));
     localStorage.setItem(STORED_FREQUENTLY_CONFUSED_PAIRS, JSON.stringify(Array.from(confusedPairs.current.entries())));
-    localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseName(), JSON.stringify(Array.from(needsPractice.current.entries())));
+    localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseType(), JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
 
@@ -152,7 +157,7 @@ const PracticeView = () => {
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Next button shortcuts
-      if ((e.key === 'n' || e.key === 'Enter') && currentPosition === settings.numberOfNotes) {
+      if ((e.key === 'n' || e.key === 'Enter') && isQuestionComplete()) {
         e.preventDefault();
         startNewRound();
         return;
@@ -249,7 +254,7 @@ const PracticeView = () => {
   };
 
   const handleNotePress = (selectedNote: SemitoneOffset) => {
-    if (currentPosition >= settings.numberOfNotes) { // at the end, just play whatever they pressed
+    if (isQuestionComplete()) { // at the end, just play whatever they pressed
       stopSounds();
       playNote(selectedNote+rootMidi);
       return;
@@ -286,8 +291,11 @@ const PracticeView = () => {
         }
       }
 
+      setCorrectAttempts(correctAttempts + 1);
+      setCurrentPosition(currentPosition + 1);
+
       // once we completed this question, add to the elapsed time 
-      if (currentPosition+1 === settings.numberOfNotes) {
+      if (isQuestionComplete()) {
         totalSequencesAnswered.current += 1;
         if (Date.now() - questionStartTime > 60000) {
           // avoid counting up wildly big times
@@ -296,9 +304,6 @@ const PracticeView = () => {
           setElapsedSeconds(elapsedSeconds + (Math.floor((Date.now() - questionStartTime) / 1000)));
         }
       }
-
-      setCorrectAttempts(correctAttempts + 1);
-      setCurrentPosition(currentPosition + 1);
 
       // Clear feedback after animation
       setTimeout(() => {
@@ -379,7 +384,7 @@ const PracticeView = () => {
         needsPracticeCount: needsPractice.current.size,
         needsPracticeTotalSeverity: Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0),
 
-        exerciseName: settings.getExerciseName(),
+        exerciseName: settings.getExerciseType(),
         settings: settings // don't need to copy this because we won't be mutating it anyway
       } satisfies SessionHistory;
       
@@ -628,7 +633,7 @@ const PracticeView = () => {
                     );
                   })}
                 </div>
-                {currentPosition === settings.numberOfNotes && (
+                {isQuestionComplete() && (
                   <div className="mt-4 flex items-center justify-center gap-3">
                     <span className="text-lg font-semibold text-success">Complete! 🎉</span>
                     <TooltipProvider>

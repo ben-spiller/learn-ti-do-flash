@@ -29,6 +29,7 @@ import {
   INSTRUMENT_OPTIONS,
   CONSTRAINTS,
   formatInstrumentName,
+  ExerciseType,
 } from "@/config/ConfigData";
 import { getFavouriteInstruments, saveFavouriteInstruments } from "@/utils/instrumentStorage";
 import {
@@ -49,6 +50,7 @@ const SettingsView = () => {
   const currentConfig = getCurrentConfiguration();
   const defaults = currentConfig || new ConfigData();
   
+  const [exerciseType, setExerciseType] = useState<ExerciseType>(defaults.exerciseType);
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
@@ -79,11 +81,11 @@ const SettingsView = () => {
     setSavedConfigs(getSavedConfigurations());
   }, []);
 
-  // TODO: instead of this, store the entire ConfigData object as a state
   const getCurrentSettings = (): ConfigData => {
     return new ConfigData({
+      exerciseType,
       selectedNotes,
-      numberOfNotes,
+      numberOfNotes: exerciseType === ExerciseType.MelodyRecognition ? numberOfNotes : 1,
       playExtraNotes,
       consecutiveIntervals,
       questionNoteRange,
@@ -101,6 +103,7 @@ const SettingsView = () => {
     const settings = loadConfiguration(id);
     if (!settings) return;
     
+    setExerciseType(settings.exerciseType);
     setSelectedNotes(settings.selectedNotes);
     setNumberOfNotes(settings.numberOfNotes);
     setPlayExtraNotes(settings.playExtraNotes);
@@ -441,7 +444,28 @@ const SettingsView = () => {
 
             <TabsContent value="practice" className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Notes per Question</Label>
+                <Label className="text-base font-semibold">Exercise</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
+                    onClick={() => setExerciseType(ExerciseType.MelodyRecognition)}
+                    className="flex-1"
+                  >
+                    {ExerciseType.MelodyRecognition}
+                  </Button>
+                  <Button
+                    variant={exerciseType === ExerciseType.SingleNoteRecognition ? "default" : "outline"}
+                    onClick={() => setExerciseType(ExerciseType.SingleNoteRecognition)}
+                    className="flex-1"
+                  >
+                    {ExerciseType.SingleNoteRecognition}
+                  </Button>
+                </div>
+              </div>
+
+              {exerciseType === ExerciseType.MelodyRecognition && (
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Notes per question</Label>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -462,6 +486,7 @@ const SettingsView = () => {
                   </Button>
                 </div>
               </div>
+            )}
 
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Play Extra Notes</Label>
