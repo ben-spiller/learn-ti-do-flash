@@ -64,6 +64,7 @@ const SettingsView = () => {
   const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
   const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
   const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(getFavouriteInstruments());
+  const [comparisonIntervals, setComparisonIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.comparisonIntervals);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
@@ -96,6 +97,7 @@ const SettingsView = () => {
       rootNotePitch,
       instrument: selectedInstrument,
       instrumentMode,
+      comparisonIntervals,
     });
   };
 
@@ -116,6 +118,7 @@ const SettingsView = () => {
     setRootNotePitch(settings.rootNotePitch);
     setSelectedInstrument(settings.instrument);
     setInstrumentMode(settings.instrumentMode);
+    setComparisonIntervals(settings.comparisonIntervals);
   };
 
   const handleSaveConfig = () => {
@@ -445,20 +448,25 @@ const SettingsView = () => {
             <TabsContent value="practice" className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Exercise</Label>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.MelodyRecognition)}
-                    className="flex-1"
                   >
                     {ExerciseType.MelodyRecognition}
                   </Button>
                   <Button
                     variant={exerciseType === ExerciseType.SingleNoteRecognition ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.SingleNoteRecognition)}
-                    className="flex-1"
                   >
                     {ExerciseType.SingleNoteRecognition}
+                  </Button>
+                  <Button
+                    variant={exerciseType === ExerciseType.IntervalComparison ? "default" : "outline"}
+                    onClick={() => setExerciseType(ExerciseType.IntervalComparison)}
+                    className="col-span-2"
+                  >
+                    {ExerciseType.IntervalComparison}
                   </Button>
                 </div>
               </div>
@@ -613,6 +621,26 @@ const SettingsView = () => {
                   </Button>
                 </div>
               </div>
+
+              {exerciseType === ExerciseType.IntervalComparison && (
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">
+                    Comparison Intervals: {semitonesToInterval(comparisonIntervals[0])} vs {semitonesToInterval(comparisonIntervals[1])}
+                  </Label>
+                  <Slider
+                    value={comparisonIntervals}
+                    onValueChange={(values) => {
+                      if (values[0] !== values[1]) {
+                        setComparisonIntervals([values[0], values[1]]);
+                      }
+                    }}
+                    min={CONSTRAINTS.comparisonIntervals.min}
+                    max={CONSTRAINTS.comparisonIntervals.max}
+                    step={1}
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              )}
 
             </TabsContent>
 
