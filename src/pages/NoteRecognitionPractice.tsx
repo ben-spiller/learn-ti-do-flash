@@ -3,16 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Play, Volume2, VolumeX, Volume1 } from "lucide-react";
 import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones } from "@/utils/audio";
-import { Slider } from "@/components/ui/slider";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getFavouriteInstruments } from "@/utils/instrumentStorage";
-import { getNoteButtonColor, getScoreColor } from "@/utils/noteStyles";
+import { getNoteButtonColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
+import { PracticeHeader } from "@/components/PracticeHeader";
 
 
 const PracticeView = () => {
@@ -501,172 +499,85 @@ const PracticeView = () => {
 
 
   return (
-    <div className="min-h-screen bg-background flex flex-col p-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          {started && (
-            <Button
-              onClick={handleFinish}
-              variant="outline"
-              size="sm"
-            >
-              Finish
-            </Button>
-          )}
-        </div>
-        <div className="flex gap-2 items-center">
-          {started && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handlePlayAgain}
-                    disabled={isPlaying}
-                  >
-                    <Play className="h-4 w-4 mr-1" />
-                    Again
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Play again (keyboard shortcut: a)</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handlePlayReference}
-                    disabled={isPlaying || isPlayingReference}
-                  >
-                    <Volume2 className="h-4 w-4 mr-1" />
-                    Reference
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Play reference for this key (keyboard shortcut: e)</p>
-                </TooltipContent>
-              </Tooltip>
-              {settings.droneType !== "none" && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      {droneVolume <= -40 ? <VolumeX className="h-5 w-5" /> : 
-                       droneVolume <= -20 ? <Volume1 className="h-5 w-5" /> : 
-                       <Volume2 className="h-5 w-5" />}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48">
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Drone Volume</div>
-                      <Slider
-                        value={[droneVolume]}
-                        onValueChange={handleDroneVolumeChange}
-                        min={-30}
-                        max={10}
-                        step={2}
-                      />
-                      <div className="text-xs text-muted-foreground text-center">
-                        {droneVolume} dB
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-              <div className="flex gap-3 text-sm ml-2">
-                <div className="text-center">
-                  <div className={`font-bold text-lg ${getScoreColor(totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100)}`}>
-                    {totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100}%
-                  </div>
-                  <div className="text-muted-foreground text-xs">Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-lg">{(elapsedSeconds/60).toFixed(0)}</div>
-                  <div className="text-muted-foreground text-xs">Min</div>
-                </div>
-              </div>
-            </TooltipProvider>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-4">
+      <PracticeHeader
+        correctAttempts={correctAttempts}
+        totalAttempts={totalAttempts}
+        elapsedSeconds={elapsedSeconds}
+        started={started}
+        isPreloading={isPreloading}
+        showLoadingIndicator={showLoadingIndicator}
+        isPlaying={isPlaying}
+        isPlayingReference={isPlayingReference}
+        droneType={settings.droneType}
+        droneVolume={droneVolume}
+        onStart={handleStart}
+        onPlayAgain={handlePlayAgain}
+        onPlayReference={handlePlayReference}
+        onFinish={handleFinish}
+        onDroneVolumeChange={handleDroneVolumeChange}
+      />
 
-      <div className="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
-        {started ? (
-          <>
-            {/* Musical note button div at the top */}
-            <SolfegeKeyboard
-              rootMidi={rootMidi}
-              onNotePress={handleNotePress}
-              overlayNote={lastPressedNote}
-              overlayNoteTick={lastPressedWasCorrect}
-              disabled={isPlayingReference}
-            />
+      {started && (
+        <div className="w-full max-w-2xl space-y-4">
+          {/* Musical note button div at the top */}
+          <SolfegeKeyboard
+            rootMidi={rootMidi}
+            onNotePress={handleNotePress}
+            overlayNote={lastPressedNote}
+            overlayNoteTick={lastPressedWasCorrect}
+            disabled={isPlayingReference}
+          />
 
-            {/* Progress card */}
-            <Card className="relative">
-              <CardHeader>
-                <CardTitle className="text-center">
-                  {isPlayingReference ? (
-                    <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
-                  ) : (
-                    "Identify the notes"
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>                
-                <div className="flex gap-2 justify-center flex-wrap">
-                  {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
-                    const isAnswered = index < currentPosition;
-                    const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index])) : "?";
-                    const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
-                    
-                    return (
-                      <div
-                        key={index}
-                        className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
-                      >
-                        {noteSolfege}
-                      </div>
-                    );
-                  })}
-                </div>
-                {isQuestionComplete() && (
-                  <div className="mt-4 flex items-center justify-center gap-3">
-                    <span className="text-lg font-semibold text-success">Complete! 🎉</span>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button onClick={startNewRound} size="lg">
-                            Next
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Press N or Enter</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
+          {/* Progress card */}
+          <Card className="relative">
+            <CardHeader>
+              <CardTitle className="text-center">
+                {isPlayingReference ? (
+                  <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
+                ) : (
+                  "Identify the notes"
                 )}
-              </CardContent>
-            </Card>
-
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-4 py-8">
-            <p className="text-center text-lg">When you're ready, press Start to enable audio and begin.</p>
-            <Button 
-              onClick={handleStart} 
-              className="w-40 h-14 text-lg"
-              disabled={isPreloading}
-            >
-              {showLoadingIndicator ? "Loading sounds..." : "Start"}
-            </Button>
-          </div>
-        )}
-      </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>                
+              <div className="flex gap-2 justify-center flex-wrap">
+                {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
+                  const isAnswered = index < currentPosition;
+                  const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index])) : "?";
+                  const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
+                    >
+                      {noteSolfege}
+                    </div>
+                  );
+                })}
+              </div>
+              {isQuestionComplete() && (
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <span className="text-lg font-semibold text-success">Complete! 🎉</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button onClick={startNewRound} size="lg">
+                          Next
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Press N or Enter</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,7 +6,8 @@ import { MidiNoteName, SemitoneOffset, semitonesToSolfege } from "@/utils/audio"
 export enum ExerciseType {
   MelodyRecognition = "Melody recognition",
   SingleNoteRecognition = "Single note recognition",
-} 
+  IntervalComparison = "Interval comparison",
+}
 
 export class ConfigData {
   exerciseType?: ExerciseType = ExerciseType.MelodyRecognition;
@@ -16,6 +17,7 @@ export class ConfigData {
   playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
   consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [0, 11]; // default - allow duplicates (0) and go up to an octave
   questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
+  comparisonIntervals: [SemitoneOffset, SemitoneOffset] = [2, 3]; // For interval comparison: two intervals to compare (e.g., major 2nd vs minor 3rd)
   tempo: number = 200; 
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
@@ -83,6 +85,7 @@ export class ConfigData {
       other.playExtraNotes === this.playExtraNotes &&
       JSON.stringify(other.consecutiveIntervals) === JSON.stringify(this.consecutiveIntervals) &&
       JSON.stringify(other.questionNoteRange) === JSON.stringify(this.questionNoteRange) &&
+      JSON.stringify(other.comparisonIntervals) === JSON.stringify(this.comparisonIntervals) &&
       other.tempo === this.tempo &&
       other.rhythm === this.rhythm &&
       other.droneType === this.droneType &&
@@ -155,6 +158,9 @@ export class ConfigData {
     if (JSON.stringify(this.questionNoteRange) !== JSON.stringify(defaults.questionNoteRange)) {
       params.set('range', this.questionNoteRange.join(','));
     }
+    if (JSON.stringify(this.comparisonIntervals) !== JSON.stringify(defaults.comparisonIntervals)) {
+      params.set('cmpInt', this.comparisonIntervals.join(','));
+    }
     if (this.tempo !== defaults.tempo) {
       params.set('tempo', this.tempo.toString());
     }
@@ -214,6 +220,14 @@ export class ConfigData {
       }
     }
 
+    const cmpInt = searchParams.get('cmpInt');
+    if (cmpInt) {
+      const parts = cmpInt.split(',').map(n => parseInt(n, 10));
+      if (parts.length === 2) {
+        partial.comparisonIntervals = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
+      }
+    }
+
     const tempo = searchParams.get('tempo');
     if (tempo) partial.tempo = parseInt(tempo, 10);
 
@@ -256,6 +270,7 @@ export const CONSTRAINTS = {
   tempo: { min: 40, max: 400, step: 10 },
   consecutiveIntervals: { min: 0, max: 12+12 },
   questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
+  comparisonIntervals: { min: 1, max: 12 }, // 1 semitone (minor 2nd) to 12 semitones (octave)
 } as const;
 
 // All available instruments from FluidR3_GM soundfont

@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import SettingsView from "./pages/Settings";
-import PracticeView from "./pages/NoteRecognitionPractice";
+import NoteRecognitionPractice from "./pages/NoteRecognitionPractice";
+import IntervalComparisonPractice from "./pages/IntervalComparisonPractice";
 import PracticeHistory from "./pages/History";
 import SolfegeKeyboardPage from "./pages/SolfegeKeyboardPage";
 import NotFound from "./pages/NotFound";
@@ -23,7 +24,8 @@ const App = () => {
       <HashRouter>
         <Routes>
           <Route path="/" element={<SettingsView />} />
-          <Route path="/practice" element={<PracticeView />} />
+          <Route path="/practice" element={<NoteRecognitionPractice />} />
+          <Route path="/interval-comparison" element={<IntervalComparisonPractice />} />
           <Route path="/history" element={<PracticeHistory />} />
           <Route path="/keyboard" element={<SolfegeKeyboardPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

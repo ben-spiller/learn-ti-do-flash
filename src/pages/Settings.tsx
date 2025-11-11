@@ -56,6 +56,7 @@ const SettingsView = () => {
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
   const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
+  const [comparisonIntervals, setComparisonIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.comparisonIntervals);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
   const [droneType, setDroneType] = useState(defaults.droneType);
@@ -89,6 +90,7 @@ const SettingsView = () => {
       playExtraNotes,
       consecutiveIntervals,
       questionNoteRange,
+      comparisonIntervals,
       tempo,
       rhythm,
       droneType,
@@ -109,6 +111,7 @@ const SettingsView = () => {
     setPlayExtraNotes(settings.playExtraNotes);
     setConsecutiveIntervals(settings.consecutiveIntervals);
     setQuestionNoteRange(settings.questionNoteRange);
+    setComparisonIntervals(settings.comparisonIntervals);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
     setDroneType(settings.droneType);
@@ -193,7 +196,10 @@ const SettingsView = () => {
       // Encode settings as query params and navigate
       const queryParams = currentSettings.toQueryParams();
       queryParams.set('preloaded', 'true');
-      navigate(`/practice?${queryParams.toString()}`);
+      const route = currentSettings.exerciseType === ExerciseType.IntervalComparison 
+        ? '/interval-comparison'
+        : '/practice';
+      navigate(`${route}?${queryParams.toString()}`);
     } catch (e) {
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
@@ -460,6 +466,13 @@ const SettingsView = () => {
                   >
                     {ExerciseType.SingleNoteRecognition}
                   </Button>
+                  <Button
+                    variant={exerciseType === ExerciseType.IntervalComparison ? "default" : "outline"}
+                    onClick={() => setExerciseType(ExerciseType.IntervalComparison)}
+                    className="flex-1"
+                  >
+                    {ExerciseType.IntervalComparison}
+                  </Button>
                 </div>
               </div>
 
@@ -514,6 +527,7 @@ const SettingsView = () => {
                 </p>
               </div>
 
+              {exerciseType !== ExerciseType.IntervalComparison && (
               <div className="space-y-4">
                 <Label className="text-base font-semibold">
                   Question note range: {formatQuestionRangeLabel(questionNoteRange[0])} ... {formatQuestionRangeLabel(questionNoteRange[1])}
@@ -536,7 +550,30 @@ const SettingsView = () => {
                   minStepsBetweenThumbs={1}
                 />
               </div>
+              )}
 
+              {exerciseType === ExerciseType.IntervalComparison && (
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">
+                  Comparison intervals: {semitonesToInterval(comparisonIntervals[0])} vs {semitonesToInterval(comparisonIntervals[1])}
+                </Label>
+                <div className="space-y-2">
+                  <Slider
+                    value={[comparisonIntervals[0], comparisonIntervals[1]]}
+                    onValueChange={(values) => {
+                      setComparisonIntervals([values[0] as SemitoneOffset, values[1] as SemitoneOffset]);
+                    }}
+                    min={CONSTRAINTS.comparisonIntervals.min}
+                    max={CONSTRAINTS.comparisonIntervals.max}
+                    step={1}
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+              )}
+
+              {exerciseType !== ExerciseType.IntervalComparison && (
+              <>
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Notes to Practice</Label>
                 <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
@@ -613,6 +650,8 @@ const SettingsView = () => {
                   </Button>
                 </div>
               </div>
+              </>
+              )}
 
             </TabsContent>
 
