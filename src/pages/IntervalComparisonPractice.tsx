@@ -50,6 +50,7 @@ const IntervalComparisonPractice = () => {
   const [currentGuess, setCurrentGuess] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState<number>(-1);
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
@@ -186,9 +187,15 @@ const IntervalComparisonPractice = () => {
   const playSequenceWithDelay = async (items: Array<{ note: number; duration: number; gapAfter: number }>) => {
     stopSounds();
     setIsPlaying(true);
+    setCurrentlyPlayingIndex(-1);
 
-    await playSequence(items);
+    // Play each note with visual feedback
+    for (let i = 0; i < items.length; i++) {
+      setCurrentlyPlayingIndex(i);
+      await playSequence([items[i]]);
+    }
 
+    setCurrentlyPlayingIndex(-1);
     setIsPlaying(false);
   };
 
@@ -291,14 +298,22 @@ const IntervalComparisonPractice = () => {
 
               <div className="flex flex-wrap justify-center gap-3">
                 {sequence.map((_, index) => {
+                  const isCurrentlyPlaying = currentlyPlayingIndex === index;
+                  
                   if (index === 0) {
                     // First note - not selectable
                     return (
-                      <div
-                        key={index}
-                        className="flex items-center justify-center w-16 h-16 rounded-lg border-2 border-muted bg-muted/50"
-                      >
-                        <span className="text-xl font-bold text-muted-foreground">1</span>
+                      <div key={index} className="flex flex-col items-center gap-1">
+                        <div
+                          className="flex items-center justify-center w-16 h-16 rounded-lg border-2 border-muted bg-muted/50"
+                        >
+                          <span className="text-xl font-bold text-muted-foreground">1</span>
+                        </div>
+                        <div className="h-2 flex items-center justify-center">
+                          {isCurrentlyPlaying && (
+                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          )}
+                        </div>
                       </div>
                     );
                   }
@@ -310,21 +325,28 @@ const IntervalComparisonPractice = () => {
                   return (
                     <div key={index} className="flex items-center gap-2">
                       <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                      <Button
-                        variant={isSelected ? "default" : "outline"}
-                        size="lg"
-                        onClick={() => handleIntervalSelect(index)}
-                        disabled={isQuestionComplete()}
-                        className={`w-16 h-16 text-xl font-bold ${
-                          showAsCorrect
-                            ? "bg-green-500 hover:bg-green-600 border-green-600"
-                            : showAsWrong
-                            ? "bg-red-500 hover:bg-red-600 border-red-600"
-                            : ""
-                        }`}
-                      >
-                        {index + 1}
-                      </Button>
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          variant={isSelected ? "default" : "outline"}
+                          size="lg"
+                          onClick={() => handleIntervalSelect(index)}
+                          disabled={isQuestionComplete()}
+                          className={`w-16 h-16 text-xl font-bold ${
+                            showAsCorrect
+                              ? "bg-green-500 hover:bg-green-600 border-green-600"
+                              : showAsWrong
+                              ? "bg-red-500 hover:bg-red-600 border-red-600"
+                              : ""
+                          }`}
+                        >
+                          {index + 1}
+                        </Button>
+                        <div className="h-2 flex items-center justify-center">
+                          {isCurrentlyPlaying && (
+                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
