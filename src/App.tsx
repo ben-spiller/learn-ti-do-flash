@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import SettingsView from "./pages/Settings";
-import PracticeView from "./pages/Practice";
+import PracticeView from "./pages/NoteRecognitionPractice";
 import PracticeHistory from "./pages/History";
 import SolfegeKeyboardPage from "./pages/SolfegeKeyboardPage";
 import NotFound from "./pages/NotFound";
