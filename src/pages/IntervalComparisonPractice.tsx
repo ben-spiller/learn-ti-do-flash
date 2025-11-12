@@ -46,6 +46,7 @@ const IntervalComparisonPractice = () => {
   });
 
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
+  const sequenceItems = useRef<Array<{ note: number; duration: number; gapAfter: number }>>([]);
   const [differentIntervalIndex, setDifferentIntervalIndex] = useState<number>(-1);
   const [currentGuess, setCurrentGuess] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -135,7 +136,7 @@ const IntervalComparisonPractice = () => {
 
   const startNewRound = () => {
     // Generate a sequence with one different interval
-    const sequenceLength = 4 + Math.floor(Math.random() * 3); // 4-6 notes
+    const sequenceLength = settings.numberOfNotes;
     const isAscending = Math.random() > 0.5;
     const [interval1, interval2] = settings.comparisonIntervals;
     const mainInterval = Math.random() > 0.5 ? interval1 : interval2;
@@ -163,13 +164,14 @@ const IntervalComparisonPractice = () => {
     const durations = generateSequenceDurations(sequenceLength);
 
     // Build sequence items for playback
-    const items = newSequence.map((offset, i) => ({
+    sequenceItems.current = newSequence.map((offset, i) => ({
       note: rootMidi + offset,
       duration: durations[i],
       gapAfter: noteGap,
     }));
+    
 
-    playSequenceWithDelay(items);
+    playSequenceWithDelay();
   };
 
   const generateSequenceDurations = (length: number): number[] => {
@@ -184,15 +186,15 @@ const IntervalComparisonPractice = () => {
     });
   };
 
-  const playSequenceWithDelay = async (items: Array<{ note: number; duration: number; gapAfter: number }>) => {
+  const playSequenceWithDelay = async () => {
     stopSounds();
     setIsPlaying(true);
     setCurrentlyPlayingIndex(-1);
 
     // Play each note with visual feedback
-    for (let i = 0; i < items.length; i++) {
+    for (let i = 0; i < sequenceItems.current.length; i++) {
       setCurrentlyPlayingIndex(i);
-      await playSequence([items[i]]);
+      await playSequence([sequenceItems.current[i]]);
     }
 
     setCurrentlyPlayingIndex(-1);
@@ -219,13 +221,7 @@ const IntervalComparisonPractice = () => {
   };
 
   const handlePlayAgain = () => {
-    const durations = generateSequenceDurations(sequence.length);
-    const items = sequence.map((offset, i) => ({
-      note: rootMidi + offset,
-      duration: durations[i],
-      gapAfter: noteGap,
-    }));
-    playSequenceWithDelay(items);
+    playSequenceWithDelay();
   };
 
   const handlePlayReference = async () => {
@@ -324,7 +320,6 @@ const IntervalComparisonPractice = () => {
 
                   return (
                     <div key={index} className="flex items-center gap-2">
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
                       <div className="flex flex-col items-center gap-1">
                         <Button
                           variant={isSelected ? "default" : "outline"}
@@ -339,7 +334,8 @@ const IntervalComparisonPractice = () => {
                               : ""
                           }`}
                         >
-                          {index + 1}
+                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                        {index + 1}
                         </Button>
                         <div className="h-2 flex items-center justify-center">
                           {isCurrentlyPlaying && (

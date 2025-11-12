@@ -86,7 +86,7 @@ const SettingsView = () => {
     return new ConfigData({
       exerciseType,
       selectedNotes,
-      numberOfNotes: exerciseType === ExerciseType.MelodyRecognition ? numberOfNotes : 1,
+      numberOfNotes: exerciseType !== ExerciseType.SingleNoteRecognition ? numberOfNotes : 1,
       playExtraNotes,
       consecutiveIntervals,
       questionNoteRange,
@@ -476,7 +476,7 @@ const SettingsView = () => {
                 </div>
               </div>
 
-              {exerciseType === ExerciseType.MelodyRecognition && (
+              {exerciseType !== ExerciseType.SingleNoteRecognition && (
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Notes per question</Label>
                 <div className="flex items-center gap-2">
