@@ -9,26 +9,161 @@ export enum ExerciseType {
   IntervalComparison = "Interval comparison",
 }
 
+// Property metadata for automatic serialization/comparison
+interface PropertyMetadata<T = any> {
+  key: keyof ConfigData;
+  defaultValue: T;
+  queryParam?: string; // URL parameter name (if omitted, property won't be serialized)
+  equals?: (a: T, b: T) => boolean; // Custom equality check
+  serialize?: (value: T) => string; // Custom serialization to URL
+  deserialize?: (value: string) => T; // Custom deserialization from URL
+  changeLabel?: string; // Label for change tracking (if omitted, property won't appear in changes)
+  formatChange?: (prev: T, curr: T) => string; // Custom change formatting
+}
+
+// Define all properties with their metadata in one place
+const PROPERTY_METADATA: PropertyMetadata[] = [
+  {
+    key: 'exerciseType',
+    defaultValue: ExerciseType.MelodyRecognition,
+    queryParam: 'exercise',
+    changeLabel: 'Exercise',
+    formatChange: (prev, curr) => `${prev} → ${curr}`,
+  },
+  {
+    key: 'selectedNotes',
+    defaultValue: [0, 2, 4, 5, 7, 9, 11] as SemitoneOffset[],
+    queryParam: 'notes',
+    equals: (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort()),
+    serialize: (value) => value.join(','),
+    deserialize: (value) => value.split(',').map(n => parseInt(n, 10)) as SemitoneOffset[],
+    changeLabel: 'Selected notes',
+    formatChange: (prev, curr) => {
+      const prevNotes = prev.map(n => semitonesToSolfege(n)).join(", ");
+      const currNotes = curr.map(n => semitonesToSolfege(n)).join(", ");
+      return `[${prevNotes}] → [${currNotes}]`;
+    },
+  },
+  {
+    key: 'numberOfNotes',
+    defaultValue: 3,
+    queryParam: 'n',
+    serialize: (value) => value.toString(),
+    deserialize: (value) => parseInt(value, 10),
+    changeLabel: 'Notes',
+    formatChange: (prev, curr) => `${prev} → ${curr}`,
+  },
+  {
+    key: 'playExtraNotes',
+    defaultValue: 0,
+    queryParam: 'extra',
+    serialize: (value) => value.toString(),
+    deserialize: (value) => parseInt(value, 10),
+    changeLabel: 'Extra notes',
+    formatChange: (prev, curr) => `${prev} → ${curr}`,
+  },
+  {
+    key: 'consecutiveIntervals',
+    defaultValue: [0, 11] as [SemitoneOffset, SemitoneOffset],
+    queryParam: 'int',
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+    serialize: (value) => value.join(','),
+    deserialize: (value) => {
+      const parts = value.split(',').map(n => parseInt(n, 10));
+      return parts.length === 2 ? [parts[0], parts[1]] as [SemitoneOffset, SemitoneOffset] : [0, 11] as [SemitoneOffset, SemitoneOffset];
+    },
+    changeLabel: 'Consecutive intervals',
+    formatChange: (prev, curr) => `${prev[0]}-${prev[1]} → ${curr[0]}-${curr[1]}`,
+  },
+  {
+    key: 'questionNoteRange',
+    defaultValue: [0, 12] as [SemitoneOffset, SemitoneOffset],
+    queryParam: 'range',
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+    serialize: (value) => value.join(','),
+    deserialize: (value) => {
+      const parts = value.split(',').map(n => parseInt(n, 10));
+      return parts.length === 2 ? [parts[0], parts[1]] as [SemitoneOffset, SemitoneOffset] : [0, 12] as [SemitoneOffset, SemitoneOffset];
+    },
+  },
+  {
+    key: 'comparisonIntervals',
+    defaultValue: [2, 3] as [SemitoneOffset, SemitoneOffset],
+    queryParam: 'cmpInt',
+    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+    serialize: (value) => value.join(','),
+    deserialize: (value) => {
+      const parts = value.split(',').map(n => parseInt(n, 10));
+      return parts.length === 2 ? [parts[0], parts[1]] as [SemitoneOffset, SemitoneOffset] : [2, 3] as [SemitoneOffset, SemitoneOffset];
+    },
+  },
+  {
+    key: 'tempo',
+    defaultValue: 200,
+    queryParam: 'tempo',
+    serialize: (value) => value.toString(),
+    deserialize: (value) => parseInt(value, 10),
+    changeLabel: 'Tempo',
+    formatChange: (prev, curr) => `${prev} → ${curr}`,
+  },
+  {
+    key: 'rhythm',
+    defaultValue: 'random' as 'fixed' | 'random',
+    queryParam: 'rhythm',
+    deserialize: (value) => (value === 'fixed' || value === 'random') ? value : 'random',
+    changeLabel: 'Rhythm',
+    formatChange: (prev, curr) => `${prev} → ${curr}`,
+  },
+  {
+    key: 'droneType',
+    defaultValue: 'none' as 'none' | 'root',
+    queryParam: 'drone',
+    deserialize: (value) => (value === 'none' || value === 'root') ? value : 'none',
+    changeLabel: 'Drone',
+    formatChange: (prev, curr) => `${prev} → ${curr}`,
+  },
+  {
+    key: 'referenceType',
+    defaultValue: 'root' as 'root' | 'arpeggio',
+    queryParam: 'ref',
+    deserialize: (value) => (value === 'root' || value === 'arpeggio') ? value : 'root',
+  },
+  {
+    key: 'rootNotePitch',
+    defaultValue: 'C4' as MidiNoteName,
+    queryParam: 'root',
+  },
+  {
+    key: 'instrument',
+    defaultValue: 'acoustic_grand_piano',
+    queryParam: 'inst',
+  },
+  {
+    key: 'instrumentMode',
+    defaultValue: 'single' as 'single' | 'random',
+    queryParam: 'mode',
+    deserialize: (value) => (value === 'single' || value === 'random') ? value : 'single',
+  },
+];
+
 export class ConfigData {
   exerciseType?: ExerciseType = ExerciseType.MelodyRecognition;
 
-  selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11]; // Full major scale - MIDI intervals relative to root (0-11)
-  numberOfNotes: number = 3; // Number of notes per question (2-10)
-  playExtraNotes: number = 0; // Extra random notes to play at end (0-5)
-  consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [0, 11]; // default - allow duplicates (0) and go up to an octave
-  questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12]; // Range for question notes: -12 (Do -1 octave) to +24 (Do +2 octaves)
-  comparisonIntervals: [SemitoneOffset, SemitoneOffset] = [2, 3]; // For interval comparison: two intervals to compare (e.g., major 2nd vs minor 3rd)
-  tempo: number = 200; 
+  selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
+  numberOfNotes: number = 3;
+  playExtraNotes: number = 0;
+  consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [0, 11];
+  questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12];
+  comparisonIntervals: [SemitoneOffset, SemitoneOffset] = [2, 3];
+  tempo: number = 200;
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
   referenceType: "root" | "arpeggio" = "root";
-  rootNotePitch: MidiNoteName = "C4"; // e.g., "C4"
-  instrument: string = "acoustic_grand_piano"; // Instrument slug (used when instrumentMode is "single")
-  instrumentMode: "single" | "random" = "single"; // Whether to use a single instrument or random from favourites
+  rootNotePitch: MidiNoteName = "C4";
+  instrument: string = "acoustic_grand_piano";
+  instrumentMode: "single" | "random" = "single";
 
-  /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results. 
-   * This accessor is included for compatibility with olders configs that didn't have this property actually saved
-   */
+  /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results. */
   getExerciseType(): ExerciseType {
     if (this.exerciseType) return this.exerciseType;
     if (this.numberOfNotes === 1) return ExerciseType.SingleNoteRecognition;
@@ -49,13 +184,11 @@ export class ConfigData {
     const pool: SemitoneOffset[] = [];
     const [minOffset, maxOffset] = this.questionNoteRange;
     for (const note of this.selectedNotes) {
-      // Find the lowest octave of this note within range
       let current = note;
       while (current - 12 >= minOffset) {
         current -= 12;
       }
       
-      // Add all octaves of this note within range
       while (current <= maxOffset) {
         if (current >= minOffset) {
           pool.push(current);
@@ -64,7 +197,6 @@ export class ConfigData {
       }
     }
     if (pool.length === 0) {
-      // TODO: really we should validate this in the Settings page
       throw new Error("There are no notes that match both the selectedNotes and questionNoteRange settings.");
     }
     
@@ -78,22 +210,12 @@ export class ConfigData {
   }
 
   equals(other: ConfigData): boolean {
-    return (
-      other.exerciseType === this.exerciseType &&
-      JSON.stringify(other.selectedNotes.sort()) === JSON.stringify(this.selectedNotes.sort()) &&
-      other.numberOfNotes === this.numberOfNotes &&
-      other.playExtraNotes === this.playExtraNotes &&
-      JSON.stringify(other.consecutiveIntervals) === JSON.stringify(this.consecutiveIntervals) &&
-      JSON.stringify(other.questionNoteRange) === JSON.stringify(this.questionNoteRange) &&
-      JSON.stringify(other.comparisonIntervals) === JSON.stringify(this.comparisonIntervals) &&
-      other.tempo === this.tempo &&
-      other.rhythm === this.rhythm &&
-      other.droneType === this.droneType &&
-      other.referenceType === this.referenceType &&
-      other.rootNotePitch === this.rootNotePitch &&
-      other.instrument === this.instrument &&
-      other.instrumentMode === this.instrumentMode
-    );
+    return PROPERTY_METADATA.every(meta => {
+      const a = this[meta.key];
+      const b = other[meta.key];
+      const equalsFn = meta.equals || ((x, y) => x === y);
+      return equalsFn(a, b);
+    });
   }
 
   /** Helper to get a human list of settings changes. */
@@ -102,31 +224,29 @@ export class ConfigData {
     
     try {
       const changes: string[] = [];
+      
+      // Special case for exerciseType since we use getExerciseType()
       if (current.getExerciseType() !== previous.getExerciseType()) {
-        changes.push(`Exercise: ${previous.getExerciseType()} → ${current.getExerciseType()}`);
+        const meta = PROPERTY_METADATA.find(m => m.key === 'exerciseType')!;
+        if (meta.changeLabel && meta.formatChange) {
+          changes.push(`${meta.changeLabel}: ${meta.formatChange(previous.getExerciseType(), current.getExerciseType())}`);
+        }
       }
-      if (current.numberOfNotes !== previous.numberOfNotes) {
-        changes.push(`Notes: ${previous.numberOfNotes} → ${current.numberOfNotes}`);
-      }
-      if (current.tempo !== previous.tempo) {
-        changes.push(`Tempo: ${previous.tempo} → ${current.tempo}`);
-      }
-      if (JSON.stringify(current.consecutiveIntervals) !== JSON.stringify(previous.consecutiveIntervals)) {
-        changes.push(`Consecutive intervals: ${previous.consecutiveIntervals[0]}-${previous.consecutiveIntervals[1]} → ${current.consecutiveIntervals[0]}-${current.consecutiveIntervals[1]}`);
-      }
-      if (current.rhythm !== previous.rhythm) {
-        changes.push(`Rhythm: ${previous.rhythm} → ${current.rhythm}`);
-      }
-      if (current.droneType !== previous.droneType) {
-        changes.push(`Drone: ${previous.droneType} → ${current.droneType}`);
-      }
-      if (current.playExtraNotes !== previous.playExtraNotes) {
-        changes.push(`Extra notes: ${previous.playExtraNotes} → ${current.playExtraNotes}`);
-      }
-      if (JSON.stringify(current.selectedNotes.sort()) !== JSON.stringify(previous.selectedNotes.sort())) {
-        const prevNotes = previous.selectedNotes.map(n => semitonesToSolfege(n)).join(", ");
-        const currNotes = current.selectedNotes.map(n => semitonesToSolfege(n)).join(", ");
-        changes.push(`Selected notes: [${prevNotes}] → [${currNotes}]`);
+
+      // All other properties
+      for (const meta of PROPERTY_METADATA) {
+        if (meta.key === 'exerciseType' || !meta.changeLabel) continue;
+        
+        const currValue = current[meta.key];
+        const prevValue = previous[meta.key];
+        const equalsFn = meta.equals || ((x, y) => x === y);
+        
+        if (!equalsFn(currValue, prevValue)) {
+          const formatted = meta.formatChange 
+            ? meta.formatChange(prevValue, currValue)
+            : `${prevValue} → ${currValue}`;
+          changes.push(`${meta.changeLabel}: ${formatted}`);
+        }
       }
       
       return changes;
@@ -134,53 +254,24 @@ export class ConfigData {
       console.error("Error computing settings changes:", e);
       return ["Configuration options changed due to new app version"];
     }
-  };
+  }
 
   /** Encode non-default settings to URL query parameters */
   toQueryParams(): URLSearchParams {
     const defaults = new ConfigData();
     const params = new URLSearchParams();
 
-    params.set('exercise', this.getExerciseType());
-
-    if (JSON.stringify(this.selectedNotes.sort()) !== JSON.stringify(defaults.selectedNotes.sort())) {
-      params.set('notes', this.selectedNotes.join(','));
-    }
-    if (this.numberOfNotes !== defaults.numberOfNotes) {
-      params.set('n', this.numberOfNotes.toString());
-    }
-    if (this.playExtraNotes !== defaults.playExtraNotes) {
-      params.set('extra', this.playExtraNotes.toString());
-    }
-    if (JSON.stringify(this.consecutiveIntervals) !== JSON.stringify(defaults.consecutiveIntervals)) {
-      params.set('int', this.consecutiveIntervals.join(','));
-    }
-    if (JSON.stringify(this.questionNoteRange) !== JSON.stringify(defaults.questionNoteRange)) {
-      params.set('range', this.questionNoteRange.join(','));
-    }
-    if (JSON.stringify(this.comparisonIntervals) !== JSON.stringify(defaults.comparisonIntervals)) {
-      params.set('cmpInt', this.comparisonIntervals.join(','));
-    }
-    if (this.tempo !== defaults.tempo) {
-      params.set('tempo', this.tempo.toString());
-    }
-    if (this.rhythm !== defaults.rhythm) {
-      params.set('rhythm', this.rhythm);
-    }
-    if (this.droneType !== defaults.droneType) {
-      params.set('drone', this.droneType);
-    }
-    if (this.referenceType !== defaults.referenceType) {
-      params.set('ref', this.referenceType);
-    }
-    if (this.rootNotePitch !== defaults.rootNotePitch) {
-      params.set('root', this.rootNotePitch);
-    }
-    if (this.instrument !== defaults.instrument) {
-      params.set('inst', this.instrument);
-    }
-    if (this.instrumentMode !== defaults.instrumentMode) {
-      params.set('mode', this.instrumentMode);
+    for (const meta of PROPERTY_METADATA) {
+      if (!meta.queryParam) continue;
+      
+      const value = this[meta.key];
+      const defaultValue = defaults[meta.key];
+      const equalsFn = meta.equals || ((x, y) => x === y);
+      
+      if (!equalsFn(value, defaultValue)) {
+        const serialized = meta.serialize ? meta.serialize(value) : String(value);
+        params.set(meta.queryParam, serialized);
+      }
     }
 
     return params;
@@ -189,72 +280,21 @@ export class ConfigData {
   /** Create ConfigData from URL query parameters, merging with defaults */
   static fromQueryParams(searchParams: URLSearchParams): ConfigData {
     const defaults = new ConfigData();
-    const partial: Partial<ConfigData> = {};
+    const partial: any = {};
 
-    partial.exerciseType = searchParams.get('exercise') as ExerciseType || defaults.getExerciseType();
-
-    const notes = searchParams.get('notes');
-    if (notes) {
-      partial.selectedNotes = notes.split(',').map(n => parseInt(n, 10)) as SemitoneOffset[];
-    }
-
-    const n = searchParams.get('n');
-    if (n) partial.numberOfNotes = parseInt(n, 10);
-
-    const extra = searchParams.get('extra');
-    if (extra) partial.playExtraNotes = parseInt(extra, 10);
-
-    const int = searchParams.get('int');
-    if (int) {
-      const parts = int.split(',').map(n => parseInt(n, 10));
-      if (parts.length === 2) {
-        partial.consecutiveIntervals = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
+    for (const meta of PROPERTY_METADATA) {
+      if (!meta.queryParam) continue;
+      
+      const paramValue = searchParams.get(meta.queryParam);
+      if (paramValue !== null) {
+        try {
+          partial[meta.key] = meta.deserialize 
+            ? meta.deserialize(paramValue) 
+            : paramValue;
+        } catch (e) {
+          console.error(`Error deserializing ${meta.key}:`, e);
+        }
       }
-    }
-
-    const range = searchParams.get('range');
-    if (range) {
-      const parts = range.split(',').map(n => parseInt(n, 10));
-      if (parts.length === 2) {
-        partial.questionNoteRange = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
-      }
-    }
-
-    const cmpInt = searchParams.get('cmpInt');
-    if (cmpInt) {
-      const parts = cmpInt.split(',').map(n => parseInt(n, 10));
-      if (parts.length === 2) {
-        partial.comparisonIntervals = [parts[0] as SemitoneOffset, parts[1] as SemitoneOffset];
-      }
-    }
-
-    const tempo = searchParams.get('tempo');
-    if (tempo) partial.tempo = parseInt(tempo, 10);
-
-    const rhythm = searchParams.get('rhythm');
-    if (rhythm && (rhythm === 'fixed' || rhythm === 'random')) {
-      partial.rhythm = rhythm;
-    }
-
-    const drone = searchParams.get('drone');
-    if (drone && (drone === 'none' || drone === 'root')) {
-      partial.droneType = drone;
-    }
-
-    const ref = searchParams.get('ref');
-    if (ref && (ref === 'root' || ref === 'arpeggio')) {
-      partial.referenceType = ref;
-    }
-
-    const root = searchParams.get('root');
-    if (root) partial.rootNotePitch = root as MidiNoteName;
-
-    const inst = searchParams.get('inst');
-    if (inst) partial.instrument = inst;
-
-    const mode = searchParams.get('mode');
-    if (mode && (mode === 'single' || mode === 'random')) {
-      partial.instrumentMode = mode;
     }
 
     return new ConfigData({ ...defaults, ...partial });
