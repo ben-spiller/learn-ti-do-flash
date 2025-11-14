@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowRight, Minus } from "lucide-react";
 import {
   stopSounds,
   MidiNoteNumber,
@@ -370,9 +370,9 @@ const IntervalComparisonPractice = () => {
                         {isCorrect !== null && (
                           <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mt-1">
                             {isLargerInterval ? (
-                              <ChevronUp className="h-3 w-3" />
+                              <ArrowRight className="h-4 w-4" />
                             ) : (
-                              <ChevronDown className="h-3 w-3" />
+                              <Minus className="h-3 w-3" />
                             )}
                             {intervalName}
                           </div>
