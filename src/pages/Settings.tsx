@@ -199,7 +199,11 @@ const SettingsView = () => {
       const route = currentSettings.exerciseType === ExerciseType.IntervalComparison 
         ? '/interval-comparison'
         : '/practice';
-      navigate(`${route}?${queryParams.toString()}`);
+      let queryString = queryParams.toString();
+      // Just to make them URLs more readable, reverse the overzealous/unnecessary escaping of commas
+      while (queryString.indexOf('%2C')>=0) 
+        queryString = queryString.replace('%2C', ',');
+      navigate(`${route}?${queryString}`);
     } catch (e) {
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
