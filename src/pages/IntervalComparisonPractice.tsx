@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronUp, ChevronDown } from "lucide-react";
 import {
   stopSounds,
   MidiNoteNumber,
@@ -338,6 +338,10 @@ const IntervalComparisonPractice = () => {
                   // Calculate interval from previous note
                   const intervalFromPrevious = Math.abs(offset - sequence[index - 1]);
                   const intervalName = semitonesToInterval(intervalFromPrevious);
+                  
+                  // Determine if this is a larger or smaller interval compared to the other intervals
+                  const [interval1, interval2] = settings.comparisonIntervals;
+                  const isLargerInterval = intervalFromPrevious === Math.max(interval1, interval2);
 
                   return (
                     <div key={index} className="flex items-center gap-2">
@@ -364,7 +368,12 @@ const IntervalComparisonPractice = () => {
                           )}
                         </div>
                         {isCorrect !== null && (
-                          <div className="text-xs font-medium text-muted-foreground mt-1">
+                          <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mt-1">
+                            {isLargerInterval ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            )}
                             {intervalName}
                           </div>
                         )}
