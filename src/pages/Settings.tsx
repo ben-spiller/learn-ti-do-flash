@@ -23,12 +23,11 @@ import {
   MAJOR_SCALE_PITCH_CLASSES,
   semitonesToSolfege,
   semitonesToOneOctave,
+  formatInstrumentName,
 } from "@/utils/audio";
 import {
   ConfigData,
-  INSTRUMENT_OPTIONS,
   CONSTRAINTS,
-  formatInstrumentName,
   ExerciseType,
 } from "@/config/ConfigData";
 import { getFavouriteInstruments, saveFavouriteInstruments } from "@/utils/instrumentStorage";
@@ -68,7 +67,7 @@ const SettingsView = () => {
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
-  
+
   const [isAudioLoading, setAudioLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   

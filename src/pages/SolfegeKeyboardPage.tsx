@@ -22,9 +22,9 @@ import {
   keypressToSemitones,
   midiToNoteName,
   isAudioInitialized,
-  NOTE_NAMES
+  NOTE_NAMES,
+  formatInstrumentName, INSTRUMENT_SLUGS
 } from "@/utils/audio";
-import { formatInstrumentName, INSTRUMENT_SLUGS } from "@/config/ConfigData";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 
