@@ -70,7 +70,7 @@ const PracticeView = () => {
   })());
   /** 2-note sequences that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseType());
+    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.exerciseType);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
 
@@ -83,7 +83,7 @@ const PracticeView = () => {
   const savePracticeData = () => {
     localStorage.setItem(STORED_WRONG_2_NOTE_SEQUENCES, JSON.stringify(Array.from(wrong2NoteSequences.current.entries())));
     localStorage.setItem(STORED_FREQUENTLY_CONFUSED_PAIRS, JSON.stringify(Array.from(confusedPairs.current.entries())));
-    localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.getExerciseType(), JSON.stringify(Array.from(needsPractice.current.entries())));
+    localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.exerciseType, JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
 
@@ -380,7 +380,7 @@ const PracticeView = () => {
         needsPracticeCount: needsPractice.current.size,
         needsPracticeTotalSeverity: Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0),
 
-        exerciseName: settings.getExerciseType(),
+        exerciseName: settings.exerciseType,
         settings: settings // don't need to copy this because we won't be mutating it anyway
       } satisfies SessionHistory;
       

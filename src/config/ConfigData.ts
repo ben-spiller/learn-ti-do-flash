@@ -3,6 +3,9 @@
 
 import { MidiNoteName, SemitoneOffset, semitonesToSolfege } from "@/utils/audio";
 
+/** A pair of semi-tone offsets, e.g. for an range of possible notes relative to the root */
+type SemitonePair = [SemitoneOffset, SemitoneOffset];
+
 export enum ExerciseType {
   MelodyRecognition = "Melody recognition",
   SingleNoteRecognition = "Single note recognition",
@@ -10,15 +13,12 @@ export enum ExerciseType {
 }
 
 // Property metadata for automatic serialization/comparison
-interface PropertyMetadata<T = any> {
+class PropertyMetadata<T = any> {
   key: keyof ConfigData;
   defaultValue: T;
-  queryParam?: string; // URL parameter name (if omitted, property won't be serialized)
-  equals?: (a: T, b: T) => boolean; // Custom equality check
-  serialize?: (value: T) => string; // Custom serialization to URL
+  omitFromChangeSummary?: boolean;
+  serialize?: (value: T) => string; // Custom serialization to URL, also used for equality
   deserialize?: (value: string) => T; // Custom deserialization from URL
-  changeLabel?: string; // Label for change tracking (if omitted, property won't appear in changes)
-  formatChange?: (prev: T, curr: T) => string; // Custom change formatting
 }
 
 // Define all properties with their metadata in one place
@@ -26,60 +26,37 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
   {
     key: 'exerciseType',
     defaultValue: ExerciseType.MelodyRecognition,
-    queryParam: 'exercise',
-    changeLabel: 'Exercise',
-    formatChange: (prev, curr) => `${prev} → ${curr}`,
   },
   {
     key: 'selectedNotes',
     defaultValue: [0, 2, 4, 5, 7, 9, 11] as SemitoneOffset[],
-    queryParam: 'notes',
-    equals: (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort()),
-    serialize: (value) => value.join(','),
+    serialize: (value) => value.sort().join(','),
     deserialize: (value) => value.split(',').map(n => parseInt(n, 10)) as SemitoneOffset[],
-    changeLabel: 'Selected notes',
-    formatChange: (prev, curr) => {
-      const prevNotes = prev.map(n => semitonesToSolfege(n)).join(", ");
-      const currNotes = curr.map(n => semitonesToSolfege(n)).join(", ");
-      return `[${prevNotes}] → [${currNotes}]`;
-    },
   },
   {
     key: 'numberOfNotes',
     defaultValue: 3,
-    queryParam: 'n',
     serialize: (value) => value.toString(),
     deserialize: (value) => parseInt(value, 10),
-    changeLabel: 'Notes',
-    formatChange: (prev, curr) => `${prev} → ${curr}`,
   },
   {
     key: 'playExtraNotes',
     defaultValue: 0,
-    queryParam: 'extra',
     serialize: (value) => value.toString(),
     deserialize: (value) => parseInt(value, 10),
-    changeLabel: 'Extra notes',
-    formatChange: (prev, curr) => `${prev} → ${curr}`,
   },
   {
     key: 'consecutiveIntervals',
     defaultValue: [0, 11] as [SemitoneOffset, SemitoneOffset],
-    queryParam: 'int',
-    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
     serialize: (value) => value.join(','),
     deserialize: (value) => {
       const parts = value.split(',').map(n => parseInt(n, 10));
       return parts.length === 2 ? [parts[0], parts[1]] as [SemitoneOffset, SemitoneOffset] : [0, 11] as [SemitoneOffset, SemitoneOffset];
     },
-    changeLabel: 'Consecutive intervals',
-    formatChange: (prev, curr) => `${prev[0]}-${prev[1]} → ${curr[0]}-${curr[1]}`,
   },
   {
     key: 'questionNoteRange',
     defaultValue: [0, 12] as [SemitoneOffset, SemitoneOffset],
-    queryParam: 'range',
-    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
     serialize: (value) => value.join(','),
     deserialize: (value) => {
       const parts = value.split(',').map(n => parseInt(n, 10));
@@ -89,8 +66,6 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
   {
     key: 'comparisonIntervals',
     defaultValue: [2, 3] as [SemitoneOffset, SemitoneOffset],
-    queryParam: 'cmpInt',
-    equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
     serialize: (value) => value.join(','),
     deserialize: (value) => {
       const parts = value.split(',').map(n => parseInt(n, 10));
@@ -100,61 +75,52 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
   {
     key: 'tempo',
     defaultValue: 200,
-    queryParam: 'tempo',
     serialize: (value) => value.toString(),
     deserialize: (value) => parseInt(value, 10),
-    changeLabel: 'Tempo',
-    formatChange: (prev, curr) => `${prev} → ${curr}`,
   },
   {
     key: 'rhythm',
     defaultValue: 'random' as 'fixed' | 'random',
-    queryParam: 'rhythm',
     deserialize: (value) => (value === 'fixed' || value === 'random') ? value : 'random',
-    changeLabel: 'Rhythm',
-    formatChange: (prev, curr) => `${prev} → ${curr}`,
   },
   {
     key: 'droneType',
     defaultValue: 'none' as 'none' | 'root',
-    queryParam: 'drone',
     deserialize: (value) => (value === 'none' || value === 'root') ? value : 'none',
-    changeLabel: 'Drone',
-    formatChange: (prev, curr) => `${prev} → ${curr}`,
   },
   {
     key: 'referenceType',
     defaultValue: 'root' as 'root' | 'arpeggio',
-    queryParam: 'ref',
+    omitFromChangeSummary: true,
     deserialize: (value) => (value === 'root' || value === 'arpeggio') ? value : 'root',
   },
   {
     key: 'rootNotePitch',
     defaultValue: 'C4' as MidiNoteName,
-    queryParam: 'root',
   },
   {
     key: 'instrument',
+    omitFromChangeSummary: true,
     defaultValue: 'acoustic_grand_piano',
-    queryParam: 'inst',
   },
   {
     key: 'instrumentMode',
+    omitFromChangeSummary: true,
     defaultValue: 'single' as 'single' | 'random',
-    queryParam: 'mode',
     deserialize: (value) => (value === 'single' || value === 'random') ? value : 'single',
   },
 ];
 
 export class ConfigData {
+  /** A general name for exercises "like this one" that will be displayed to users, and used to group historic results. */
   exerciseType?: ExerciseType = ExerciseType.MelodyRecognition;
 
   selectedNotes: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
   numberOfNotes: number = 3;
   playExtraNotes: number = 0;
-  consecutiveIntervals: [SemitoneOffset, SemitoneOffset] = [0, 11];
-  questionNoteRange: [SemitoneOffset, SemitoneOffset] = [0, 12];
-  comparisonIntervals: [SemitoneOffset, SemitoneOffset] = [2, 3];
+  consecutiveIntervals: SemitonePair = [0, 11];
+  questionNoteRange: SemitonePair = [0, 12];
+  comparisonIntervals: SemitonePair = [2, 3];
   tempo: number = 200;
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
@@ -163,12 +129,6 @@ export class ConfigData {
   instrument: string = "acoustic_grand_piano";
   instrumentMode: "single" | "random" = "single";
 
-  /** Get a general name for exercises "like this one" that will be displayed to users, and used to group historic results. */
-  getExerciseType(): ExerciseType {
-    if (this.exerciseType) return this.exerciseType;
-    if (this.numberOfNotes === 1) return ExerciseType.SingleNoteRecognition;
-    return ExerciseType.MelodyRecognition;
-  }
 
   /** Pick the instrument to use for this session based on the instrument mode */
   pickInstrument(favouriteInstruments: string[]): string {
@@ -213,8 +173,7 @@ export class ConfigData {
     return PROPERTY_METADATA.every(meta => {
       const a = this[meta.key];
       const b = other[meta.key];
-      const equalsFn = meta.equals || ((x, y) => x === y);
-      return equalsFn(a, b);
+      return serialize(meta, a) === serialize(meta, b);
     });
   }
 
@@ -224,28 +183,18 @@ export class ConfigData {
     
     try {
       const changes: string[] = [];
-      
-      // Special case for exerciseType since we use getExerciseType()
-      if (current.getExerciseType() !== previous.getExerciseType()) {
-        const meta = PROPERTY_METADATA.find(m => m.key === 'exerciseType')!;
-        if (meta.changeLabel && meta.formatChange) {
-          changes.push(`${meta.changeLabel}: ${meta.formatChange(previous.getExerciseType(), current.getExerciseType())}`);
-        }
-      }
 
       // All other properties
       for (const meta of PROPERTY_METADATA) {
-        if (meta.key === 'exerciseType' || !meta.changeLabel) continue;
+        if (meta.omitFromChangeSummary) continue;
+
+        if (!(meta.key in previous)) continue; // in case of new app version
         
         const currValue = current[meta.key];
         const prevValue = previous[meta.key];
-        const equalsFn = meta.equals || ((x, y) => x === y);
         
-        if (!equalsFn(currValue, prevValue)) {
-          const formatted = meta.formatChange 
-            ? meta.formatChange(prevValue, currValue)
-            : `${prevValue} → ${currValue}`;
-          changes.push(`${meta.changeLabel}: ${formatted}`);
+        if (serialize(meta, prevValue) !== serialize(meta, currValue)) {
+           changes.push(`${meta.key}: ${serialize(meta, prevValue)} → ${serialize(meta, currValue)}`);
         }
       }
       
@@ -262,15 +211,11 @@ export class ConfigData {
     const params = new URLSearchParams();
 
     for (const meta of PROPERTY_METADATA) {
-      if (!meta.queryParam) continue;
-      
       const value = this[meta.key];
       const defaultValue = defaults[meta.key];
-      const equalsFn = meta.equals || ((x, y) => x === y);
-      
-      if (!equalsFn(value, defaultValue)) {
-        const serialized = meta.serialize ? meta.serialize(value) : String(value);
-        params.set(meta.queryParam, serialized);
+
+      if (serialize(meta, value) !== serialize(meta, defaultValue)) {
+        params.set(meta.key, serialize(meta, value));
       }
     }
 
@@ -283,24 +228,26 @@ export class ConfigData {
     const partial: any = {};
 
     for (const meta of PROPERTY_METADATA) {
-      if (!meta.queryParam) continue;
       
-      const paramValue = searchParams.get(meta.queryParam);
+      const paramValue = searchParams.get(meta.key);
       if (paramValue !== null) {
         try {
           partial[meta.key] = meta.deserialize 
             ? meta.deserialize(paramValue) 
             : paramValue;
         } catch (e) {
-          console.error(`Error deserializing ${meta.key}:`, e);
+          console.error(`Error deserializing ${meta.key} value ${paramValue}:`, e);
         }
       }
     }
 
     return new ConfigData({ ...defaults, ...partial });
   }
+}
 
-  
+function serialize(meta: PropertyMetadata, value: any) {
+  if (value === undefined) return "undefined";
+   return meta.serialize ? meta.serialize(value) : String(value);
 }
 
 // Constraints on valid values, used by the UI

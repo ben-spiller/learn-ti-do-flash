@@ -243,7 +243,7 @@ const IntervalComparisonPractice = () => {
         totalSeconds: elapsedSeconds,
         needsPracticeCount: 0,
         needsPracticeTotalSeverity: 0,
-        exerciseName: settings.getExerciseType(),
+        exerciseName: settings.exerciseType,
         settings: settings,
       } satisfies SessionHistory;
 
