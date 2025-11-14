@@ -73,6 +73,11 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
     },
   },
   {
+    key: 'differentIntervalType',
+    defaultValue: 'random' as 'higher' | 'lower' | 'random',
+    deserialize: (value) => (value === 'higher' || value === 'lower' || value === 'random') ? value : 'random',
+  },
+  {
     key: 'tempo',
     defaultValue: 200,
     serialize: (value) => value.toString(),
@@ -121,6 +126,7 @@ export class ConfigData {
   consecutiveIntervals: SemitonePair = [0, 11];
   questionNoteRange: SemitonePair = [0, 12];
   comparisonIntervals: SemitonePair = [2, 3];
+  differentIntervalType: "higher" | "lower" | "random" = "random";
   tempo: number = 200;
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";

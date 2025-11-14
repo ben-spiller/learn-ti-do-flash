@@ -139,10 +139,21 @@ const IntervalComparisonPractice = () => {
   const startNewRound = () => {
     // Generate a sequence with one different interval
     const sequenceLength = settings.numberOfNotes;
-    const isAscending = Math.random() > 0.5;
     const [interval1, interval2] = settings.comparisonIntervals;
     const mainInterval = Math.random() > 0.5 ? interval1 : interval2;
     const differentInterval = mainInterval === interval1 ? interval2 : interval1;
+
+    // Determine if ascending or descending based on differentIntervalType setting
+    let isAscending: boolean;
+    const isDifferentIntervalHigher = differentInterval > mainInterval;
+    
+    if (settings.differentIntervalType === 'random') {
+      isAscending = Math.random() > 0.5;
+    } else if (settings.differentIntervalType === 'higher') {
+      isAscending = isDifferentIntervalHigher;
+    } else { // 'lower'
+      isAscending = !isDifferentIntervalHigher;
+    }
 
     // Pick which position will have the different interval (not the first)
     const diffIndex = 1 + Math.floor(Math.random() * (sequenceLength - 1));
@@ -294,7 +305,7 @@ const IntervalComparisonPractice = () => {
               </div>
 
               <div className="flex flex-wrap justify-center gap-3">
-                {sequence.map((_, index) => {
+                {sequence.map((offset, index) => {
                   const isCurrentlyPlaying = currentlyPlayingIndex === index;
                   
                   if (index === 0) {
@@ -311,6 +322,11 @@ const IntervalComparisonPractice = () => {
                             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           )}
                         </div>
+                        {isCorrect !== null && (
+                          <div className="text-xs font-medium text-muted-foreground mt-1">
+                            Root
+                          </div>
+                        )}
                       </div>
                     );
                   }
@@ -318,6 +334,10 @@ const IntervalComparisonPractice = () => {
                   const isSelected = currentGuess === index;
                   const showAsCorrect = isCorrect && isSelected;
                   const showAsWrong = isCorrect === false && isSelected;
+                  
+                  // Calculate interval from previous note
+                  const intervalFromPrevious = Math.abs(offset - sequence[index - 1]);
+                  const intervalName = semitonesToInterval(intervalFromPrevious);
 
                   return (
                     <div key={index} className="flex items-center gap-2">
@@ -343,6 +363,11 @@ const IntervalComparisonPractice = () => {
                             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           )}
                         </div>
+                        {isCorrect !== null && (
+                          <div className="text-xs font-medium text-muted-foreground mt-1">
+                            {intervalName}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

@@ -56,6 +56,7 @@ const SettingsView = () => {
   const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
   const [comparisonIntervals, setComparisonIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.comparisonIntervals);
+  const [differentIntervalType, setDifferentIntervalType] = useState<'higher' | 'lower' | 'random'>(defaults.differentIntervalType);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
   const [droneType, setDroneType] = useState(defaults.droneType);
@@ -91,6 +92,7 @@ const SettingsView = () => {
       consecutiveIntervals,
       questionNoteRange,
       comparisonIntervals,
+      differentIntervalType,
       tempo,
       rhythm,
       droneType,
@@ -112,6 +114,7 @@ const SettingsView = () => {
     setConsecutiveIntervals(settings.consecutiveIntervals);
     setQuestionNoteRange(settings.questionNoteRange);
     setComparisonIntervals(settings.comparisonIntervals);
+    setDifferentIntervalType(settings.differentIntervalType);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
     setDroneType(settings.droneType);
@@ -572,6 +575,20 @@ const SettingsView = () => {
                     step={1}
                     minStepsBetweenThumbs={1}
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">Different interval is</Label>
+                  <Select value={differentIntervalType} onValueChange={(value: 'higher' | 'lower' | 'random') => setDifferentIntervalType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="random">Random (higher or lower)</SelectItem>
+                      <SelectItem value="higher">Higher (ascending)</SelectItem>
+                      <SelectItem value="lower">Lower (descending)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               )}
