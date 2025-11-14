@@ -7,17 +7,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getScoreColor } from "@/utils/noteStyles";
 
 interface PracticeHeaderProps {
+  showReference: boolean;
   correctAttempts: number;
   totalAttempts: number;
   elapsedSeconds: number;
   started: boolean;
-  isPreloading: boolean;
-  showLoadingIndicator: boolean;
   isPlaying: boolean;
   isPlayingReference: boolean;
   droneType: "none" | "root";
   droneVolume: number;
-  onStart: () => void;
   onPlayAgain: () => void;
   onPlayReference: () => void;
   onFinish: () => void;
@@ -25,17 +23,15 @@ interface PracticeHeaderProps {
 }
 
 export const PracticeHeader = ({
+  showReference,
   correctAttempts,
   totalAttempts,
   elapsedSeconds,
   started,
-  isPreloading,
-  showLoadingIndicator,
   isPlaying,
   isPlayingReference,
   droneType,
   droneVolume,
-  onStart,
   onPlayAgain,
   onPlayReference,
   onFinish,
@@ -43,139 +39,106 @@ export const PracticeHeader = ({
 }: PracticeHeaderProps) => {
   const scorePercent = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100;
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
-  const getVolumeIcon = () => {
-    if (droneVolume <= -20) return <VolumeX className="h-4 w-4" />;
-    if (droneVolume <= -10) return <Volume1 className="h-4 w-4" />;
-    return <Volume2 className="h-4 w-4" />;
-  };
+  // const getVolumeIcon = () => {
+  //   if (droneVolume <= -20) return <VolumeX className="h-4 w-4" />;
+  //   if (droneVolume <= -10) return <Volume1 className="h-4 w-4" />;
+  //   return <Volume2 className="h-4 w-4" />;
+  // };
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle>Practice Session</CardTitle>
+     <div className="flex items-center mb-4">
+        <div className="flex items-center gap-2">
           {started && (
-            <div className="flex gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onPlayAgain}
-                      disabled={isPlaying || isPlayingReference}
-                    >
-                      <Play className="h-4 w-4" />
-                      <span className="ml-1 hidden sm:inline">Play Again (A)</span>
-                      <span className="ml-1 sm:hidden">Again</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Replay the sequence (keyboard shortcut: A)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <Button
+              onClick={onFinish}
+              variant="outline"
+              size="sm"
+            >
+              Finish
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center" style={{marginLeft: "auto"}}>
+          {started && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onPlayAgain}
+                    disabled={isPlaying}
+                  >
+                    <Play className="h-4 w-4 mr-1" />
+                    Again
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Play again (keyboard shortcut: a)</p>
+                </TooltipContent>
+              </Tooltip>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onPlayReference}
-                      disabled={isPlaying || isPlayingReference}
-                    >
-                      <Play className="h-4 w-4" />
-                      <span className="ml-1 hidden sm:inline">Reference (E)</span>
-                      <span className="ml-1 sm:hidden">Ref</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Play root note or arpeggio (keyboard shortcut: E)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              {droneType !== "none" && (
+              {showReference && (              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onPlayReference}
+                    disabled={isPlaying || isPlayingReference}
+                  >
+                    <Volume2 className="h-4 w-4 mr-1" />
+                    Reference
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Play reference for this key (keyboard shortcut: e)</p>
+                </TooltipContent>
+              </Tooltip>
+              )}
+              {droneType !== "none" && showReference && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      {getVolumeIcon()}
-                      <span className="ml-1 hidden sm:inline">Drone</span>
+                    <Button variant="ghost" size="icon">
+                      {droneVolume <= -40 ? <VolumeX className="h-5 w-5" /> : 
+                       droneVolume <= -20 ? <Volume1 className="h-5 w-5" /> : 
+                       <Volume2 className="h-5 w-5" />}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56">
+                  <PopoverContent className="w-48">
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Drone Volume</h4>
+                      <div className="text-sm font-medium">Drone Volume</div>
                       <Slider
                         value={[droneVolume]}
                         onValueChange={onDroneVolumeChange}
                         min={-30}
-                        max={0}
-                        step={1}
-                        className="w-full"
+                        max={10}
+                        step={2}
                       />
-                      <p className="text-xs text-muted-foreground text-center">
+                      <div className="text-xs text-muted-foreground text-center">
                         {droneVolume} dB
-                      </p>
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
               )}
-
-              <Button variant="outline" size="sm" onClick={onFinish}>
-                Finish
-              </Button>
-            </div>
+              <div className="flex gap-3 text-sm ml-2">
+                <div className="text-center">
+                  <div className={`font-bold text-lg ${getScoreColor(scorePercent)}`}>
+                    {scorePercent}%
+                  </div>
+                  <div className="text-muted-foreground text-xs">Score</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-lg">{(elapsedSeconds/60).toFixed(0)}</div>
+                  <div className="text-muted-foreground text-xs">Min</div>
+                </div>
+              </div>
+            </TooltipProvider>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
-        {!started ? (
-          <div className="flex flex-col items-center gap-4">
-            <Button
-              size="lg"
-              onClick={onStart}
-              disabled={isPreloading}
-              className="w-full max-w-xs"
-            >
-              {showLoadingIndicator ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                  Loading...
-                </>
-              ) : (
-                "Start Practice"
-              )}
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-sm text-muted-foreground">Score</p>
-              <p className={`text-2xl font-bold ${getScoreColor(scorePercent)}`}>
-                {scorePercent}%
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Attempts</p>
-              <p className="text-2xl font-bold">
-                {correctAttempts}/{totalAttempts}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Time</p>
-              <p className="text-2xl font-bold">{formatTime(elapsedSeconds)}</p>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+
   );
 };

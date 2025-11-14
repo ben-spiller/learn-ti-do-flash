@@ -497,19 +497,17 @@ const PracticeView = () => {
 
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-4">
+   <div className="min-h-screen bg-background flex flex-col p-4 max-w-2xl mx-auto">
       <PracticeHeader
+        showReference={true}
         correctAttempts={correctAttempts}
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
         started={started}
-        isPreloading={isAudioLoading}
-        showLoadingIndicator={showLoadingIndicator}
         isPlaying={isPlaying}
         isPlayingReference={isPlayingReference}
         droneType={settings.droneType}
         droneVolume={droneVolume}
-        onStart={handleStart}
         onPlayAgain={handlePlayAgain}
         onPlayReference={handlePlayReference}
         onFinish={handleFinish}
