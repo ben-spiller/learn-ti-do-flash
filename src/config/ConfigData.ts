@@ -175,6 +175,40 @@ export class ConfigData {
     }
   }
 
+  /** Get default settings for a specific exercise type */
+  static getDefaults(exerciseType: ExerciseType): ConfigData {
+    const defaults = new ConfigData();
+    defaults.exerciseType = exerciseType;
+
+    switch (exerciseType) {
+      case ExerciseType.MelodyRecognition:
+        defaults.numberOfNotes = 3;
+        defaults.selectedNotes = [0, 2, 4, 5, 7, 9, 11];
+        defaults.questionNoteRange = [0, 12];
+        defaults.rhythm = 'random';
+        defaults.droneType = 'none';
+        break;
+
+      case ExerciseType.SingleNoteRecognition:
+        defaults.numberOfNotes = 1;
+        defaults.selectedNotes = [0, 2, 4, 5, 7, 9, 11];
+        defaults.questionNoteRange = [0, 12];
+        defaults.rhythm = 'fixed';
+        defaults.droneType = 'root';
+        break;
+
+      case ExerciseType.IntervalComparison:
+        defaults.numberOfNotes = 4;
+        defaults.comparisonIntervals = [2, 3];
+        defaults.differentIntervalType = 'random';
+        defaults.rhythm = 'fixed';
+        defaults.droneType = 'none';
+        break;
+    }
+
+    return defaults;
+  }
+
   equals(other: ConfigData): boolean {
     return PROPERTY_METADATA.every(meta => {
       const a = this[meta.key];
