@@ -68,7 +68,8 @@ const SettingsView = () => {
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
-  const [isPreloading, setIsPreloading] = useState(false);
+  
+  const [isAudioLoading, setAudioLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   
   // Saved configurations state
@@ -173,7 +174,7 @@ const SettingsView = () => {
       return;
     }
     
-    setIsPreloading(true);
+    setAudioLoading(true);
     
     // Show loading indicator only if preload takes more than 400ms
     const loadingTimer = setTimeout(() => {
@@ -188,7 +189,7 @@ const SettingsView = () => {
       await preloadInstrumentWithGesture(instrumentToPreload);
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
-      setIsPreloading(false);
+      setAudioLoading(false);
       
       // Save current configuration so practice can restore later
       saveCurrentConfiguration(currentSettings);
@@ -203,7 +204,7 @@ const SettingsView = () => {
     } catch (e) {
       clearTimeout(loadingTimer);
       setShowLoadingIndicator(false);
-      setIsPreloading(false);
+      setAudioLoading(false);
     }
   };
 
@@ -786,7 +787,7 @@ const SettingsView = () => {
           <Button
             className="w-full h-14 text-lg font-semibold mt-6"
             onClick={handleStart}
-            disabled={selectedNotes.length < 2 || isPreloading}
+            disabled={selectedNotes.length < 2 || isAudioLoading}
           >
             {showLoadingIndicator ? "Loading sounds..." : "Start Practice"}
           </Button>
