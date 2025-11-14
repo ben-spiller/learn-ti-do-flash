@@ -52,10 +52,9 @@ const PracticeView = () => {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isPreloading, setIsPreloading] = useState(false);
+  const [isAudioLoading, setAudioLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [started, setStarted] = useState(preloaded);
-  const [hasPreloaded, setHasPreloaded] = useState(preloaded);
   const [droneVolume, setDroneVolumeState] = useState(-8); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
@@ -131,7 +130,7 @@ const PracticeView = () => {
     // Save current configuration to local storage
     saveCurrentConfiguration(settings);
     
-    setIsPreloading(true);
+    setAudioLoading(true);
     
     // Show loading indicator only if preload takes more than 400ms
     const loadingTimer = setTimeout(() => {
@@ -142,10 +141,9 @@ const PracticeView = () => {
     
     clearTimeout(loadingTimer);
     setShowLoadingIndicator(false);
-    setIsPreloading(false);
+    setAudioLoading(false);
     
     if (ok) {
-      setHasPreloaded(true);
       setStarted(true);
       
       doStart();
@@ -505,7 +503,7 @@ const PracticeView = () => {
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
         started={started}
-        isPreloading={isPreloading}
+        isPreloading={isAudioLoading}
         showLoadingIndicator={showLoadingIndicator}
         isPlaying={isPlaying}
         isPlayingReference={isPlayingReference}

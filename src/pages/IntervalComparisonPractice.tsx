@@ -56,9 +56,11 @@ const IntervalComparisonPractice = () => {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isPreloading, setIsPreloading] = useState(false);
+  
+  const [isAudioLoading, setAudioLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [started, setStarted] = useState(preloaded);
+
   const [isPlayingReference, setIsPlayingReference] = useState(false);
   const [droneVolume] = useState(-8);
 
@@ -116,7 +118,7 @@ const IntervalComparisonPractice = () => {
 
     saveCurrentConfiguration(settings);
 
-    setIsPreloading(true);
+    setAudioLoading(true);
 
     const loadingTimer = setTimeout(() => {
       setShowLoadingIndicator(true);
@@ -126,7 +128,7 @@ const IntervalComparisonPractice = () => {
 
     clearTimeout(loadingTimer);
     setShowLoadingIndicator(false);
-    setIsPreloading(false);
+    setAudioLoading(false);
 
     if (ok) {
       setStarted(true);
@@ -267,7 +269,7 @@ const IntervalComparisonPractice = () => {
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
         started={started}
-        isPreloading={isPreloading}
+        isPreloading={isAudioLoading}
         showLoadingIndicator={showLoadingIndicator}
         isPlaying={isPlaying}
         isPlayingReference={isPlayingReference}
