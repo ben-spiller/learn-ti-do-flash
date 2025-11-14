@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { INSTRUMENT_OPTIONS, formatInstrumentName } from "@/config/ConfigData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Shuffle } from "lucide-react";
-import { preloadInstrumentWithGesture, playNote, noteNameToMidi } from "@/utils/audio";
+import { INSTRUMENT_OPTIONS, preloadInstrumentWithGesture, playNote, noteNameToMidi } from "@/utils/audio";
 
 interface InstrumentSelectorProps {
   open: boolean;
