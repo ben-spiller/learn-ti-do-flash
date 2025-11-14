@@ -1,4 +1,4 @@
-import { ConfigData } from "@/config/ConfigData";
+import { ConfigData, ExerciseType } from "@/config/ConfigData";
 
 export interface SavedConfiguration {
   id: string;
@@ -8,7 +8,7 @@ export interface SavedConfiguration {
 }
 
 const STORAGE_KEY = "saved-practice-configurations";
-const CURRENT_CONFIG_KEY = "current-practice-configuration";
+const CURRENT_CONFIG_KEY_PREFIX = "current-practice-configuration";
 
 export const getSavedConfigurations = (): SavedConfiguration[] => {
   try {
@@ -70,12 +70,14 @@ export const loadConfiguration = (id: string): ConfigData | null => {
 };
 
 export const saveCurrentConfiguration = (settings: ConfigData): void => {
-  localStorage.setItem(CURRENT_CONFIG_KEY, JSON.stringify(settings));
+  const key = `${CURRENT_CONFIG_KEY_PREFIX}-${settings.exerciseType}`;
+  localStorage.setItem(key, JSON.stringify(settings));
 };
 
-export const getCurrentConfiguration = (): ConfigData | null => {
+export const getCurrentConfiguration = (exerciseType: ExerciseType): ConfigData | null => {
   try {
-    const stored = localStorage.getItem(CURRENT_CONFIG_KEY);
+    const key = `${CURRENT_CONFIG_KEY_PREFIX}-${exerciseType}`;
+    const stored = localStorage.getItem(key);
     if (!stored) return null;
     return new ConfigData(JSON.parse(stored));
   } catch (error) {

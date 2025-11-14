@@ -45,11 +45,33 @@ import { InstrumentSelector } from "@/components/InstrumentSelector";
 const SettingsView = () => {
   const navigate = useNavigate();
   
-  // Load current configuration or use defaults
-  const currentConfig = getCurrentConfiguration();
-  const defaults = currentConfig || new ConfigData();
+  // Load current configuration for initial exercise type or use defaults
+  const initialExerciseType = ExerciseType.MelodyRecognition;
+  const currentConfig = getCurrentConfiguration(initialExerciseType);
+  const defaults = currentConfig || ConfigData.getDefaults(initialExerciseType);
   
   const [exerciseType, setExerciseType] = useState<ExerciseType>(defaults.exerciseType);
+  
+  // Load settings when exercise type changes
+  useEffect(() => {
+    const savedConfig = getCurrentConfiguration(exerciseType);
+    const configToUse = savedConfig || ConfigData.getDefaults(exerciseType);
+    
+    setSelectedNotes(configToUse.selectedNotes);
+    setNumberOfNotes(configToUse.numberOfNotes);
+    setPlayExtraNotes(configToUse.playExtraNotes);
+    setConsecutiveIntervals(configToUse.consecutiveIntervals);
+    setQuestionNoteRange(configToUse.questionNoteRange);
+    setComparisonIntervals(configToUse.comparisonIntervals);
+    setDifferentIntervalType(configToUse.differentIntervalType);
+    setTempo(configToUse.tempo);
+    setRhythm(configToUse.rhythm);
+    setDroneType(configToUse.droneType);
+    setReferenceType(configToUse.referenceType);
+    setRootNotePitch(configToUse.rootNotePitch);
+    setSelectedInstrument(configToUse.instrument);
+    setInstrumentMode(configToUse.instrumentMode);
+  }, [exerciseType]);
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
