@@ -429,15 +429,27 @@ const createToneInstrument = async (instrument?: string) => {
   }
 };
 
-// Ensure AudioContext is resumed on first user interaction if needed
+/** Checks if we need to wait until the until clicks before we can initialize the audio - 
+ * means displaying a Start button or similar to the user before proceeding., 
+*/
+export const mustWaitForFestureBeforeAudioInit = (): boolean => {
+  const ctx = getAudioContext();
+  // if it's already running, we don't need to wait
+  if (ctx.state === 'running') return false;
+  // otherwise, we must wait if there isn't an active user activation gesture right now
+  return !navigator.userActivation.isActive;
+}
+
+/** Ensure AudioContext is resumed/started if not already. Throws an exceotion if mustWaitForFestureBeforeAudioInit(). */
 const ensureContextRunning = async () => {
+  if (mustWaitForFestureBeforeAudioInit()) throw Error("Cannot start audio until a user gesture is received");
   // For Tone.js we need to call Tone.start() within a user gesture. Also resume AudioContext if present.
   try {
     if ((window as any).Tone && typeof (window as any).Tone.start === 'function') {
       await (window as any).Tone.start();
     }
-  } catch (e) { console.warn('Error starting Tone.js', e);
-    
+  } catch (e) { 
+    console.warn('Error starting Tone.js', e);
     // ignore
   }
   const ctx = getAudioContext();
@@ -446,7 +458,7 @@ const ensureContextRunning = async () => {
       await ctx.resume();
     } catch (e) { 
       console.warn('Error resuming AudioContext', e);
-      // ignore - resume may require user gesture
+      throw e;
     }
   }
 };
@@ -470,6 +482,9 @@ const getNotesBetween = (from: MidiNoteName, to: MidiNoteName) => {
 /**
  * Unified function to set and preload an instrument.
  * This is the ONLY exported function to use for instrument changes.
+ * 
+ * It is recommended to check mustWaitForFestureBeforeAudioInit before calling this 
+ * as it will fail if audio hasn't been initialized and there isn't a gesture yet.  
  * 
  * @param instrumentName The instrument to load (e.g., 'acoustic_grand_piano', 'violin')
  * @param predecodeNotes Optional list of notes or range to pre-decode (defaults to C3..C5)

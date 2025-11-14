@@ -12,7 +12,8 @@ import {
   MidiNoteNumber, 
   SemitoneOffset, 
   playNote, 
-  noteNameToMidi, 
+  noteNameToMidi,
+  mustWaitForFestureBeforeAudioInit, 
   preloadInstrumentWithGesture, 
   startDrone, 
   stopDrone, 
@@ -33,8 +34,8 @@ const SolfegeKeyboardPage = () => {
   const [settings, setSettings] = useState<KeyboardSettings>(getKeyboardSettings());
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNote));
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
-  const [isPreloading, setIsPreloading] = useState(false);
-  const [hasPreloaded, setHasPreloaded] = useState(false);
+  const [isAudioLoading, setAudioLoading] = useState(false);
+  const [isAudioLoaded, setAudioLoaded] = useState(false);
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
   
@@ -48,48 +49,34 @@ const SolfegeKeyboardPage = () => {
   
   // Reload instrument when switching tabs if needed
   useEffect(() => {
-    if (hasPreloaded) {
-      const needsReload = activeTab === "notes" 
+    if (isAudioLoaded) {
+      const desiredInstrument = activeTab === "notes" 
         ? settings.notesInstrument 
         : settings.chordsInstrument;
       
-      preloadInstrumentWithGesture(needsReload).then(() => {
+      preloadInstrumentWithGesture(desiredInstrument).then(() => {
         setMasterVolume(currentVolume);
       });
     }
   }, [activeTab]);
-  
-  // Auto-start if audio is already initialized for this instrument
+
+  // Ensure audio is started
   useEffect(() => {
-    if (!hasPreloaded && isAudioInitialized(currentInstrument)) {
-      setHasPreloaded(true);
-      
+    if (isAudioInitialized(currentInstrument)) {      
       // Set master volume
       setMasterVolume(currentVolume);
       
       // Start drone if enabled
-      if (settings.droneEnabled) {
+      if (!isAudioLoaded && settings.droneEnabled) {
         startDrone(rootMidi, settings.droneVolume);
       }
+      setAudioLoaded(true);
+
+    } else if (!isAudioLoading && !mustWaitForFestureBeforeAudioInit()) {
+      handleStartAudio(true);
     }
   }, []);
-  
-  // Try to auto-preload on mount (navigation from another page is a gesture)
-  useEffect(() => {
-    if (!hasPreloaded && !isPreloading) {
-      // Add a timeout to prevent hanging forever
-      const timeoutId = setTimeout(() => {
-        if (isPreloading) {
-          setIsPreloading(false);
-        }
-      }, 2000); // Give it 2 seconds max
-      
-      handleStart(true).finally(() => {
-        clearTimeout(timeoutId);
-      });
-    }
-  }, []);
-  
+    
   // Cleanup drone on unmount
   useEffect(() => {
     return () => {
@@ -101,7 +88,7 @@ const SolfegeKeyboardPage = () => {
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (!hasPreloaded) return;
+      if (!isAudioLoaded) return;
       
       const note = keypressToSemitones(e);
       if (note !== null) {
@@ -112,12 +99,12 @@ const SolfegeKeyboardPage = () => {
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [hasPreloaded, rootMidi,  activeTab]);
+  }, [isAudioLoaded, rootMidi,  activeTab]);
   
-  const handleStart = async (silent = false) => {
-    if (hasPreloaded) return;
+  const handleStartAudio = async (silent = false) => {
+    if (isAudioLoaded) return;
     
-    setIsPreloading(true);
+    setAudioLoading(true);
     
     try {
       // Try to start audio context - this will fail silently if no gesture
@@ -127,10 +114,10 @@ const SolfegeKeyboardPage = () => {
       }
       
       const ok = await preloadInstrumentWithGesture(currentInstrument);
-      setIsPreloading(false);
+      setAudioLoading(false);
       
       if (ok) {
-        setHasPreloaded(true);
+        setAudioLoaded(true);
         
         // Set master volume
         setMasterVolume(currentVolume);
@@ -144,7 +131,7 @@ const SolfegeKeyboardPage = () => {
         window.alert('Unable to initialize audio. Please try again.');
       }
     } catch (err) {
-      setIsPreloading(false);
+      setAudioLoading(false);
       // Silent auto-start: don't show alert, just leave start button visible
       if (!silent) {
         console.error('Failed to start audio:', err);
@@ -161,7 +148,7 @@ const SolfegeKeyboardPage = () => {
       setIsSelectingRoot(false);
     } else {
       stopSounds();
-      console.log(`Playing note: ${note + rootMidi} (semitone offset: ${note}) with activeTab=${activeTab}`);
+      //console.log(`Playing note: ${note + rootMidi} (semitone offset: ${note}) with activeTab=${activeTab}`);
       if (activeTab === "chords") {
         // Determine chord quality based on scale degree
         const scaleDegree = note % 12;
@@ -217,7 +204,7 @@ const SolfegeKeyboardPage = () => {
     setSettings({ ...settings, rootNote: noteName });
     
     // Restart drone if it's playing
-    if (settings.droneEnabled && hasPreloaded) {
+    if (settings.droneEnabled && isAudioLoaded) {
       stopDrone();
       startDrone(newRootMidi, settings.droneVolume);
     }
@@ -231,10 +218,10 @@ const SolfegeKeyboardPage = () => {
     }
     
     // Reload instrument if already preloaded
-    if (hasPreloaded) {
-      setIsPreloading(true);
+    if (isAudioLoaded) {
+      setAudioLoading(true);
       await preloadInstrumentWithGesture(instrument);
-      setIsPreloading(false);
+      setAudioLoading(false);
     }
   };
   
@@ -242,7 +229,7 @@ const SolfegeKeyboardPage = () => {
     const newEnabled = !settings.droneEnabled;
     setSettings({ ...settings, droneEnabled: newEnabled });
     
-    if (hasPreloaded) {
+    if (isAudioLoaded) {
       if (newEnabled) {
         startDrone(rootMidi, settings.droneVolume);
       } else {
@@ -254,7 +241,7 @@ const SolfegeKeyboardPage = () => {
   const handleDroneVolumeChange = (value: number[]) => {
     const newVolume = value[0];
     setSettings({ ...settings, droneVolume: newVolume });
-    if (settings.droneEnabled && hasPreloaded) {
+    if (settings.droneEnabled && isAudioLoaded) {
       setAudioDroneVolume(newVolume);
     }
   };
@@ -266,7 +253,7 @@ const SolfegeKeyboardPage = () => {
     } else {
       setSettings({ ...settings, chordsVolume: newVolume });
     }
-    if (hasPreloaded) {
+    if (isAudioLoaded) {
       setMasterVolume(newVolume);
     }
   };
@@ -292,16 +279,16 @@ const SolfegeKeyboardPage = () => {
         </div>
         
         {/* Start Button or Keyboard */}
-        {!hasPreloaded ? (
+        {!isAudioLoaded ? (
           <Card>
             <CardContent className="pt-6">
               <Button 
-                onClick={() => handleStart(false)} 
-                disabled={isPreloading}
+                onClick={() => handleStartAudio(false)} 
+                disabled={isAudioLoading}
                 className="w-full"
                 size="lg"
               >
-                {isPreloading ? "Loading..." : "Start Playing"}
+                {isAudioLoading ? "Loading..." : "Start Playing"}
               </Button>
             </CardContent>
           </Card>
@@ -394,7 +381,7 @@ const SolfegeKeyboardPage = () => {
                   variant={isSelectingRoot ? "default" : "outline"}
                   size="sm"
                   onClick={() => setIsSelectingRoot(!isSelectingRoot)}
-                  disabled={!hasPreloaded}
+                  disabled={!isAudioLoaded}
                   className="h-10"
                 >
                   From Keyboard
@@ -410,7 +397,7 @@ const SolfegeKeyboardPage = () => {
                   variant={settings.droneEnabled ? "default" : "outline"}
                   size="sm"
                   onClick={handleDroneToggle}
-                  disabled={!hasPreloaded}
+                  disabled={!isAudioLoaded}
                   className="w-24"
                 >
                   {settings.droneEnabled ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
@@ -420,7 +407,7 @@ const SolfegeKeyboardPage = () => {
                 {settings.droneEnabled && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={!hasPreloaded}>
+                      <Button variant="outline" size="sm" disabled={!isAudioLoaded}>
                         Volume
                       </Button>
                     </PopoverTrigger>
@@ -472,7 +459,7 @@ const SolfegeKeyboardPage = () => {
               <div className="flex items-center gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" disabled={!hasPreloaded} className="w-full">
+                    <Button variant="outline" size="sm" disabled={!isAudioLoaded} className="w-full">
                       <Volume2 className="h-4 w-4 mr-2" />
                       {currentVolume} dB
                     </Button>
