@@ -74,7 +74,7 @@ const PracticeView = () => {
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
 
- const isQuestionComplete = (): boolean => {
+ const isQuestionComplete = (currentPosition: number): boolean => {
     return currentPosition >= settings.numberOfNotes 
       || (settings.exerciseType === ExerciseType.SingleNoteRecognition && currentPosition >= 1); 
   }
@@ -153,7 +153,7 @@ const PracticeView = () => {
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Next button shortcuts
-      if ((e.key === 'n' || e.key === 'Enter') && isQuestionComplete()) {
+      if ((e.key === 'n' || e.key === 'Enter') && isQuestionComplete(currentPosition)) {
         e.preventDefault();
         startNewRound();
         return;
@@ -250,7 +250,7 @@ const PracticeView = () => {
   };
 
   const handleNotePress = (selectedNote: SemitoneOffset) => {
-    if (isQuestionComplete()) { // at the end, just play whatever they pressed
+    if (isQuestionComplete(currentPosition)) { // at the end, just play whatever they pressed
       stopSounds();
       playNote(selectedNote+rootMidi);
       return;
@@ -291,8 +291,9 @@ const PracticeView = () => {
       setCurrentPosition(currentPosition + 1);
 
       // once we completed this question, add to the elapsed time 
-      if (isQuestionComplete()) {
+      if (isQuestionComplete(currentPosition + 1)) {
         totalSequencesAnswered.current += 1;
+
         if (Date.now() - questionStartTime > 60000) {
           // avoid counting up wildly big times
           console.log("Ignoring time spent on this question as user probably stepped away from the app");
@@ -365,6 +366,7 @@ const PracticeView = () => {
   };
 
   const handleFinish = () => {
+    console.log("finish: ", totalSequencesAnswered.current);
     savePracticeData();
     saveCurrentConfiguration(settings);
     // Save session data if at least one question was answered
@@ -553,7 +555,7 @@ const PracticeView = () => {
                   );
                 })}
               </div>
-              {isQuestionComplete() && (
+              {isQuestionComplete(currentPosition) && (
                 <div className="mt-4 flex items-center justify-center gap-3">
                   <span className="text-lg font-semibold text-success">Complete! 🎉</span>
                   <TooltipProvider>
