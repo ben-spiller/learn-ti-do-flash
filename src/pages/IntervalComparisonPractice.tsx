@@ -164,7 +164,7 @@ const IntervalComparisonPractice = () => {
     
     // Generate pool of other intervals from range
     const otherIntervalsPool: SemitoneOffset[] = [];
-    for (let i = settings.intervalRangeToFindWithin[0]; i <= settings.intervalRangeToFindWithin[1]; i++) {
+    for (let i = settings.intervalComparisonRange[0]; i <= settings.intervalComparisonRange[1]; i++) {
       if (i !== settings.intervalToFind) {
         otherIntervalsPool.push(i as SemitoneOffset);
       }
