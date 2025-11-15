@@ -39,6 +39,7 @@ import {
   getCurrentConfiguration,
   saveCurrentConfiguration,
   SavedConfiguration,
+  getLastExerciseType,
 } from "@/utils/settingsStorage";
 import { InstrumentSelector } from "@/components/InstrumentSelector";
 
@@ -46,7 +47,7 @@ const SettingsView = () => {
   const navigate = useNavigate();
   
   // Load current configuration for initial exercise type or use defaults
-  const initialExerciseType = ExerciseType.MelodyRecognition;
+  const initialExerciseType = getLastExerciseType();
   const currentConfig = getCurrentConfiguration(initialExerciseType);
   const defaults = currentConfig || ConfigData.getDefaults(initialExerciseType);
   
@@ -63,7 +64,7 @@ const SettingsView = () => {
     setConsecutiveIntervals(configToUse.consecutiveIntervals);
     setQuestionNoteRange(configToUse.questionNoteRange);
     setTargetInterval(configToUse.targetInterval);
-    setOtherIntervals(configToUse.otherIntervals);
+    setOtherIntervalsRange(configToUse.otherIntervalsRange);
     setIntervalDirection(configToUse.intervalDirection);
     setTempo(configToUse.tempo);
     setRhythm(configToUse.rhythm);
@@ -79,7 +80,7 @@ const SettingsView = () => {
   const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
   const [targetInterval, setTargetInterval] = useState<SemitoneOffset>(defaults.targetInterval);
-  const [otherIntervals, setOtherIntervals] = useState<SemitoneOffset[]>(defaults.otherIntervals);
+  const [otherIntervalsRange, setOtherIntervalsRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.otherIntervalsRange);
   const [intervalDirection, setIntervalDirection] = useState<'random' | 'ascending' | 'descending'>(defaults.intervalDirection);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
@@ -90,7 +91,6 @@ const SettingsView = () => {
   const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
   const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(getFavouriteInstruments());
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
-  const [intervalsDialogOpen, setIntervalsDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
 
@@ -117,7 +117,7 @@ const SettingsView = () => {
       consecutiveIntervals,
       questionNoteRange,
       targetInterval,
-      otherIntervals,
+      otherIntervalsRange,
       intervalDirection,
       tempo,
       rhythm,
@@ -140,7 +140,7 @@ const SettingsView = () => {
     setConsecutiveIntervals(settings.consecutiveIntervals);
     setQuestionNoteRange(settings.questionNoteRange);
     setTargetInterval(settings.targetInterval);
-    setOtherIntervals(settings.otherIntervals);
+    setOtherIntervalsRange(settings.otherIntervalsRange);
     setIntervalDirection(settings.intervalDirection);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
@@ -604,57 +604,23 @@ const SettingsView = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Other intervals to use</Label>
-                  <Dialog open={intervalsDialogOpen} onOpenChange={setIntervalsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start">
-                        {otherIntervals.length} intervals selected: {otherIntervals.map(i => semitonesToInterval(i)).join(", ")}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Select Other Intervals</DialogTitle>
-                        <DialogDescription>
-                          Choose which intervals can appear in positions other than the target interval
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((interval) => {
-                          const semitone = interval as SemitoneOffset;
-                          const isSelected = otherIntervals.includes(semitone);
-                          const isTarget = semitone === targetInterval;
-                          return (
-                            <Button
-                              key={semitone}
-                              variant={isSelected ? "default" : "outline"}
-                              className="h-16 flex flex-col gap-1"
-                              onClick={() => {
-                                if (isTarget) {
-                                  toast({
-                                    title: "Cannot select target interval",
-                                    description: "This is the target interval to find",
-                                    variant: "destructive",
-                                  });
-                                  return;
-                                }
-                                if (isSelected) {
-                                  setOtherIntervals(otherIntervals.filter(i => i !== semitone));
-                                } else {
-                                  setOtherIntervals([...otherIntervals, semitone].sort((a, b) => a - b));
-                                }
-                              }}
-                              disabled={isTarget}
-                            >
-                              <span className="text-xs font-normal">{semitonesToInterval(semitone)}</span>
-                            </Button>
-                          );
-                        })}
-                      </div>
-                      <DialogFooter>
-                        <Button onClick={() => setIntervalsDialogOpen(false)}>Done</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Label className="text-base font-semibold">
+                    Other intervals range: {semitonesToInterval(otherIntervalsRange[0])} ... {semitonesToInterval(otherIntervalsRange[1])}
+                  </Label>
+                  <Slider
+                    value={otherIntervalsRange}
+                    onValueChange={(values) => {
+                      // Ensure min and max are different
+                      if (values[0] === values[1]) {
+                        return;
+                      }
+                      setOtherIntervalsRange([values[0], values[1]]);
+                    }}
+                    min={CONSTRAINTS.otherIntervalsRange.min}
+                    max={CONSTRAINTS.otherIntervalsRange.max}
+                    step={1}
+                    minStepsBetweenThumbs={0}
+                  />
                 </div>
                 
                 <div className="space-y-2">

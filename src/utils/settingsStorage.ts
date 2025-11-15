@@ -9,6 +9,7 @@ export interface SavedConfiguration {
 
 const STORAGE_KEY = "saved-practice-configurations";
 const CURRENT_CONFIG_KEY_PREFIX = "current-practice-configuration";
+const LAST_EXERCISE_TYPE_KEY = "last-exercise-type";
 
 export const getSavedConfigurations = (): SavedConfiguration[] => {
   try {
@@ -72,6 +73,8 @@ export const loadConfiguration = (id: string): ConfigData | null => {
 export const saveCurrentConfiguration = (settings: ConfigData): void => {
   const key = `${CURRENT_CONFIG_KEY_PREFIX}-${settings.exerciseType}`;
   localStorage.setItem(key, JSON.stringify(settings));
+  // Also save the last used exercise type
+  localStorage.setItem(LAST_EXERCISE_TYPE_KEY, settings.exerciseType!);
 };
 
 export const getCurrentConfiguration = (exerciseType: ExerciseType): ConfigData | null => {
@@ -83,5 +86,18 @@ export const getCurrentConfiguration = (exerciseType: ExerciseType): ConfigData 
   } catch (error) {
     console.error("Error loading current configuration:", error);
     return null;
+  }
+};
+
+export const getLastExerciseType = (): ExerciseType => {
+  try {
+    const stored = localStorage.getItem(LAST_EXERCISE_TYPE_KEY);
+    if (stored && Object.values(ExerciseType).includes(stored as ExerciseType)) {
+      return stored as ExerciseType;
+    }
+    return ExerciseType.MelodyRecognition;
+  } catch (error) {
+    console.error("Error loading last exercise type:", error);
+    return ExerciseType.MelodyRecognition;
   }
 };

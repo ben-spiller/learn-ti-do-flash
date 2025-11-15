@@ -162,9 +162,17 @@ const IntervalComparisonPractice = () => {
     // Track which intervals we use to check for duplicates
     const usedIntervals: number[] = [];
     
+    // Generate pool of other intervals from range
+    const otherIntervalsPool: SemitoneOffset[] = [];
+    for (let i = settings.otherIntervalsRange[0]; i <= settings.otherIntervalsRange[1]; i++) {
+      if (i !== settings.targetInterval) {
+        otherIntervalsPool.push(i as SemitoneOffset);
+      }
+    }
+    
     for (let i = 1; i < sequenceLength; i++) {
       const intervalToUse = i === targetIndex ? settings.targetInterval : 
-        settings.otherIntervals[Math.floor(Math.random() * settings.otherIntervals.length)];
+        otherIntervalsPool[Math.floor(Math.random() * otherIntervalsPool.length)];
       usedIntervals.push(intervalToUse);
       currentOffset += isAscending ? intervalToUse : -intervalToUse;
       newSequence.push(currentOffset);
