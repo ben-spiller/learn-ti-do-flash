@@ -70,10 +70,13 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
     deserialize: (value) => parseInt(value, 10) as SemitoneOffset,
   },
   {
-    key: 'otherIntervals',
-    defaultValue: [2, 4, 5] as SemitoneOffset[],
-    serialize: (value) => value.sort((a, b) => a - b).join(','),
-    deserialize: (value) => value.split(',').map(n => parseInt(n, 10)) as SemitoneOffset[],
+    key: 'otherIntervalsRange',
+    defaultValue: [2, 5] as [SemitoneOffset, SemitoneOffset],
+    serialize: (value) => value.join(','),
+    deserialize: (value) => {
+      const parts = value.split(',').map(n => parseInt(n, 10));
+      return parts.length === 2 ? [parts[0], parts[1]] as [SemitoneOffset, SemitoneOffset] : [2, 5] as [SemitoneOffset, SemitoneOffset];
+    },
   },
   {
     key: 'intervalDirection',
@@ -129,7 +132,7 @@ export class ConfigData {
   consecutiveIntervals: SemitonePair = [0, 11];
   questionNoteRange: SemitonePair = [0, 12];
   targetInterval: SemitoneOffset = 3;
-  otherIntervals: SemitoneOffset[] = [2, 4, 5];
+  otherIntervalsRange: SemitonePair = [2, 5];
   intervalDirection: "random" | "ascending" | "descending" = "random";
   tempo: number = 200;
   rhythm: "fixed" | "random" = "random";
@@ -204,7 +207,7 @@ export class ConfigData {
       case ExerciseType.IntervalComparison:
         defaults.numberOfNotes = 4;
         defaults.targetInterval = 3;
-        defaults.otherIntervals = [2, 4, 5];
+        defaults.otherIntervalsRange = [2, 5];
         defaults.intervalDirection = 'random';
         defaults.rhythm = 'fixed';
         defaults.droneType = 'none';
@@ -303,5 +306,6 @@ export const CONSTRAINTS = {
   consecutiveIntervals: { min: 0, max: 12+12 },
   questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
   targetInterval: { min: 1, max: 12 }, // 1 semitone (minor 2nd) to 12 semitones (octave)
+  otherIntervalsRange: { min: 1, max: 12 },
 } as const;
 
