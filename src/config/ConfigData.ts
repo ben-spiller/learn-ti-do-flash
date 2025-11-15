@@ -64,18 +64,21 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
     },
   },
   {
-    key: 'comparisonIntervals',
-    defaultValue: [2, 3] as [SemitoneOffset, SemitoneOffset],
-    serialize: (value) => value.join(','),
-    deserialize: (value) => {
-      const parts = value.split(',').map(n => parseInt(n, 10));
-      return parts.length === 2 ? [parts[0], parts[1]] as [SemitoneOffset, SemitoneOffset] : [2, 3] as [SemitoneOffset, SemitoneOffset];
-    },
+    key: 'targetInterval',
+    defaultValue: 3 as SemitoneOffset,
+    serialize: (value) => value.toString(),
+    deserialize: (value) => parseInt(value, 10) as SemitoneOffset,
   },
   {
-    key: 'differentIntervalType',
-    defaultValue: 'random' as 'higher' | 'lower' | 'random',
-    deserialize: (value) => (value === 'higher' || value === 'lower' || value === 'random') ? value : 'random',
+    key: 'otherIntervals',
+    defaultValue: [2, 4, 5] as SemitoneOffset[],
+    serialize: (value) => value.sort((a, b) => a - b).join(','),
+    deserialize: (value) => value.split(',').map(n => parseInt(n, 10)) as SemitoneOffset[],
+  },
+  {
+    key: 'intervalDirection',
+    defaultValue: 'random' as 'random' | 'ascending' | 'descending',
+    deserialize: (value) => (value === 'random' || value === 'ascending' || value === 'descending') ? value : 'random',
   },
   {
     key: 'tempo',
@@ -125,8 +128,9 @@ export class ConfigData {
   playExtraNotes: number = 0;
   consecutiveIntervals: SemitonePair = [0, 11];
   questionNoteRange: SemitonePair = [0, 12];
-  comparisonIntervals: SemitonePair = [2, 3];
-  differentIntervalType: "higher" | "lower" | "random" = "random";
+  targetInterval: SemitoneOffset = 3;
+  otherIntervals: SemitoneOffset[] = [2, 4, 5];
+  intervalDirection: "random" | "ascending" | "descending" = "random";
   tempo: number = 200;
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
@@ -199,8 +203,9 @@ export class ConfigData {
 
       case ExerciseType.IntervalComparison:
         defaults.numberOfNotes = 4;
-        defaults.comparisonIntervals = [2, 3];
-        defaults.differentIntervalType = 'random';
+        defaults.targetInterval = 3;
+        defaults.otherIntervals = [2, 4, 5];
+        defaults.intervalDirection = 'random';
         defaults.rhythm = 'fixed';
         defaults.droneType = 'none';
         break;
@@ -297,6 +302,6 @@ export const CONSTRAINTS = {
   tempo: { min: 40, max: 400, step: 10 },
   consecutiveIntervals: { min: 0, max: 12+12 },
   questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
-  comparisonIntervals: { min: 1, max: 12 }, // 1 semitone (minor 2nd) to 12 semitones (octave)
+  targetInterval: { min: 1, max: 12 }, // 1 semitone (minor 2nd) to 12 semitones (octave)
 } as const;
 

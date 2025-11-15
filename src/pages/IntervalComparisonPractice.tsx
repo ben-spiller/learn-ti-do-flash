@@ -65,6 +65,7 @@ const IntervalComparisonPractice = () => {
   const [droneVolume] = useState(-8);
 
   const totalSequencesAnswered = useRef(0);
+  const lastQuestionKey = useRef<string>("");
 
   const isQuestionComplete = (): boolean => {
     return isCorrect === true;
@@ -137,36 +138,46 @@ const IntervalComparisonPractice = () => {
   };
 
   const startNewRound = () => {
-    // Generate a sequence with one different interval
+    // Generate a sequence with one target interval and other intervals from otherIntervals
     const sequenceLength = settings.numberOfNotes;
-    const [interval1, interval2] = settings.comparisonIntervals;
-    const mainInterval = Math.random() > 0.5 ? interval1 : interval2;
-    const differentInterval = mainInterval === interval1 ? interval2 : interval1;
-
-    // Determine if ascending or descending based on differentIntervalType setting
-    let isAscending: boolean;
-    const isDifferentIntervalHigher = differentInterval > mainInterval;
     
-    if (settings.differentIntervalType === 'random') {
+    // Determine direction for this question
+    let isAscending: boolean;
+    if (settings.intervalDirection === 'random') {
       isAscending = Math.random() > 0.5;
-    } else if (settings.differentIntervalType === 'higher') {
-      isAscending = isDifferentIntervalHigher;
-    } else { // 'lower'
-      isAscending = !isDifferentIntervalHigher;
+    } else if (settings.intervalDirection === 'ascending') {
+      isAscending = true;
+    } else { // 'descending'
+      isAscending = false;
     }
 
-    // Pick which position will have the different interval (not the first)
-    const diffIndex = 1 + Math.floor(Math.random() * (sequenceLength - 1));
-    setDifferentIntervalIndex(diffIndex);
+    // Pick which position will have the target interval (not the first)
+    const targetIndex = 1 + Math.floor(Math.random() * (sequenceLength - 1));
+    setDifferentIntervalIndex(targetIndex);
 
     // Build sequence
     const newSequence: SemitoneOffset[] = [isAscending ? 0 : 12]; // Start at root, or from an octave above if descending
     let currentOffset = 0;
+    
+    // Track which intervals we use to check for duplicates
+    const usedIntervals: number[] = [];
+    
     for (let i = 1; i < sequenceLength; i++) {
-      const intervalToUse = i === diffIndex ? differentInterval : mainInterval;
+      const intervalToUse = i === targetIndex ? settings.targetInterval : 
+        settings.otherIntervals[Math.floor(Math.random() * settings.otherIntervals.length)];
+      usedIntervals.push(intervalToUse);
       currentOffset += isAscending ? intervalToUse : -intervalToUse;
       newSequence.push(currentOffset);
     }
+
+    // Check if this is the same as the last question (same intervals in same order and direction)
+    const currentKey = `${isAscending ? 'asc' : 'desc'}-${usedIntervals.join(',')}`;
+    if (currentKey === lastQuestionKey.current && totalSequencesAnswered.current > 0) {
+      // Try again with different configuration
+      startNewRound();
+      return;
+    }
+    lastQuestionKey.current = currentKey;
 
     setSequence(newSequence);
     setCurrentGuess(null);
@@ -295,12 +306,11 @@ const IntervalComparisonPractice = () => {
       {started && (
         <Card className="w-full max-w-2xl">
           <CardContent className="pt-6">
-            <div className="space-y-6">
+              <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Which interval is different?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Comparing {semitonesToInterval(settings.comparisonIntervals[0])} and{" "}
-                  {semitonesToInterval(settings.comparisonIntervals[1])}
+                  Find the {semitonesToInterval(settings.targetInterval)} among the other intervals
                 </p>
               </div>
 
@@ -339,9 +349,8 @@ const IntervalComparisonPractice = () => {
                   const intervalFromPrevious = Math.abs(offset - sequence[index - 1]);
                   const intervalName = semitonesToInterval(intervalFromPrevious);
                   
-                  // Determine if this is a larger or smaller interval compared to the other intervals
-                  const [interval1, interval2] = settings.comparisonIntervals;
-                  const isLargerInterval = intervalFromPrevious === Math.max(interval1, interval2);
+                  // Check if this is the target interval
+                  const isTargetInterval = intervalFromPrevious === settings.targetInterval;
 
                   return (
                     <div key={index} className="flex items-center gap-2">
@@ -369,7 +378,7 @@ const IntervalComparisonPractice = () => {
                         </div>
                         {isCorrect !== null && (
                           <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mt-1">
-                            {isLargerInterval ? (
+                            {isTargetInterval ? (
                               <ArrowRight className="h-4 w-4" />
                             ) : (
                               <Minus className="h-3 w-3" />

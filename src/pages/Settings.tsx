@@ -62,8 +62,9 @@ const SettingsView = () => {
     setPlayExtraNotes(configToUse.playExtraNotes);
     setConsecutiveIntervals(configToUse.consecutiveIntervals);
     setQuestionNoteRange(configToUse.questionNoteRange);
-    setComparisonIntervals(configToUse.comparisonIntervals);
-    setDifferentIntervalType(configToUse.differentIntervalType);
+    setTargetInterval(configToUse.targetInterval);
+    setOtherIntervals(configToUse.otherIntervals);
+    setIntervalDirection(configToUse.intervalDirection);
     setTempo(configToUse.tempo);
     setRhythm(configToUse.rhythm);
     setDroneType(configToUse.droneType);
@@ -77,8 +78,9 @@ const SettingsView = () => {
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
   const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
-  const [comparisonIntervals, setComparisonIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.comparisonIntervals);
-  const [differentIntervalType, setDifferentIntervalType] = useState<'higher' | 'lower' | 'random'>(defaults.differentIntervalType);
+  const [targetInterval, setTargetInterval] = useState<SemitoneOffset>(defaults.targetInterval);
+  const [otherIntervals, setOtherIntervals] = useState<SemitoneOffset[]>(defaults.otherIntervals);
+  const [intervalDirection, setIntervalDirection] = useState<'random' | 'ascending' | 'descending'>(defaults.intervalDirection);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
   const [droneType, setDroneType] = useState(defaults.droneType);
@@ -88,6 +90,7 @@ const SettingsView = () => {
   const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
   const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(getFavouriteInstruments());
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [intervalsDialogOpen, setIntervalsDialogOpen] = useState(false);
   const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
   const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
 
@@ -113,8 +116,9 @@ const SettingsView = () => {
       playExtraNotes,
       consecutiveIntervals,
       questionNoteRange,
-      comparisonIntervals,
-      differentIntervalType,
+      targetInterval,
+      otherIntervals,
+      intervalDirection,
       tempo,
       rhythm,
       droneType,
@@ -135,8 +139,9 @@ const SettingsView = () => {
     setPlayExtraNotes(settings.playExtraNotes);
     setConsecutiveIntervals(settings.consecutiveIntervals);
     setQuestionNoteRange(settings.questionNoteRange);
-    setComparisonIntervals(settings.comparisonIntervals);
-    setDifferentIntervalType(settings.differentIntervalType);
+    setTargetInterval(settings.targetInterval);
+    setOtherIntervals(settings.otherIntervals);
+    setIntervalDirection(settings.intervalDirection);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
     setDroneType(settings.droneType);
@@ -583,32 +588,85 @@ const SettingsView = () => {
 
               {exerciseType === ExerciseType.IntervalComparison && (
               <div className="space-y-4">
-                <Label className="text-base font-semibold">
-                  Comparison intervals: {semitonesToInterval(comparisonIntervals[0])} vs {semitonesToInterval(comparisonIntervals[1])}
-                </Label>
                 <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    Target interval to find: {semitonesToInterval(targetInterval)}
+                  </Label>
                   <Slider
-                    value={[comparisonIntervals[0], comparisonIntervals[1]]}
+                    value={[targetInterval]}
                     onValueChange={(values) => {
-                      setComparisonIntervals([values[0] as SemitoneOffset, values[1] as SemitoneOffset]);
+                      setTargetInterval(values[0] as SemitoneOffset);
                     }}
-                    min={CONSTRAINTS.comparisonIntervals.min}
-                    max={CONSTRAINTS.comparisonIntervals.max}
+                    min={1}
+                    max={12}
                     step={1}
-                    minStepsBetweenThumbs={1}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">Other intervals to use</Label>
+                  <Dialog open={intervalsDialogOpen} onOpenChange={setIntervalsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        {otherIntervals.length} intervals selected: {otherIntervals.map(i => semitonesToInterval(i)).join(", ")}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Select Other Intervals</DialogTitle>
+                        <DialogDescription>
+                          Choose which intervals can appear in positions other than the target interval
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((interval) => {
+                          const semitone = interval as SemitoneOffset;
+                          const isSelected = otherIntervals.includes(semitone);
+                          const isTarget = semitone === targetInterval;
+                          return (
+                            <Button
+                              key={semitone}
+                              variant={isSelected ? "default" : "outline"}
+                              className="h-16 flex flex-col gap-1"
+                              onClick={() => {
+                                if (isTarget) {
+                                  toast({
+                                    title: "Cannot select target interval",
+                                    description: "This is the target interval to find",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
+                                if (isSelected) {
+                                  setOtherIntervals(otherIntervals.filter(i => i !== semitone));
+                                } else {
+                                  setOtherIntervals([...otherIntervals, semitone].sort((a, b) => a - b));
+                                }
+                              }}
+                              disabled={isTarget}
+                            >
+                              <span className="text-xs font-normal">{semitonesToInterval(semitone)}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={() => setIntervalsDialogOpen(false)}>Done</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Different interval is</Label>
-                  <Select value={differentIntervalType} onValueChange={(value: 'higher' | 'lower' | 'random') => setDifferentIntervalType(value)}>
+                  <Label className="text-base font-semibold">Direction</Label>
+                  <Select value={intervalDirection} onValueChange={(value: 'random' | 'ascending' | 'descending') => setIntervalDirection(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="random">Random (higher or lower)</SelectItem>
-                      <SelectItem value="higher">Higher (ascending)</SelectItem>
-                      <SelectItem value="lower">Lower (descending)</SelectItem>
+                      <SelectItem value="random">Random each question</SelectItem>
+                      <SelectItem value="ascending">Ascending (fixed for session)</SelectItem>
+                      <SelectItem value="descending">Descending (fixed for session)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
