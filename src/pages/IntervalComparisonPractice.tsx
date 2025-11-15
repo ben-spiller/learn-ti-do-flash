@@ -316,9 +316,9 @@ const IntervalComparisonPractice = () => {
           <CardContent className="pt-6">
               <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Which interval is different?</h3>
+                <h3 className="text-lg font-semibold mb-2">Interval comparison</h3>
                 <p className="text-sm text-muted-foreground">
-                  Find the {semitonesToInterval(settings.intervalToFind)} among the other intervals
+                  Find the <b>{semitonesToInterval(settings.intervalToFind)}</b> among the other intervals
                 </p>
               </div>
 
@@ -340,9 +340,9 @@ const IntervalComparisonPractice = () => {
                             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           )}
                         </div>
-                        {isCorrect !== null && (
+                        {isQuestionComplete() && (
                           <div className="text-xs font-medium text-muted-foreground mt-1">
-                            Root
+                            
                           </div>
                         )}
                       </div>
@@ -358,7 +358,7 @@ const IntervalComparisonPractice = () => {
                   const intervalName = semitonesToInterval(intervalFromPrevious);
                   
                   // Check if this is the target interval
-                  const isTargetInterval = intervalFromPrevious === settings.intervalToFind;
+                  // const isTargetInterval = intervalFromPrevious === settings.intervalToFind;
 
                   return (
                     <div key={index} className="flex items-center gap-2">
@@ -384,13 +384,13 @@ const IntervalComparisonPractice = () => {
                             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           )}
                         </div>
-                        {isCorrect !== null && (
+                        {isQuestionComplete() && (
                           <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mt-1">
-                            {isTargetInterval ? (
+                            {/* {isTargetInterval ? (
                               <ArrowRight className="h-4 w-4" />
                             ) : (
                               <Minus className="h-3 w-3" />
-                            )}
+                            )} */}
                             {intervalName}
                           </div>
                         )}
@@ -403,7 +403,7 @@ const IntervalComparisonPractice = () => {
               {isQuestionComplete() && (
                 <div className="flex justify-center mt-6">
                   <Button size="lg" onClick={startNewRound}>
-                    Next (N or Enter)
+                    Next
                   </Button>
                 </div>
               )}
