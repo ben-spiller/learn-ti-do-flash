@@ -42,7 +42,7 @@ const IntervalComparisonPractice = () => {
   // Random root note for this session (no fixed root needed)
   const [rootMidi] = useState<MidiNoteNumber>(() => {
     const middleC = 60;
-    return middleC + Math.floor(Math.random() * 13) - 6; // Random root within ±6 semitones of C4
+    return middleC + Math.floor(Math.random() * 13); // Random root within up to 12 notes above C4 - don't go too low!
   });
 
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
@@ -156,8 +156,8 @@ const IntervalComparisonPractice = () => {
     setDifferentIntervalIndex(targetIndex);
 
     // Build sequence
-    const newSequence: SemitoneOffset[] = [isAscending ? 0 : 12]; // Start at root, or from an octave above if descending
-    let currentOffset = 0;
+    let currentOffset = isAscending ? 0 : 12; // Start at root, or from an octave above if descending to leave space
+    const newSequence: SemitoneOffset[] = [currentOffset]; 
     
     // Track which intervals we use to check for duplicates
     const usedIntervals: number[] = [];
@@ -174,7 +174,7 @@ const IntervalComparisonPractice = () => {
       const intervalToUse = i === targetIndex ? settings.intervalToFind : 
         otherIntervalsPool[Math.floor(Math.random() * otherIntervalsPool.length)];
       usedIntervals.push(intervalToUse);
-      currentOffset += isAscending ? intervalToUse : -intervalToUse;
+      currentOffset += isAscending ? intervalToUse : (-intervalToUse);
       newSequence.push(currentOffset);
     }
 
