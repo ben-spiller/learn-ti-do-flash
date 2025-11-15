@@ -485,7 +485,7 @@ const SettingsView = () => {
             <TabsContent value="practice" className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Exercise</Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.MelodyRecognition)}
