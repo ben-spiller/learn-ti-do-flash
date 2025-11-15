@@ -605,7 +605,10 @@ const SettingsView = () => {
 
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
-                    Comparison interval(s): {semitonesToInterval(intervalComparisonRange[0])} ... {semitonesToInterval(intervalComparisonRange[1])}
+                    {intervalComparisonRange[0] !== intervalComparisonRange[1] ?
+                      `Comparison intervals: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
+                      : `Comparison interval: ${semitonesToInterval(intervalComparisonRange[0])}`
+                    }
                   </Label>
                   <Slider
                     value={intervalComparisonRange}
