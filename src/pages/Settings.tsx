@@ -63,8 +63,8 @@ const SettingsView = () => {
     setPlayExtraNotes(configToUse.playExtraNotes);
     setConsecutiveIntervals(configToUse.consecutiveIntervals);
     setQuestionNoteRange(configToUse.questionNoteRange);
-    setTargetInterval(configToUse.targetInterval);
-    setOtherIntervalsRange(configToUse.otherIntervalsRange);
+    setTargetInterval(configToUse.intervalToFind);
+    setOtherIntervalsRange(configToUse.intervalRangeToFindWithin);
     setIntervalDirection(configToUse.intervalDirection);
     setTempo(configToUse.tempo);
     setRhythm(configToUse.rhythm);
@@ -79,8 +79,8 @@ const SettingsView = () => {
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
   const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
-  const [targetInterval, setTargetInterval] = useState<SemitoneOffset>(defaults.targetInterval);
-  const [otherIntervalsRange, setOtherIntervalsRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.otherIntervalsRange);
+  const [intervalToFind, setTargetInterval] = useState<SemitoneOffset>(defaults.intervalToFind);
+  const [intervalRangeToFindWithin, setOtherIntervalsRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.intervalRangeToFindWithin);
   const [intervalDirection, setIntervalDirection] = useState<'random' | 'ascending' | 'descending'>(defaults.intervalDirection);
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
@@ -116,8 +116,8 @@ const SettingsView = () => {
       playExtraNotes,
       consecutiveIntervals,
       questionNoteRange,
-      targetInterval,
-      otherIntervalsRange,
+      intervalToFind,
+      intervalRangeToFindWithin,
       intervalDirection,
       tempo,
       rhythm,
@@ -139,8 +139,8 @@ const SettingsView = () => {
     setPlayExtraNotes(settings.playExtraNotes);
     setConsecutiveIntervals(settings.consecutiveIntervals);
     setQuestionNoteRange(settings.questionNoteRange);
-    setTargetInterval(settings.targetInterval);
-    setOtherIntervalsRange(settings.otherIntervalsRange);
+    setTargetInterval(settings.intervalToFind);
+    setOtherIntervalsRange(settings.intervalRangeToFindWithin);
     setIntervalDirection(settings.intervalDirection);
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
@@ -535,6 +535,8 @@ const SettingsView = () => {
               </div>
             )}
 
+            {exerciseType !== ExerciseType.IntervalComparison && (<>
+
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Play Extra Notes</Label>
                 <div className="flex items-center gap-2">
@@ -560,8 +562,6 @@ const SettingsView = () => {
                   Random notes played after the sequence (don't need to guess)
                 </p>
               </div>
-
-              {exerciseType !== ExerciseType.IntervalComparison && (
               <div className="space-y-4">
                 <Label className="text-base font-semibold">
                   Question note range: {formatQuestionRangeLabel(questionNoteRange[0])} ... {formatQuestionRangeLabel(questionNoteRange[1])}
@@ -584,16 +584,16 @@ const SettingsView = () => {
                   minStepsBetweenThumbs={1}
                 />
               </div>
-              )}
+              </>)}
 
               {exerciseType === ExerciseType.IntervalComparison && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
-                    Target interval to find: {semitonesToInterval(targetInterval)}
+                    Target interval to find: {semitonesToInterval(intervalToFind)}
                   </Label>
                   <Slider
-                    value={[targetInterval]}
+                    value={[intervalToFind]}
                     onValueChange={(values) => {
                       setTargetInterval(values[0] as SemitoneOffset);
                     }}
@@ -605,19 +605,15 @@ const SettingsView = () => {
 
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
-                    Other intervals range: {semitonesToInterval(otherIntervalsRange[0])} ... {semitonesToInterval(otherIntervalsRange[1])}
+                    Comparison interval(s): {semitonesToInterval(intervalRangeToFindWithin[0])} ... {semitonesToInterval(intervalRangeToFindWithin[1])}
                   </Label>
                   <Slider
-                    value={otherIntervalsRange}
+                    value={intervalRangeToFindWithin}
                     onValueChange={(values) => {
-                      // Ensure min and max are different
-                      if (values[0] === values[1]) {
-                        return;
-                      }
                       setOtherIntervalsRange([values[0], values[1]]);
                     }}
-                    min={CONSTRAINTS.otherIntervalsRange.min}
-                    max={CONSTRAINTS.otherIntervalsRange.max}
+                    min={CONSTRAINTS.intervalRangeToFindWithin.min}
+                    max={CONSTRAINTS.intervalRangeToFindWithin.max}
                     step={1}
                     minStepsBetweenThumbs={0}
                   />

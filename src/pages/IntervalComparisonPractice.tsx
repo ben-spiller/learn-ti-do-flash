@@ -164,14 +164,14 @@ const IntervalComparisonPractice = () => {
     
     // Generate pool of other intervals from range
     const otherIntervalsPool: SemitoneOffset[] = [];
-    for (let i = settings.otherIntervalsRange[0]; i <= settings.otherIntervalsRange[1]; i++) {
-      if (i !== settings.targetInterval) {
+    for (let i = settings.intervalRangeToFindWithin[0]; i <= settings.intervalRangeToFindWithin[1]; i++) {
+      if (i !== settings.intervalToFind) {
         otherIntervalsPool.push(i as SemitoneOffset);
       }
     }
     
     for (let i = 1; i < sequenceLength; i++) {
-      const intervalToUse = i === targetIndex ? settings.targetInterval : 
+      const intervalToUse = i === targetIndex ? settings.intervalToFind : 
         otherIntervalsPool[Math.floor(Math.random() * otherIntervalsPool.length)];
       usedIntervals.push(intervalToUse);
       currentOffset += isAscending ? intervalToUse : -intervalToUse;
@@ -318,7 +318,7 @@ const IntervalComparisonPractice = () => {
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Which interval is different?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Find the {semitonesToInterval(settings.targetInterval)} among the other intervals
+                  Find the {semitonesToInterval(settings.intervalToFind)} among the other intervals
                 </p>
               </div>
 
@@ -358,7 +358,7 @@ const IntervalComparisonPractice = () => {
                   const intervalName = semitonesToInterval(intervalFromPrevious);
                   
                   // Check if this is the target interval
-                  const isTargetInterval = intervalFromPrevious === settings.targetInterval;
+                  const isTargetInterval = intervalFromPrevious === settings.intervalToFind;
 
                   return (
                     <div key={index} className="flex items-center gap-2">
