@@ -160,7 +160,7 @@ const IntervalComparisonPractice = () => {
     setDifferentIntervalIndex(diffIndex);
 
     // Build sequence
-    const newSequence: SemitoneOffset[] = [0]; // Start at root
+    const newSequence: SemitoneOffset[] = [isAscending ? 0 : 12]; // Start at root, or from an octave above if descending
     let currentOffset = 0;
     for (let i = 1; i < sequenceLength; i++) {
       const intervalToUse = i === diffIndex ? differentInterval : mainInterval;
