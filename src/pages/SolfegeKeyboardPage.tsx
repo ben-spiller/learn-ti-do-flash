@@ -23,7 +23,7 @@ import {
   midiToNoteName,
   isAudioInitialized,
   NOTE_NAMES,
-  formatInstrumentName, INSTRUMENT_SLUGS
+  formatInstrumentName, INSTRUMENT_IDS
 } from "@/utils/audio";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
@@ -442,7 +442,7 @@ const SolfegeKeyboardPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {INSTRUMENT_SLUGS.map(slug => (
+                  {INSTRUMENT_IDS.map(slug => (
                     <SelectItem key={slug} value={slug}>
                       {formatInstrumentName(slug)}
                     </SelectItem>

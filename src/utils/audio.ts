@@ -840,7 +840,7 @@ export const stopSounds = () => {
 };
 
 // All available instruments from FluidR3_GM soundfont
-export const INSTRUMENT_SLUGS = [
+export const INSTRUMENT_IDS = [
   "acoustic_grand_piano",
   "bright_acoustic_piano",
   "electric_grand_piano",
@@ -927,6 +927,25 @@ export const INSTRUMENT_SLUGS = [
   "agogo"
 ] as const;
 
+export const DEFAULT_FAVOURITE_INSTRUMENTS = [
+  "acoustic_grand_piano",
+  "electric_piano_1",
+  "electric_piano_2",
+  "rock_organ",
+  "church_organ",
+  "reed_organ",
+  "harmonica",
+  "acoustic_guitar_steel",
+  "electric_guitar_jazz",
+  "electric_guitar_clean",
+  "electric_guitar_muted",
+  "violin",
+  "trumpet",
+  "trombone",
+  "alto_sax",
+  "clarinet"
+] as const;
+
 /** Convert instrument slug to human-friendly label */
 export function formatInstrumentName(slug: string): string {
   return slug
@@ -936,7 +955,7 @@ export function formatInstrumentName(slug: string): string {
 }
 
 // Instrument options with formatted labels
-export const INSTRUMENT_OPTIONS = INSTRUMENT_SLUGS.map(slug => ({
+export const INSTRUMENT_OPTIONS = INSTRUMENT_IDS.map(slug => ({
   slug,
   label: formatInstrumentName(slug)
 }));
