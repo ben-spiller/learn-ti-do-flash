@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones } from "@/utils/audio";
 import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
+import { getGlobalSettings } from "@/utils/globalSettingsStorage";
 import { getFavouriteInstruments } from "@/utils/instrumentStorage";
 import { getNoteButtonColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
@@ -26,6 +27,7 @@ const PracticeView = () => {
     : new ConfigData(location.state as Partial<ConfigData>);
   
   const preloaded = searchParams.get('preloaded') === 'true';
+  const globalSettings = getGlobalSettings();
   
   // Pick the instrument to use for this session based on settings
   const sessionInstrument = settings.pickInstrument(getFavouriteInstruments());
@@ -346,8 +348,9 @@ const PracticeView = () => {
   };
 
   const handlePlayReference = async () => {
+    const globalSettings = getGlobalSettings();
     setIsPlayingReference(true);
-    if (settings.referenceType === "arpeggio") {
+    if (globalSettings.referenceType === "arpeggio") {
       const doMidi = rootMidi;
       const arpeggio = [
         doMidi,           // do

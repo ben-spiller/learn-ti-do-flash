@@ -105,12 +105,6 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
     deserialize: (value) => (value === 'none' || value === 'root') ? value : 'none',
   },
   {
-    key: 'referenceType',
-    defaultValue: 'root' as 'root' | 'arpeggio',
-    omitFromChangeSummary: true,
-    deserialize: (value) => (value === 'root' || value === 'arpeggio') ? value : 'root',
-  },
-  {
     key: 'rootNotePitch',
     defaultValue: 'C4' as MidiNoteName,
   },
@@ -142,7 +136,6 @@ export class ConfigData {
   tempo: number = 200;
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
-  referenceType: "root" | "arpeggio" = "root";
   rootNotePitch: MidiNoteName = "C4";
   instrument: string = "acoustic_grand_piano";
   instrumentMode: "single" | "random" = "single";

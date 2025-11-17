@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import SettingsView from "./pages/Settings";
+import GlobalSettings from "./pages/GlobalSettings";
 import NoteRecognitionPractice from "./pages/NoteRecognitionPractice";
 import IntervalComparisonPractice from "./pages/IntervalComparisonPractice";
 import PracticeHistory from "./pages/History";
@@ -24,6 +25,7 @@ const App = () => {
       <HashRouter>
         <Routes>
           <Route path="/" element={<SettingsView />} />
+          <Route path="/global-settings" element={<GlobalSettings />} />
           <Route path="/practice" element={<NoteRecognitionPractice />} />
           <Route path="/interval-comparison" element={<IntervalComparisonPractice />} />
           <Route path="/history" element={<PracticeHistory />} />
