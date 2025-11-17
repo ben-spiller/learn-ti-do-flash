@@ -122,7 +122,7 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
   {
     key: 'instrumentMode',
     omitFromChangeSummary: true,
-    defaultValue: 'single' as 'single' | 'random',
+    defaultValue: 'random' as 'single' | 'random',
     deserialize: (value) => (value === 'single' || value === 'random') ? value : 'single',
   },
 ];
