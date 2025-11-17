@@ -385,13 +385,18 @@ const IntervalComparisonPractice = () => {
                           )}
                         </div>
                         {isQuestionComplete() && (
-                          <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mt-1">
-                            {/* {isTargetInterval ? (
-                              <ArrowRight className="h-4 w-4" />
-                            ) : (
-                              <Minus className="h-3 w-3" />
-                            )} */}
-                            {intervalName}
+                          <div className="flex flex-col items-center gap-1 mt-1">
+                            <div className="text-xs font-medium text-muted-foreground">
+                              {intervalName}
+                            </div>
+                            <div className="flex gap-0.5">
+                              {Array.from({ length: intervalFromPrevious }).map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"
+                                />
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
