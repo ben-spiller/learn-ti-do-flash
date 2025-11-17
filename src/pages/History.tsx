@@ -7,7 +7,7 @@ import { ArrowLeft, Settings } from "lucide-react";
 import { semitonesToSolfege, semitonesToInterval } from "@/utils/audio";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getNoteButtonColor, getScoreColor, getOctaveIndicator } from "@/utils/noteStyles";
-import { ConfigData } from "@/config/ConfigData";
+import { ConfigData, exerciseIsTonal, ExerciseType } from "@/config/ConfigData";
 import { startOfWeek, endOfWeek, format } from "date-fns";
 
 export const STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES = "wrong2NoteSequences"
@@ -214,8 +214,9 @@ const PracticeHistory = () => {
             <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
                 💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
-                Add a drone note to build a tonal mental model for hearing the notes,  
-                focus on the specific intervals and note sequences that you find most challenging, 
+                Focus on the specific intervals and note sequences that you find most challenging,
+                {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType === "none" ? 
+                  "add a drone note to build a tonal mental model for hearing the notes, " : ""}
                 or try single note practice for a while.
               </p>
             </div>
@@ -223,8 +224,9 @@ const PracticeHistory = () => {
           {recentSession.score >= 95 && (
             <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
-                🎉 Excellent work! This exercise seems to easy for you. Try removing the drone (if present), increasing the number of notes, 
-                or expanding the note range.
+                🎉 Excellent work! This exercise seems too easy for you. 
+                Try {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType !== "none" ? "removing the drone, " : ""}increasing 
+                the number of notes, or expanding the note range.
               </p>
             </div>
           )}
@@ -232,9 +234,10 @@ const PracticeHistory = () => {
       </Card>
 
       {/* Wrong Answers Visualization */}
+      {recentSession.exerciseName != ExerciseType.IntervalComparison && (<>
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Frequent wrong sequences (latest session)</CardTitle>
+          <CardTitle>Frequent wrong sequences ({recentSession.exerciseName} - latest session)</CardTitle>
         </CardHeader>
         <CardContent>
           {wrongAnswerPairs.length > 0 ? (
@@ -375,6 +378,7 @@ const PracticeHistory = () => {
           )}
         </CardContent>
       </Card>
+      </>)}
 
       {/* Tabs by Exercise */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
@@ -419,6 +423,7 @@ const PracticeHistory = () => {
           return (
             <TabsContent key={exerciseKey} value={exerciseKey} className="space-y-6">
               {/* Needs Practice Section */}
+              {exerciseKey !== ExerciseType.IntervalComparison && (<>
               <Card>
                 <CardHeader>
                   <CardTitle>Sequences needing more practice</CardTitle>
@@ -480,6 +485,7 @@ const PracticeHistory = () => {
                   )}
                 </CardContent>
               </Card>
+              </>)}
 
               {/* All Sessions for this Exercise */}
               <Card>

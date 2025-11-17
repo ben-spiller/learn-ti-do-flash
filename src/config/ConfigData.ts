@@ -12,6 +12,11 @@ export enum ExerciseType {
   IntervalComparison = "Interval comparison",
 }
 
+/** True for exercises where there is a reference note and a drone can be configured */
+export function exerciseIsTonal(type: ExerciseType) {
+  return type !== ExerciseType.IntervalComparison;
+}
+
 // Property metadata for automatic serialization/comparison
 class PropertyMetadata<T = any> {
   key: keyof ConfigData;
