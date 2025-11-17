@@ -320,13 +320,13 @@ const SettingsView = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate("/global-settings")}>
-                <SettingsIcon className="h-4 w-4 mr-2" />
-                Global Settings
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/history")}>
                 <History className="h-4 w-4 mr-2" />
                 Practice History
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/global-settings")}>
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Global Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {location.href='https://github.com/ben-spiller/learn-ti-do-flash/blob/main/README.md';}}>
                 <HelpCircle className="h-4 w-4 mr-2" />
