@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import SettingsView from "./pages/Settings";
+import HomeSettingsView from "./pages/Home";
 import GlobalSettings from "./pages/GlobalSettings";
 import NoteRecognitionPractice from "./pages/NoteRecognitionPractice";
 import IntervalComparisonPractice from "./pages/IntervalComparisonPractice";
@@ -24,7 +24,7 @@ const App = () => {
       <Sonner />
       <HashRouter>
         <Routes>
-          <Route path="/" element={<SettingsView />} />
+          <Route path="/" element={<HomeSettingsView />} />
           <Route path="/global-settings" element={<GlobalSettings />} />
           <Route path="/practice" element={<NoteRecognitionPractice />} />
           <Route path="/interval-comparison" element={<IntervalComparisonPractice />} />
