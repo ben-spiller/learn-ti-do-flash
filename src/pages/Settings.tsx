@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle, Settings as SettingsIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
+import keyboardIcon from "@/assets/solfege-keyboard.png";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -305,36 +306,12 @@ const SettingsView = () => {
         <CardHeader className="text-center relative">
           <Button 
             variant="ghost" 
-            className="absolute right-16 top-4 h-20 w-24 p-2 rounded-md hover:bg-accent/40"
+            className="absolute right-16 top-4 h-20 w-10 p-2 rounded-md hover:bg-accent/40"
             onClick={() => navigate("/keyboard")}
             aria-label="Open Solfege Keyboard"
             title="Solfege Keyboard"
           >
-            <svg viewBox="0 0 120 80" className="h-full w-full" aria-hidden="true">
-              <defs>
-                <linearGradient id="lt-notes" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="hsl(var(--brand-cyan))" />
-                  <stop offset="50%" stopColor="hsl(var(--brand-magenta))" />
-                  <stop offset="100%" stopColor="hsl(var(--brand-lime))" />
-                </linearGradient>
-              </defs>
-              <rect x="2" y="8" width="116" height="64" rx="8" fill="hsl(var(--card))" stroke="url(#lt-notes)" strokeWidth="6" />
-              <g stroke="hsl(var(--border))" strokeWidth="2">
-                <line x1="19" y1="8" x2="19" y2="72" />
-                <line x1="36" y1="8" x2="36" y2="72" />
-                <line x1="53" y1="8" x2="53" y2="72" />
-                <line x1="70" y1="8" x2="70" y2="72" />
-                <line x1="87" y1="8" x2="87" y2="72" />
-                <line x1="104" y1="8" x2="104" y2="72" />
-              </g>
-              <g fill="url(#lt-notes)">
-                <rect x="26" y="8" width="10" height="36" rx="2" />
-                <rect x="43" y="8" width="10" height="36" rx="2" />
-                <rect x="77" y="8" width="10" height="36" rx="2" />
-                <rect x="94" y="8" width="10" height="36" rx="2" />
-                <rect x="108" y="8" width="10" height="36" rx="2" />
-              </g>
-            </svg>
+            <img src={keyboardIcon} alt="Solfege Keyboard Button" style={{ width: '100%', height: '100%' }} />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
