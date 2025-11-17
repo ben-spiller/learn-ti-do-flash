@@ -9,9 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle } from "lucide-react";
+import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle, Settings as SettingsIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
+import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 import { toast } from "@/hooks/use-toast";
 import {
   preloadInstrumentWithGesture,
@@ -69,7 +70,6 @@ const SettingsView = () => {
     setTempo(configToUse.tempo);
     setRhythm(configToUse.rhythm);
     setDroneType(configToUse.droneType);
-    setReferenceType(configToUse.referenceType);
     setRootNotePitch(configToUse.rootNotePitch);
     setSelectedInstrument(configToUse.instrument);
     setInstrumentMode(configToUse.instrumentMode);
@@ -85,7 +85,6 @@ const SettingsView = () => {
   const [tempo, setTempo] = useState(defaults.tempo);
   const [rhythm, setRhythm] = useState(defaults.rhythm);
   const [droneType, setDroneType] = useState(defaults.droneType);
-  const [referenceType, setReferenceType] = useState(defaults.referenceType);
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
   const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
   const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
@@ -122,7 +121,6 @@ const SettingsView = () => {
       tempo,
       rhythm,
       droneType,
-      referenceType,
       rootNotePitch,
       instrument: selectedInstrument,
       instrumentMode,
@@ -145,7 +143,6 @@ const SettingsView = () => {
     setTempo(settings.tempo);
     setRhythm(settings.rhythm);
     setDroneType(settings.droneType);
-    setReferenceType(settings.referenceType);
     setRootNotePitch(settings.rootNotePitch);
     setSelectedInstrument(settings.instrument);
     setInstrumentMode(settings.instrumentMode);
@@ -346,6 +343,10 @@ const SettingsView = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate("/global-settings")}>
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Global Settings
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/history")}>
                 <History className="h-4 w-4 mr-2" />
                 Practice History
@@ -645,35 +646,65 @@ const SettingsView = () => {
                 <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start">
-                      {selectedNotes.length} notes selected: {selectedNotes.map(i => INTERVAL_TO_SOLFEGE[i]).join(", ")}
+                      {selectedNotes.length === 12 
+                        ? "All 12 notes" 
+                        : `${selectedNotes.length} notes: ${selectedNotes.map(i => INTERVAL_TO_SOLFEGE[i]).filter(Boolean).join(", ")}`}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>Select Notes to Practice</DialogTitle>
-                      <DialogDescription>Choose which solfege notes you want to practice</DialogDescription>
+                      <DialogDescription>
+                        Click notes to toggle, or use buttons to bulk select
+                      </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-3 py-4">
-                      {SOLFEGE_NOTES.map((note) => {
-                        const interval = SOLFEGE_TO_INTERVAL[note];
-                        return (
-                          <div key={note} className="flex items-center space-x-3">
-                            <Checkbox
-                              id={note}
-                              checked={selectedNotes.includes(interval)}
-                              onCheckedChange={() => handleNoteToggle(interval)}
-                            />
-                            <Label
-                              htmlFor={note}
-                              className="text-base cursor-pointer flex-1 py-2"
-                            >
-                              {note}
-                            </Label>
-                          </div>
-                        );
-                      })}
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedNotes([0, 2, 4, 5, 7, 9, 11])}
+                        >
+                          Major Scale
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedNotes([1, 3, 6, 8, 10])}
+                        >
+                          Chromatic Only
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedNotes(Array.from({ length: 12 }, (_, i) => i))}
+                        >
+                          All Notes
+                        </Button>
+                      </div>
+                      <div className="flex justify-center overflow-x-auto">
+                        <SolfegeKeyboard
+                          rootMidi={60}
+                          onNotePress={(note) => {
+                            const noteInOctave = note % 12;
+                            setSelectedNotes(prev => {
+                              if (prev.includes(noteInOctave)) {
+                                return prev.filter(n => n !== noteInOctave);
+                              } else {
+                                return [...prev, noteInOctave].sort((a, b) => a - b);
+                              }
+                            });
+                          }}
+                          overlayNote={null}
+                          overlayNoteTick={null}
+                          disabled={false}
+                          range={[0, 11]}
+                        />
+                      </div>
+                      <Button onClick={() => setNotesDialogOpen(false)} className="w-full">
+                        Done
+                      </Button>
                     </div>
-                    <Button onClick={() => setNotesDialogOpen(false)}>Done</Button>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -779,26 +810,6 @@ const SettingsView = () => {
                     saveFavouriteInstruments(favourites);
                   }}
                 />
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Reference Type</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={referenceType === "root" ? "default" : "outline"}
-                    onClick={() => setReferenceType("root")}
-                    className="flex-1"
-                  >
-                    Root Note
-                  </Button>
-                  <Button
-                    variant={referenceType === "arpeggio" ? "default" : "outline"}
-                    onClick={() => setReferenceType("arpeggio")}
-                    className="flex-1"
-                  >
-                    Arpeggio
-                  </Button>
-                </div>
               </div>
 
               <div className="space-y-4">
