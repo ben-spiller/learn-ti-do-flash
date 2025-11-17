@@ -43,7 +43,7 @@ import {
 } from "@/utils/settingsStorage";
 import { InstrumentSelector } from "@/components/InstrumentSelector";
 
-const HomeView = () => {
+const SettingsView = () => {
   const navigate = useNavigate();
   
   // Load current configuration for initial exercise type or use defaults
@@ -863,4 +863,4 @@ const HomeView = () => {
   );
 };
 
-export default HomeView;
+export default SettingsView;
