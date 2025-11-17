@@ -100,13 +100,13 @@ export function InstrumentSelector({
 
         <Tabs value={localMode} onValueChange={(v) => setLocalMode(v as "single" | "random")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="single" className="flex items-center gap-2">
-              <Music className="h-4 w-4" />
-              Single Instrument
-            </TabsTrigger>
             <TabsTrigger value="random" className="flex items-center gap-2">
               <Shuffle className="h-4 w-4" />
               Random from Favourites
+            </TabsTrigger>
+            <TabsTrigger value="single" className="flex items-center gap-2">
+              <Music className="h-4 w-4" />
+              Single Instrument
             </TabsTrigger>
           </TabsList>
 

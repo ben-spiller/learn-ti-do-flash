@@ -486,7 +486,7 @@ const HomeSettingsView = () => {
             {exerciseType !== ExerciseType.IntervalComparison && (<>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Play Extra Notes</Label>
+                <Label className="text-base font-semibold">Play extra notes</Label>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -681,7 +681,7 @@ const HomeSettingsView = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Background Drone</Label>
+                <Label className="text-base font-semibold">Background drone note</Label>
                 <div className="flex gap-2">
                   <Button
                     variant={droneType === "none" ? "default" : "outline"}
