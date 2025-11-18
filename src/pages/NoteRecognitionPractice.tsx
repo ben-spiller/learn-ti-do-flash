@@ -369,7 +369,6 @@ const PracticeView = () => {
   };
 
   const handleFinish = () => {
-    console.log("finish: ", totalSequencesAnswered.current);
     savePracticeData();
     saveCurrentConfiguration(settings);
     // Save session data if at least one question was answered

@@ -202,10 +202,11 @@ const PracticeHistory = () => {
               <div className="text-3xl font-bold">{recentSession.avgSecsPerAnswer?.toFixed(1)}s</div>
               <div className="text-sm text-muted-foreground mt-1">Avg per Answer</div>
             </div>
+            {recentSession.exerciseName !== ExerciseType.IntervalComparison &&
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
               <div className="text-sm text-muted-foreground mt-1">Needs Practice</div>
-            </div>
+            </div>}
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
             {recentSession.correctAttempts} correct out of {recentSession.totalAttempts} attempts
@@ -216,7 +217,7 @@ const PracticeHistory = () => {
                 💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
                 Focus on the specific intervals and note sequences that you find most challenging,
                 {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType === "none" ? 
-                  "add a drone note to build a tonal mental model for hearing the notes, " : ""}
+                  " add a drone note to build a tonal mental model for hearing the notes, " : " reduce the tempo, "}
                 or try single note practice for a while.
               </p>
             </div>
@@ -225,7 +226,8 @@ const PracticeHistory = () => {
             <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
                 🎉 Excellent work! This exercise seems too easy for you. 
-                Try {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType !== "none" ? "removing the drone, " : ""}increasing 
+                Try {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType !== "none" ? 
+                " removing the drone, " : " increasing the tempo, "}increasing 
                 the number of notes, or expanding the note range.
               </p>
             </div>
@@ -274,7 +276,7 @@ const PracticeHistory = () => {
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground ml-1">
-                        ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : '(Start)'})
+                        ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : 'Start'})
                       </span>
                     </div>
                     <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
@@ -322,7 +324,8 @@ const PracticeHistory = () => {
                       note2Value: note2,
                       count,
                     };
-                  } catch {
+                  } catch (e) {
+                    console.warn("Confused pairs error: ", e);
                     return null;
                   }
                 })
@@ -356,6 +359,9 @@ const PracticeHistory = () => {
                           )}
                         </div>
                       </div>
+                      <span className="text-xs text-muted-foreground ml-1">
+                        ({Math.abs(pair.note1Value-pair.note2Value)} semitones)
+                      </span>
                       <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
                         <div 
                           className="h-full bg-gradient-to-r from-orange-500/70 to-orange-600/70 transition-all duration-500 flex items-center justify-end pr-3"
