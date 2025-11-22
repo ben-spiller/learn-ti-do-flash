@@ -359,26 +359,6 @@ const SolfegeKeyboardPage = () => {
             <TabsContent value="chords">
               <Card>
                 <CardContent className="pt-6">
-                  {/* Chord Variation Mode Buttons */}
-                  <div className="mb-4 flex gap-2">
-                    <Button
-                      variant={chordVariationMode === "7th" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setChordVariationMode("7th")}
-                      className="flex-1"
-                    >
-                      7th Chord
-                    </Button>
-                    <Button
-                      variant={chordVariationMode === "toggleMajorMinor" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setChordVariationMode("toggleMajorMinor")}
-                      className="flex-1"
-                    >
-                      Toggle Major/Minor
-                    </Button>
-                  </div>
-                  
                   <SolfegeKeyboard
                     rootMidi={rootMidi}
                     onNotePress={handleNotePress}
@@ -445,6 +425,35 @@ const SolfegeKeyboardPage = () => {
                 </Button>
               </div>
             </div>
+
+          {activeTab === "chords" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Chord variation (on hold/control)</label>
+              <div className="flex items-center gap-2">
+                  {/* Chord Variation Mode Buttons */}
+                  <div className="mb-4 flex gap-2">
+                    <Button
+                      variant={chordVariationMode === "7th" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setChordVariationMode("7th")}
+                      className="flex-1"
+                    >
+                      7th Chord
+                    </Button>
+                    <Button
+                      variant={chordVariationMode === "toggleMajorMinor" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setChordVariationMode("toggleMajorMinor")}
+                      className="flex-1"
+                    >
+                      Toggle Major/Minor
+                    </Button>
+                  </div>
+                </div>
+            </div>
+            )}
+
+
 
             {/* Drone Control */}
             <div className="space-y-2">
