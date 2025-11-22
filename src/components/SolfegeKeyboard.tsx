@@ -15,6 +15,8 @@ interface SolfegeKeyboardProps {
   range?: [SemitoneOffset, SemitoneOffset];
   /** If true, show chord labels with Roman numerals. */
   showChordLabels?: boolean;
+  /** Optional suffix to append to main button labels (e.g., " +variation") */
+  buttonSuffix?: string;
 }
 
 const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
@@ -25,6 +27,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   disabled = false,
   range = [0, 11],
   showChordLabels = false,
+  buttonSuffix = "",
 }) => {
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
@@ -195,7 +198,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
                 disabled={disabled}
               >
-                {solfege}
+                {solfege}{buttonSuffix}
                 {isLastPressed && overlayNoteTick !== null && (
                   <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">

@@ -39,6 +39,7 @@ const SolfegeKeyboardPage = () => {
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
   const [chordVariationMode, setChordVariationMode] = useState<"7th" | "toggleMajorMinor">("7th");
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   
   const currentInstrument = activeTab === "notes" ? settings.notesInstrument : settings.chordsInstrument;
   const currentVolume = activeTab === "notes" ? settings.notesVolume : settings.chordsVolume;
@@ -83,6 +84,29 @@ const SolfegeKeyboardPage = () => {
     return () => {
       stopDrone();
       stopSounds();
+    };
+  }, []);
+  
+  // Track ctrl/cmd key state for variation mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        setIsCtrlPressed(true);
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        setIsCtrlPressed(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
   
@@ -367,6 +391,7 @@ const SolfegeKeyboardPage = () => {
                     disabled={false}
                     range={[0, 11]}
                     showChordLabels={true}
+                    buttonSuffix={isCtrlPressed ? " +variation" : ""}
                   />
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
