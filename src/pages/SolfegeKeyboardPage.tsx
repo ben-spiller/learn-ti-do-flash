@@ -210,6 +210,9 @@ const SolfegeKeyboardPage = () => {
         playNote(rootNote3, 2);
         playNote(rootNote3 + fifth, 2);
         playNote(rootNote3 + 12, 2);
+        if (seventh !== null) {
+          playNote(rootNote3 + seventh, 2);
+        }
         
         // Octave 4: root, 3rd, 5th, (7th if applicable)
         playNote(rootNote4, 2);
