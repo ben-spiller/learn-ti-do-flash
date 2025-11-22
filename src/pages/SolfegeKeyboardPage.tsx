@@ -38,6 +38,7 @@ const SolfegeKeyboardPage = () => {
   const [isAudioLoaded, setAudioLoaded] = useState(false);
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
+  const [chordVariationMode, setChordVariationMode] = useState<"7th" | "toggleMajorMinor">("7th");
   
   const currentInstrument = activeTab === "notes" ? settings.notesInstrument : settings.chordsInstrument;
   const currentVolume = activeTab === "notes" ? settings.notesVolume : settings.chordsVolume;
@@ -140,7 +141,7 @@ const SolfegeKeyboardPage = () => {
     }
   };
   
-  const handleNotePress = (note: SemitoneOffset) => {
+  const handleNotePress = (note: SemitoneOffset, isVariation: boolean = false) => {
     if (isSelectingRoot) {
       // Set the root note based on the selected semitone
       const newRootNote = midiToNoteName(rootMidi + note);
@@ -148,28 +149,58 @@ const SolfegeKeyboardPage = () => {
       setIsSelectingRoot(false);
     } else {
       stopSounds();
-      //console.log(`Playing note: ${note + rootMidi} (semitone offset: ${note}) with activeTab=${activeTab}`);
       if (activeTab === "chords") {
         // Determine chord quality based on scale degree
         const scaleDegree = note % 12;
         let third: number;
         let fifth: number;
+        let seventh: number | null = null;
         
-        // Major scale chord qualities:
-        // I (0), IV (5), V (7) = Major (major 3rd, perfect 5th)
-        // ii (2), iii (4), vi (9) = minor (minor 3rd, perfect 5th)
-        // vii° (11) = diminished (minor 3rd, diminished 5th)
+        // Base chord qualities
+        let isMajor: boolean;
+        let isDiminished = false;
+        
         if (scaleDegree === 11) {
           // Diminished chord
+          isMajor = false;
+          isDiminished = true;
           third = 3;
           fifth = 6;
         } else if (scaleDegree === 2 || scaleDegree === 4 || scaleDegree === 9) {
           // minor chord (2, 4, 9)
+          isMajor = false;
           third = 3;
           fifth = 7;
-        } else { // 0,3,7 plus chromatic notes (e.g. bVII, bVI) are major
+        } else {
+          // Major chord
+          isMajor = true;
           third = 4;
           fifth = 7;
+        }
+        
+        // Apply variation
+        if (isVariation) {
+          if (chordVariationMode === "7th") {
+            // Add 7th chord
+            if (isDiminished) {
+              seventh = 9; // diminished 7th
+            } else if (isMajor && scaleDegree === 0) {
+              seventh = 11; // Major 7th for I chord
+            } else if (isMajor) {
+              seventh = 10; // Dominant 7th for other major chords
+            } else {
+              seventh = 10; // minor 7th
+            }
+          } else if (chordVariationMode === "toggleMajorMinor") {
+            // Toggle major/minor (swap 3rd)
+            if (isDiminished) {
+              // Diminished becomes minor
+              third = 3;
+              fifth = 7;
+            } else {
+              third = isMajor ? 3 : 4; // Swap major 3rd with minor 3rd
+            }
+          }
         }
         
         const rootNote3 = (rootMidi-12) + note;
@@ -180,10 +211,13 @@ const SolfegeKeyboardPage = () => {
         playNote(rootNote3 + fifth, 2);
         playNote(rootNote3 + 12, 2);
         
-        // Octave 4: root, 3rd, 5th
+        // Octave 4: root, 3rd, 5th, (7th if applicable)
         playNote(rootNote4, 2);
         playNote(rootNote4 + third, 2);
         playNote(rootNote4 + fifth, 2);
+        if (seventh !== null) {
+          playNote(rootNote4 + seventh, 2);
+        }
       } else {
         // Normal single note playing
         playNote(note + rootMidi);
@@ -322,6 +356,26 @@ const SolfegeKeyboardPage = () => {
             <TabsContent value="chords">
               <Card>
                 <CardContent className="pt-6">
+                  {/* Chord Variation Mode Buttons */}
+                  <div className="mb-4 flex gap-2">
+                    <Button
+                      variant={chordVariationMode === "7th" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setChordVariationMode("7th")}
+                      className="flex-1"
+                    >
+                      7th Chord
+                    </Button>
+                    <Button
+                      variant={chordVariationMode === "toggleMajorMinor" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setChordVariationMode("toggleMajorMinor")}
+                      className="flex-1"
+                    >
+                      Toggle Major/Minor
+                    </Button>
+                  </div>
+                  
                   <SolfegeKeyboard
                     rootMidi={rootMidi}
                     onNotePress={handleNotePress}
@@ -334,7 +388,7 @@ const SolfegeKeyboardPage = () => {
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
                       ? "Click a note to set as root note" 
-                      : "Click to play chords built on each scale degree"}
+                      : "Click for chord, hold or Ctrl+click for variation"}
                   </div>
                 </CardContent>
               </Card>

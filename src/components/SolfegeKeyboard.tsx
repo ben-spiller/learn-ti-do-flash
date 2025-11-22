@@ -6,7 +6,7 @@ import { getNoteButtonColor } from "@/utils/noteStyles";
 
 interface SolfegeKeyboardProps {
   rootMidi: number;
-  onNotePress: (note: SemitoneOffset) => void;
+  onNotePress: (note: SemitoneOffset, isVariation?: boolean) => void;
   /** If true, show a tick overlay icon, if false a cross, if null then nothing. */
   overlayNoteTick: boolean | null;
   overlayNote: SemitoneOffset | null;
@@ -83,6 +83,10 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   // Ref for scrolling to the main octave center
   const mainOctaveCenterRef = useRef<HTMLDivElement>(null);
   
+  // State for handling long press
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isPressedRef = useRef(false);
+  
   // Scroll to center the main octave on mount
   useEffect(() => {
     if (mainOctaveCenterRef.current) {
@@ -91,6 +95,54 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
         block: 'center' 
       });
     }
+  }, []);
+  
+  // Handle note press with variation detection
+  const handleButtonPress = (pitch: SemitoneOffset, event: React.MouseEvent | React.TouchEvent) => {
+    if (disabled) return;
+    
+    // Check if ctrl/cmd key is pressed
+    const isCtrlPressed = 'ctrlKey' in event ? event.ctrlKey || event.metaKey : false;
+    
+    if (isCtrlPressed) {
+      // Immediate variation trigger
+      onNotePress(pitch, true);
+    } else {
+      // Normal press - will be triggered on release if not long press
+      isPressedRef.current = true;
+      
+      // Start long press timer
+      pressTimerRef.current = setTimeout(() => {
+        if (isPressedRef.current) {
+          // Long press detected - trigger variation
+          onNotePress(pitch, true);
+          isPressedRef.current = false; // Prevent normal press on release
+        }
+      }, 500);
+    }
+  };
+  
+  const handleButtonRelease = (pitch: SemitoneOffset) => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    
+    // If still marked as pressed, it's a normal click (not long press or ctrl)
+    if (isPressedRef.current) {
+      onNotePress(pitch, false);
+    }
+    
+    isPressedRef.current = false;
+  };
+  
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+      }
+    };
   }, []);
 
   // Build a map from diatonic note -> top offset (rem), and compute total column height
@@ -135,7 +187,11 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
               style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}
             >
               <Button
-                onClick={() => onNotePress(pitch)}
+                onMouseDown={(e) => handleButtonPress(pitch, e)}
+                onMouseUp={() => handleButtonRelease(pitch)}
+                onMouseLeave={() => handleButtonRelease(pitch)}
+                onTouchStart={(e) => handleButtonPress(pitch, e)}
+                onTouchEnd={() => handleButtonRelease(pitch)}
                 className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
                 disabled={disabled}
               >
@@ -181,7 +237,11 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
             <div key={pitch} className="absolute w-full" style={{ top: `${top}rem` }}>
               <div className={''}>
                 <Button
-                  onClick={() => onNotePress(pitch)}
+                  onMouseDown={(e) => handleButtonPress(pitch, e)}
+                  onMouseUp={() => handleButtonRelease(pitch)}
+                  onMouseLeave={() => handleButtonRelease(pitch)}
+                  onTouchStart={(e) => handleButtonPress(pitch, e)}
+                  onTouchEnd={() => handleButtonRelease(pitch)}
                   className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'}`}
                   disabled={disabled}
                   title={semitonesToSolfege(pitch, true, showChordLabels)}
