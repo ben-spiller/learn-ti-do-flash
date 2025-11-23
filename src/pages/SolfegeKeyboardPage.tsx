@@ -38,7 +38,7 @@ const SolfegeKeyboardPage = () => {
   const [isAudioLoaded, setAudioLoaded] = useState(false);
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
-  const [chordVariationMode, setChordVariationMode] = useState<"7th" | "toggleMajorMinor">("7th");
+  const [chordVariationMode, setChordVariationMode] = useState<"7th" | "Major/minor toggle">("7th");
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   
   const currentInstrument = activeTab === "notes" ? settings.notesInstrument : settings.chordsInstrument;
@@ -215,7 +215,7 @@ const SolfegeKeyboardPage = () => {
             } else {
               seventh = 10; // minor 7th
             }
-          } else if (chordVariationMode === "toggleMajorMinor") {
+          } else if (chordVariationMode === "Major/minor toggle") {
             // Toggle major/minor (swap 3rd)
             if (isDiminished) {
               // Diminished becomes minor
@@ -391,7 +391,7 @@ const SolfegeKeyboardPage = () => {
                     disabled={false}
                     range={[0, 11]}
                     showChordLabels={true}
-                    buttonSuffix={isCtrlPressed ? " +variation" : ""}
+                    buttonSuffix={isCtrlPressed ? (chordVariationMode.indexOf(" ")>0 ? " + ":" ")+chordVariationMode : ""}
                   />
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
@@ -456,8 +456,7 @@ const SolfegeKeyboardPage = () => {
               <label className="text-sm font-medium">Chord variation (on hold/control)</label>
               <div className="flex items-center gap-2">
                   {/* Chord Variation Mode Buttons */}
-                  <div className="mb-4 flex gap-2">
-                    <Button
+                  <Button
                       variant={chordVariationMode === "7th" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setChordVariationMode("7th")}
@@ -466,14 +465,14 @@ const SolfegeKeyboardPage = () => {
                       7th Chord
                     </Button>
                     <Button
-                      variant={chordVariationMode === "toggleMajorMinor" ? "default" : "outline"}
+                      variant={chordVariationMode === "Major/minor toggle" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setChordVariationMode("toggleMajorMinor")}
+                      onClick={() => setChordVariationMode("Major/minor toggle")}
                       className="flex-1"
                     >
-                      Toggle Major/Minor
+                      Major/Minor toggle
                     </Button>
-                  </div>
+                  
                 </div>
             </div>
             )}
