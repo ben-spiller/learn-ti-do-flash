@@ -138,7 +138,7 @@ export class ConfigData {
   droneType: "none" | "root" = "none";
   rootNotePitch: MidiNoteName = "C4";
   instrument: string = "acoustic_grand_piano";
-  instrumentMode: "single" | "random" = "single";
+  instrumentMode: "single" | "random" = "random";
 
 
   /** Pick the instrument to use for this session based on the instrument mode */
