@@ -40,8 +40,11 @@ const PracticeView = () => {
   /** The MIDI note of the root/do note for this particular exercise (may be randomly selected based on the config) */  
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNotePitch)+(Math.floor(Math.random() * 6)-3));
 
+  /** The previous question sequence, to avoid duplication */
   const prevSequence = useRef<SemitoneOffset[]>([]);
   const totalSequencesAnswered = useRef(0);
+
+  /** The notes for the current question (relative to the root) */
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
   const sequenceItems = useRef<Array<{ note: number; duration: number; gapAfter: number }>>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -251,10 +254,23 @@ const PracticeView = () => {
     setIsPlaying(false);
   };
 
+  /** Uses whichever octave was most recently used in the current sequence for the specified note, if any */
+  const moveNoteToMostRecentOctave = (note: SemitoneOffset): SemitoneOffset => {
+    let result = note;
+    let index = 0;
+    for (const seqNote of sequence) {
+      if (index++ > currentPosition) break; // don't look into the future
+      if (semitonesToOneOctave(note) === semitonesToOneOctave(seqNote))
+        result = seqNote;
+    }
+
+    return result;
+  }
+
   const handleNotePress = (selectedNote: SemitoneOffset) => {
     if (isQuestionComplete(currentPosition)) { // at the end, just play whatever they pressed
       stopSounds();
-      playNote(selectedNote+rootMidi);
+      playNote(moveNoteToMostRecentOctave(selectedNote)+rootMidi);
       return;
     }
 
@@ -312,7 +328,7 @@ const PracticeView = () => {
     } else {
       // Play the wrong note that was pressed
       stopSounds();
-      playNote(selectedNote+rootMidi);
+      playNote(moveNoteToMostRecentOctave(selectedNote)+rootMidi);
 
       // Update wrong answer count
       wrong2NoteSequences.current.set(pairKey, (wrong2NoteSequences.current.get(pairKey) || 0) + 1);
