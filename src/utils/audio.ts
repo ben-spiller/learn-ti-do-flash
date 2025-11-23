@@ -508,8 +508,19 @@ export const preloadInstrumentWithGesture = async (
   const rangeKey = normalizeRangeKey(predecodeNotes);
   const key = `${instrumentToUse}|${rangeKey}`;
 
-  // If already fully preloaded, immediately notify and resolve
+  // If already fully preloaded, check if we need to switch instruments
   if (_preloadedDone[key]) {
+    // If switching to a different instrument that's already preloaded, update current instrument
+    if (instrumentToUse !== currentInstrument) {
+      console.info(`Switching from ${currentInstrument} to already-preloaded ${instrumentToUse}`);
+      if (toneInstrument && typeof toneInstrument.dispose === 'function') {
+        try { toneInstrument.dispose(); } catch (_) {}
+      }
+      toneInstrument = null;
+      currentInstrument = instrumentToUse;
+      // Recreate the instrument (already loaded, so this should be fast)
+      await createToneInstrument(instrumentToUse);
+    }
     progressCallback?.(1, 1);
     return Promise.resolve(true);
   }
