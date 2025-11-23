@@ -652,7 +652,11 @@ export const isAudioInitialized = (instrument?: string) => {
   return toneLoaded && toneInstrument !== null && currentInstrument === targetInstrument;
 };
 
-export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, durationSecs: number = 0.7, when?: number) => {
+export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, durationSecs: number = 0.7, when?: number, cancelOtherNotes?: boolean) => {
+  if (cancelOtherNotes) {
+    (window as any).Tone.Transport.cancel();
+  }
+
   // note may be a MIDI number (preferred), or a note name like 'C4'
   let noteName: string | null = null;
   if (typeof midiNote === 'number') {
@@ -713,6 +717,8 @@ type SequenceItem = { note: MidiNoteNumber | MidiNoteName; duration?: number; ga
 
 export const playSequence = async (items: Array<SequenceItem | MidiNoteNumber | MidiNoteName>, 
     defaultGap: number = 0.1, defaultDuration: number = 0.7) => {
+  (window as any).Tone.Transport.cancel();
+
   // Convert items to SequenceItem
   const seq: SequenceItem[] = items.map(it => {
     if (typeof it === 'number' || typeof it === 'string') return { note: it, duration: defaultDuration, gapAfter: defaultGap };
@@ -840,6 +846,7 @@ export const stopSounds = () => {
   
   // Stop instrument notes (if using Tone.js PolySynth)
   if (toneInstrument) {
+    (window as any).Tone.Transport.cancel();
     try {
       if (typeof toneInstrument.releaseAll === 'function') {
         toneInstrument.releaseAll();
