@@ -311,7 +311,8 @@ const HomeSettingsView = () => {
           <CardDescription>Functional ear practice with solfege keyboard</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Saved Configurations - Card Grid */}
+        {/* 
+          {/* Saved Configurations - Card Grid *}
           <div className="mb-6 pb-6 border-b">
             <div className="flex items-center justify-between mb-3">
               <Label className="text-sm font-medium">My Configurations</Label>
@@ -423,7 +424,7 @@ const HomeSettingsView = () => {
                 No saved configurations yet. Click "Save" to create your first one.
               </p>
             )}
-          </div>
+          </div> */}
           <Tabs defaultValue="practice" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="practice">Practice</TabsTrigger>
