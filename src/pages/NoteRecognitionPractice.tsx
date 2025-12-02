@@ -342,7 +342,7 @@ const PracticeView = () => {
       // Add to needsPractice for the CORRECT note (+3 if first wrong answer or in the danger zone, +1 otherwise)
       let needsPracticeCount = (needsPractice.current.get(pairKey) || 0);
       // put an upper bound on the severity of each one to avoid it getting crazy
-      const maxNeedsPractice = 20;
+      const maxNeedsPractice = 10;
       needsPractice.current.set(pairKey, Math.min(maxNeedsPractice, needsPracticeCount + (
         (needsPracticeCount <3) ? +3 : +1)));
       
