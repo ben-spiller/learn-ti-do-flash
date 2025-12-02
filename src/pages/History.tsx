@@ -531,19 +531,19 @@ const PracticeHistory = () => {
                               return dataPoint;
                             });
                             
-                            const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+                            const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3'];
                             const intervals = Array.from(intervalGroups.keys());
                             
                             return (
                               <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <YAxis domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
                                 <Legend />
                                 {intervals.map((interval, idx) => (
                                   <Line
-                                    key={interval}
+                                    key={`line-${interval}`}
                                     type="monotone"
                                     dataKey={interval}
                                     name={interval}
@@ -566,18 +566,18 @@ const PracticeHistory = () => {
                             
                             return (
                               <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <YAxis yAxisId="left" domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <YAxis yAxisId="right" orientation="right" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <YAxis yAxisId="left" domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <YAxis yAxisId="right" orientation="right" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
                                 <Legend />
                                 <Line
                                   yAxisId="left"
                                   type="monotone"
                                   dataKey="score"
                                   name="Score %"
-                                  stroke="hsl(var(--chart-1))"
+                                  stroke="#7c3aed"
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
                                 />
@@ -586,7 +586,7 @@ const PracticeHistory = () => {
                                   type="monotone"
                                   dataKey="severity"
                                   name="Needs Practice Severity"
-                                  stroke="hsl(var(--chart-2))"
+                                  stroke="#f59e0b"
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
                                 />
