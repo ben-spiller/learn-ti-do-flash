@@ -494,45 +494,83 @@ const PracticeHistory = () => {
               </Card>
               </>)}
 
-              {/* Progress Chart */}
-              {exerciseSessions.length > 1 && (
+              {/* Progress Charts */}
+              {exerciseSessions.length > 1 && exerciseKey === ExerciseType.IntervalComparison && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Progress over time</CardTitle>
+                    <CardTitle>Score by interval</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
-                        {exerciseKey === ExerciseType.IntervalComparison ? (
-                          (() => {
-                            // Group sessions by interval and prepare chart data
-                            const intervalGroups = new Map<string, { date: string; score: number }[]>();
-                            exerciseSessions.forEach(session => {
-                              const interval = semitonesToInterval(session.settings.intervalToFind);
-                              if (!intervalGroups.has(interval)) {
-                                intervalGroups.set(interval, []);
-                              }
-                              intervalGroups.get(interval)!.push({
-                                date: format(new Date(session.sessionDate), 'dd/MM'),
-                                score: session.score,
-                              });
-                            });
-                            
-                            // Build unified chart data with all dates
-                            const allDates = [...new Set(exerciseSessions.map(s => format(new Date(s.sessionDate), 'dd/MM')))];
-                            const chartData = allDates.map(date => {
-                              const dataPoint: any = { date };
-                              intervalGroups.forEach((sessions, interval) => {
-                                const sessionForDate = sessions.find(s => s.date === date);
-                                if (sessionForDate) {
-                                  dataPoint[interval] = sessionForDate.score;
-                                }
-                              });
-                              return dataPoint;
-                            });
-                            
-                            const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3'];
-                            const intervals = Array.from(intervalGroups.keys());
+                        {(() => {
+                          // Build chart data with each session as a separate point
+                          const chartData = exerciseSessions.map((session, idx) => {
+                            const interval = semitonesToInterval(session.settings.intervalToFind);
+                            return {
+                              idx,
+                              date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
+                              interval,
+                              score: session.score,
+                            };
+                          });
+                          
+                          // Get all unique intervals
+                          const intervals = [...new Set(chartData.map(d => d.interval))];
+                          const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3'];
+                          
+                          // Transform to have each interval as a separate line
+                          const transformedData = chartData.map((point, idx) => {
+                            const dataPoint: any = { idx, date: point.date };
+                            if (point.interval) {
+                              dataPoint[point.interval] = point.score;
+                            }
+                            return dataPoint;
+                          });
+                          
+                          return (
+                            <LineChart data={transformedData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                              <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                              <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
+                              <Legend />
+                              {intervals.map((interval, idx) => (
+                                <Line
+                                  key={`line-${interval}`}
+                                  type="monotone"
+                                  dataKey={interval}
+                                  name={interval}
+                                  stroke={colors[idx % colors.length]}
+                                  strokeWidth={2}
+                                  dot={{ r: 4 }}
+                                  connectNulls
+                                />
+                              ))}
+                            </LineChart>
+                          );
+                        })()}
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {exerciseSessions.length > 1 && exerciseKey !== ExerciseType.IntervalComparison && (
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Score over time</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          {(() => {
+                            const chartData = exerciseSessions.map((session, idx) => ({
+                              idx,
+                              date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
+                              score: session.score,
+                            }));
                             
                             return (
                               <LineChart data={chartData}>
@@ -540,40 +578,7 @@ const PracticeHistory = () => {
                                 <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
                                 <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
                                 <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
-                                <Legend />
-                                {intervals.map((interval, idx) => (
-                                  <Line
-                                    key={`line-${interval}`}
-                                    type="monotone"
-                                    dataKey={interval}
-                                    name={interval}
-                                    stroke={colors[idx % colors.length]}
-                                    strokeWidth={2}
-                                    dot={{ r: 4 }}
-                                    connectNulls
-                                  />
-                                ))}
-                              </LineChart>
-                            );
-                          })()
-                        ) : (
-                          (() => {
-                            const chartData = exerciseSessions.map(session => ({
-                              date: format(new Date(session.sessionDate), 'dd/MM'),
-                              score: session.score,
-                              severity: session.needsPracticeTotalSeverity || 0,
-                            }));
-                            
-                            return (
-                              <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
-                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                                <YAxis yAxisId="left" domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                                <YAxis yAxisId="right" orientation="right" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
-                                <Legend />
                                 <Line
-                                  yAxisId="left"
                                   type="monotone"
                                   dataKey="score"
                                   name="Score %"
@@ -581,8 +586,35 @@ const PracticeHistory = () => {
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
                                 />
+                              </LineChart>
+                            );
+                          })()}
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Needs practice severity over time</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          {(() => {
+                            const chartData = exerciseSessions.map((session, idx) => ({
+                              idx,
+                              date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
+                              severity: session.needsPracticeTotalSeverity || 0,
+                            }));
+                            
+                            return (
+                              <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <YAxis tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
                                 <Line
-                                  yAxisId="right"
                                   type="monotone"
                                   dataKey="severity"
                                   name="Needs Practice Severity"
@@ -592,12 +624,12 @@ const PracticeHistory = () => {
                                 />
                               </LineChart>
                             );
-                          })()
-                        )}
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
+                          })()}
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
               )}
 
               {/* All Sessions for this Exercise */}
