@@ -498,7 +498,7 @@ const PracticeHistory = () => {
               {exerciseSessions.length > 1 && exerciseKey === ExerciseType.IntervalComparison && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Score by interval</CardTitle>
+                    <CardTitle>Score % by interval</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-64">
@@ -558,45 +558,10 @@ const PracticeHistory = () => {
 
               {exerciseSessions.length > 1 && exerciseKey !== ExerciseType.IntervalComparison && (
                 <>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Score over time</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                          {(() => {
-                            const chartData = exerciseSessions.map((session, idx) => ({
-                              idx,
-                              date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
-                              score: session.score,
-                            }));
-                            
-                            return (
-                              <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
-                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                                <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
-                                <Line
-                                  type="monotone"
-                                  dataKey="score"
-                                  name="Score %"
-                                  stroke="#7c3aed"
-                                  strokeWidth={2}
-                                  dot={{ r: 4 }}
-                                />
-                              </LineChart>
-                            );
-                          })()}
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Needs practice severity over time</CardTitle>
+                      <CardTitle>Needs practice</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="h-48">
@@ -618,7 +583,7 @@ const PracticeHistory = () => {
                                   type="monotone"
                                   dataKey="severity"
                                   name="Needs Practice Severity"
-                                  stroke="#f59e0b"
+                                  stroke="red"
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
                                 />
@@ -629,6 +594,43 @@ const PracticeHistory = () => {
                       </div>
                     </CardContent>
                   </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Score %</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          {(() => {
+                            const chartData = exerciseSessions.map((session, idx) => ({
+                              idx,
+                              date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
+                              score: session.score,
+                            }));
+                            
+                            return (
+                              <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                                <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
+                                <Line
+                                  type="monotone"
+                                  dataKey="score"
+                                  name="Score %"
+                                  stroke="lightgreen"
+                                  strokeWidth={2}
+                                  dot={{ r: 4 }}
+                                />
+                              </LineChart>
+                            );
+                          })()}
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                 </>
               )}
 
