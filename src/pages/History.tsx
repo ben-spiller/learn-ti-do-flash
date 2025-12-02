@@ -498,7 +498,7 @@ const PracticeHistory = () => {
               {exerciseSessions.length > 1 && exerciseKey === ExerciseType.IntervalComparison && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Score % by interval</CardTitle>
+                    <CardTitle>Score % by interval to find</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-64">
