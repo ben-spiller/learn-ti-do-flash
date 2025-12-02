@@ -349,7 +349,7 @@ const PracticeView = () => {
       // Also increment needsPractice for the INCORRECT note that was entered
       const incorrectPairKey = `${prevInterval},${selectedNote}`;
       const incorrectNeedsPracticeCount = (needsPractice.current.get(incorrectPairKey) || 0);
-      needsPractice.current.set(incorrectPairKey, incorrectNeedsPracticeCount + 1);
+      needsPractice.current.set(incorrectPairKey, Math.min(maxNeedsPractice, incorrectNeedsPracticeCount + 1));
       
       // Clear feedback after animation
       setTimeout(() => {
