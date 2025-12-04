@@ -614,23 +614,43 @@ const HomeSettingsView = () => {
                     <div className="space-y-4">
                       <div className="flex gap-2">
                         <Button
-                          variant="outline"
+                          variant={JSON.stringify(selectedNotes) === JSON.stringify([0, 2, 4, 5, 7, 9, 11]) ? "default" : "outline"}
                           size="sm"
-                          onClick={() => setSelectedNotes([0, 2, 4, 5, 7, 9, 11])}
+                          onClick={() => {
+                            const majorScale = [0, 2, 4, 5, 7, 9, 11];
+                            if (JSON.stringify(selectedNotes) === JSON.stringify(majorScale)) {
+                              setSelectedNotes([]);
+                            } else {
+                              setSelectedNotes(majorScale);
+                            }
+                          }}
                         >
                           Major Scale
                         </Button>
                         <Button
-                          variant="outline"
+                          variant={JSON.stringify(selectedNotes) === JSON.stringify([1, 3, 6, 8, 10]) ? "default" : "outline"}
                           size="sm"
-                          onClick={() => setSelectedNotes([1, 3, 6, 8, 10])}
+                          onClick={() => {
+                            const chromatic = [1, 3, 6, 8, 10];
+                            if (JSON.stringify(selectedNotes) === JSON.stringify(chromatic)) {
+                              setSelectedNotes([]);
+                            } else {
+                              setSelectedNotes(chromatic);
+                            }
+                          }}
                         >
                           Chromatic Only
                         </Button>
                         <Button
-                          variant="outline"
+                          variant={selectedNotes.length === 12 ? "default" : "outline"}
                           size="sm"
-                          onClick={() => setSelectedNotes(Array.from({ length: 12 }, (_, i) => i))}
+                          onClick={() => {
+                            if (selectedNotes.length === 12) {
+                              setSelectedNotes([]);
+                            } else {
+                              setSelectedNotes(Array.from({ length: 12 }, (_, i) => i));
+                            }
+                          }}
                         >
                           All Notes
                         </Button>
@@ -652,6 +672,7 @@ const HomeSettingsView = () => {
                           overlayNoteTick={null}
                           disabled={false}
                           range={[0, 11]}
+                          selectedNotes={selectedNotes}
                         />
                       </div>
                       <Button onClick={() => setNotesDialogOpen(false)} className="w-full">

@@ -17,6 +17,8 @@ interface SolfegeKeyboardProps {
   showChordLabels?: boolean;
   /** Optional suffix to append to main button labels (e.g., " +variation") */
   buttonSuffix?: string;
+  /** Array of selected note pitch classes (0-11) for visual indication */
+  selectedNotes?: number[];
 }
 
 const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
@@ -28,7 +30,14 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   range = [0, 11],
   showChordLabels = false,
   buttonSuffix = "",
+  selectedNotes,
 }) => {
+  // Helper to check if a note is selected (by pitch class 0-11)
+  const isNoteSelected = (pitch: SemitoneOffset) => {
+    if (!selectedNotes) return true; // If no selection tracking, all appear selected
+    const pitchClass = ((pitch % 12) + 12) % 12;
+    return selectedNotes.includes(pitchClass);
+  };
   // Shared spacing constants used by both the solfege column and the chromatic column.
   // Units: rem for the layout math, and Tailwind margin classes for the button stack.
   const WIDE_GAP_REM = 1.0; // rem - used for both solfege stack spacing and chromatic math
@@ -195,7 +204,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 onMouseLeave={() => handleButtonRelease(pitch)}
                 onTouchStart={(e) => handleButtonPress(pitch, e)}
                 onTouchEnd={() => handleButtonRelease(pitch)}
-                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'}`}
+                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : 'opacity-40'}`}
                 disabled={disabled}
               >
                 {solfege}{buttonSuffix}
@@ -245,7 +254,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                   onMouseLeave={() => handleButtonRelease(pitch)}
                   onTouchStart={(e) => handleButtonPress(pitch, e)}
                   onTouchEnd={() => handleButtonRelease(pitch)}
-                  className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'}`}
+                  className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : 'opacity-40'}`}
                   disabled={disabled}
                   title={semitonesToSolfege(pitch, true, showChordLabels)}
                 >
