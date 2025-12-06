@@ -173,7 +173,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   const isInMainOctave = (semitone: SemitoneOffset) => semitone >= 0 && semitone <= 11;
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2" style={{ margin: "8px" /* Margin is to give space for selected notes */}}> 
       {/* Main (major scale / solfege) notes column */}
       <div className="flex-1 flex flex-col">
         {majorScaleNotes.map((pitch, index) => {
