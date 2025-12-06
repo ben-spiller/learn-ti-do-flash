@@ -5,7 +5,6 @@ import { SemitoneOffset, MAJOR_SCALE_PITCH_CLASSES, semitonesToSolfege } from "@
 import { getNoteButtonColor } from "@/utils/noteStyles";
 
 interface SolfegeKeyboardProps {
-  rootMidi: number;
   onNotePress: (note: SemitoneOffset, isVariation?: boolean) => void;
   /** If true, show a tick overlay icon, if false a cross, if null then nothing. */
   overlayNoteTick: boolean | null;
@@ -17,12 +16,11 @@ interface SolfegeKeyboardProps {
   showChordLabels?: boolean;
   /** Optional suffix to append to main button labels (e.g., " +variation") */
   buttonSuffix?: string;
-  /** Array of selected note pitch classes (0-11) for visual indication */
+  /** Array of selected note pitch classes (0-11) for visual indication when using this control for selecting */
   selectedNotes?: number[];
 }
 
 const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
-  rootMidi,
   onNotePress,
   overlayNote = null,
   overlayNoteTick = null,
@@ -34,7 +32,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
 }) => {
   // Helper to check if a note is selected (by pitch class 0-11)
   const isNoteSelected = (pitch: SemitoneOffset) => {
-    if (!selectedNotes) return true; // If no selection tracking, all appear selected
+    if (!selectedNotes) return false; // If no selection tracking, none appear selected
     const pitchClass = ((pitch % 12) + 12) % 12;
     return selectedNotes.includes(pitchClass);
   };
@@ -204,7 +202,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 onMouseLeave={() => handleButtonRelease(pitch)}
                 onTouchStart={(e) => handleButtonPress(pitch, e)}
                 onTouchEnd={() => handleButtonRelease(pitch)}
-                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : 'opacity-40'}`}
+                className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : ''}`}
                 disabled={disabled}
               >
                 {solfege}{buttonSuffix}
