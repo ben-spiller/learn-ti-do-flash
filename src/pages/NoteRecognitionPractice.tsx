@@ -538,7 +538,6 @@ const PracticeView = () => {
         <div className="w-full max-w-2xl space-y-4">
           {/* Musical note button div at the top */}
           <SolfegeKeyboard
-            rootMidi={rootMidi}
             onNotePress={handleNotePress}
             overlayNote={lastPressedNote}
             overlayNoteTick={lastPressedWasCorrect}

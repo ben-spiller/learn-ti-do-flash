@@ -364,7 +364,6 @@ const SolfegeKeyboardPage = () => {
               <Card>
                 <CardContent className="pt-6">
                   <SolfegeKeyboard
-                    rootMidi={rootMidi}
                     onNotePress={handleNotePress}
                     overlayNote={lastPressedNote}
                     overlayNoteTick={null}
@@ -384,7 +383,6 @@ const SolfegeKeyboardPage = () => {
               <Card>
                 <CardContent className="pt-6">
                   <SolfegeKeyboard
-                    rootMidi={rootMidi}
                     onNotePress={handleNotePress}
                     overlayNote={lastPressedNote}
                     overlayNoteTick={null}

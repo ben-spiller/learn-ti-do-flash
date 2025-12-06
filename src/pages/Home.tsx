@@ -657,7 +657,6 @@ const HomeSettingsView = () => {
                       </div>
                       <div className="flex justify-center overflow-x-auto">
                         <SolfegeKeyboard
-                          rootMidi={60}
                           onNotePress={(note) => {
                             const noteInOctave = note % 12;
                             setSelectedNotes(prev => {
