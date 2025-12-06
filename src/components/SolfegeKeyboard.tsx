@@ -106,11 +106,22 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
       });
     }
   }, []);
-  
+
+  const shouldIgnoreTouchEvent  = (e: React.MouseEvent | React.TouchEvent) => {
+    if (e.nativeEvent instanceof TouchEvent) {
+      const touch = e.nativeEvent.changedTouches[0]; // the finger that ended
+      const endTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (endTarget !== e.currentTarget) {
+        return true; // Touch moved away to another element
+      } 
+    }
+    return false;
+  }
+
   // Handle note press with variation detection
   const handleButtonPress = (pitch: SemitoneOffset, event: React.MouseEvent | React.TouchEvent) => {
-    if (disabled) return;
-    
+    if (disabled || shouldIgnoreTouchEvent(event)) return;
+
     // Check if ctrl/cmd key is pressed
     const isCtrlPressed = 'ctrlKey' in event ? event.ctrlKey || event.metaKey : false;
     
@@ -132,14 +143,14 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
     }
   };
   
-  const handleButtonRelease = (pitch: SemitoneOffset) => {
+  const handleButtonRelease = (pitch: SemitoneOffset, event: React.MouseEvent | React.TouchEvent) => {
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
     }
     
     // If still marked as pressed, it's a normal click (not long press or ctrl)
-    if (isPressedRef.current) {
+    if (isPressedRef.current && !shouldIgnoreTouchEvent(event)) {
       onNotePress(pitch, false);
     }
     
@@ -198,10 +209,10 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
             >
               <Button
                 onMouseDown={(e) => handleButtonPress(pitch, e)}
-                onMouseUp={() => handleButtonRelease(pitch)}
-                onMouseLeave={() => handleButtonRelease(pitch)}
+                onMouseUp={(e) => handleButtonRelease(pitch, e)}
+                onMouseLeave={(e) => handleButtonRelease(pitch, e)}
                 onTouchStart={(e) => handleButtonPress(pitch, e)}
-                onTouchEnd={() => handleButtonRelease(pitch)}
+                onTouchEnd={(e) => handleButtonRelease(pitch, e)}
                 className={`h-16 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : ''}`}
                 disabled={disabled}
               >
@@ -248,10 +259,10 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
               <div className={''}>
                 <Button
                   onMouseDown={(e) => handleButtonPress(pitch, e)}
-                  onMouseUp={() => handleButtonRelease(pitch)}
-                  onMouseLeave={() => handleButtonRelease(pitch)}
+                  onMouseUp={(e) => handleButtonRelease(pitch, e)}
+                  onMouseLeave={(e) => handleButtonRelease(pitch, e)}
                   onTouchStart={(e) => handleButtonPress(pitch, e)}
-                  onTouchEnd={() => handleButtonRelease(pitch)}
+                  onTouchEnd={(e) => handleButtonRelease(pitch, e)}
                   className={`h-12 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : 'opacity-40'}`}
                   disabled={disabled}
                   title={semitonesToSolfege(pitch, true, showChordLabels)}
