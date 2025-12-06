@@ -506,7 +506,7 @@ const PracticeHistory = () => {
                         {(() => {
                           // Build chart data with each session as a separate point
                           const chartData = exerciseSessions.map((session, idx) => {
-                            const interval = semitonesToInterval(session.settings.intervalToFind);
+                            const interval = session.settings.intervalToFind;
                             return {
                               idx,
                               date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
@@ -516,7 +516,7 @@ const PracticeHistory = () => {
                           });
                           
                           // Get all unique intervals
-                          const intervals = [...new Set(chartData.map(d => d.interval))];
+                          const intervals = [...new Set(chartData.map(d => d.interval).filter(i => i))].sort();
                           const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3'];
                           
                           // Transform to have each interval as a separate line
@@ -540,7 +540,7 @@ const PracticeHistory = () => {
                                   key={`line-${interval}`}
                                   type="monotone"
                                   dataKey={interval}
-                                  name={interval}
+                                  name={semitonesToInterval(interval)}
                                   stroke={colors[idx % colors.length]}
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
