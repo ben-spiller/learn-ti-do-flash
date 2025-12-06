@@ -30,6 +30,8 @@ import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 
 const SolfegeKeyboardPage = () => {
   const navigate = useNavigate();
+
+  const OCTAVES = [2, 3, 4, 5, 6];
   
   const [settings, setSettings] = useState<KeyboardSettings>(getKeyboardSettings());
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNote));
@@ -408,7 +410,7 @@ const SolfegeKeyboardPage = () => {
             {/* Root Note and Octave */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Root/Do Note</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <Select 
                   value={currentNoteName} 
                   onValueChange={(note) => handleRootNoteChange(`${note}${currentOctave}`)}
@@ -431,12 +433,28 @@ const SolfegeKeyboardPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[2, 3, 4, 5, 6].map(octave => (
+                    {OCTAVES.map(octave => (
                       <SelectItem key={octave} value={octave.toString()}>{octave}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                
+
+                <Button
+                  size="sm"
+                  variant = "outline"
+                  onClick={() => {
+                    let note = undefined;
+                    while (!note || note === currentNoteName)
+                      note = NOTE_NAMES[Math.floor(Math.random() * NOTE_NAMES.length)];
+
+                    handleRootNoteChange(note+OCTAVES[Math.floor(Math.random() * OCTAVES.length)]);
+                  }}
+                  disabled={!isAudioLoaded}
+                  className="h-10"
+                >
+                  Random
+                </Button>
+
                 <Button
                   variant={isSelectingRoot ? "default" : "outline"}
                   size="sm"
