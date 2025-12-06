@@ -461,8 +461,9 @@ const SolfegeKeyboardPage = () => {
                   onClick={() => setIsSelectingRoot(!isSelectingRoot)}
                   disabled={!isAudioLoaded}
                   className="h-10"
+                  title="Select by clicking a button on the keyboard"
                 >
-                  From Keyboard
+                  Select
                 </Button>
               </div>
             </div>
