@@ -14,6 +14,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 export const STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES = "wrong2NoteSequences"
 /** Notes that are confused for each other (in either direction) */
 export const STORED_FREQUENTLY_CONFUSED_PAIRS = "wrongConfusedPairs"
+/** Intervals that are confused for each other in interval comparison exercises */
+export const STORED_CONFUSED_INTERVALS = "confusedIntervals"
 
 export const STORED_NEEDS_PRACTICE_SEQUENCES = "needsPracticeNotePairs:"
 
@@ -108,6 +110,17 @@ const PracticeHistory = () => {
       return stored ? new Map(JSON.parse(stored)) : new Map();
     } catch (error) {
       console.error('Error reading needs practice data:', error);
+      return new Map();
+    }
+  };
+
+  // Get confused intervals from localStorage for interval comparison exercises
+  const getConfusedIntervals = (): Map<string, number> => {
+    try {
+      const stored = localStorage.getItem(STORED_CONFUSED_INTERVALS);
+      return stored ? new Map(JSON.parse(stored)) : new Map();
+    } catch (error) {
+      console.error('Error reading confused intervals:', error);
       return new Map();
     }
   };
@@ -235,6 +248,83 @@ const PracticeHistory = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Confused Intervals Visualization - for Interval Comparison exercises */}
+      {recentSession.exerciseName === ExerciseType.IntervalComparison && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Frequently confused intervals (latest session)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const confusedIntervals = getConfusedIntervals();
+              const confusedIntervalsPairs = Array.from(confusedIntervals.entries())
+                .map(([pairKey, count]) => {
+                  try {
+                    const [targetInterval, selectedInterval] = pairKey.split(',').map(n => parseInt(n));
+                    return {
+                      pairKey,
+                      targetInterval,
+                      selectedInterval,
+                      targetName: semitonesToInterval(targetInterval),
+                      selectedName: semitonesToInterval(selectedInterval),
+                      count,
+                    };
+                  } catch {
+                    return null;
+                  }
+                })
+                .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8);
+              
+              if (confusedIntervalsPairs.length === 0) {
+                return (
+                  <p className="text-muted-foreground text-center py-8">
+                    No confused intervals yet - excellent work! 🎯
+                  </p>
+                );
+              }
+              
+              const maxCount = confusedIntervalsPairs[0].count;
+              
+              return (
+                <div className="space-y-3">
+                  {confusedIntervalsPairs.map((pair, index) => {
+                    const widthPercent = (pair.count / maxCount) * 100;
+                    
+                    return (
+                      <div key={pair.pairKey} className="flex items-center gap-3">
+                        <span className="font-medium text-muted-foreground w-6">{index + 1}.</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="px-3 py-2 rounded-lg bg-primary/20 border border-primary/30 font-bold text-sm">
+                            {pair.targetName}
+                          </div>
+                          <span className="text-muted-foreground">↔</span>
+                          <div className="px-3 py-2 rounded-lg bg-destructive/20 border border-destructive/30 font-bold text-sm">
+                            {pair.selectedName}
+                          </div>
+                        </div>
+                        <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-orange-500/70 to-orange-600/70 transition-all duration-500 flex items-center justify-end pr-3"
+                            style={{ width: `${widthPercent}%` }}
+                          >
+                            {widthPercent > 15 && (
+                              <span className="text-xs font-bold text-white">{pair.count}</span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">{pair.count} times</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Wrong Answers Visualization */}
       {recentSession.exerciseName != ExerciseType.IntervalComparison && (<>

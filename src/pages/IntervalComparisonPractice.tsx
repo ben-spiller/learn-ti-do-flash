@@ -15,7 +15,7 @@ import {
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getFavouriteInstruments } from "@/utils/instrumentStorage";
-import { SessionHistory } from "./History";
+import { SessionHistory, STORED_CONFUSED_INTERVALS } from "./History";
 import { PracticeHeader } from "@/components/PracticeHeader";
 
 const IntervalComparisonPractice = () => {
@@ -66,6 +66,9 @@ const IntervalComparisonPractice = () => {
 
   const totalSequencesAnswered = useRef(0);
   const lastQuestionKey = useRef<string>("");
+  
+  // Track confused intervals for this session: Map<"targetInterval,selectedInterval", count>
+  const confusedIntervalsRef = useRef<Map<string, number>>(new Map());
 
   const isQuestionComplete = (): boolean => {
     return isCorrect === true;
@@ -249,6 +252,13 @@ const IntervalComparisonPractice = () => {
       if (Date.now() - questionStartTime < 60000) {
         setElapsedSeconds(elapsedSeconds + Math.floor((Date.now() - questionStartTime) / 1000));
       }
+    } else {
+      // Track the confusion: target interval vs what user selected
+      const targetInterval = settings.intervalToFind;
+      const selectedInterval = Math.abs(sequence[index] - sequence[index - 1]);
+      const confusionKey = `${targetInterval},${selectedInterval}`;
+      const currentCount = confusedIntervalsRef.current.get(confusionKey) || 0;
+      confusedIntervalsRef.current.set(confusionKey, currentCount + 1);
     }
   };
 
@@ -281,6 +291,12 @@ const IntervalComparisonPractice = () => {
       const sessions = sessionsStr ? JSON.parse(sessionsStr) : [];
       sessions.push(session);
       localStorage.setItem("practiceSessions", JSON.stringify(sessions));
+
+      // Save confused intervals for this session
+      localStorage.setItem(
+        STORED_CONFUSED_INTERVALS,
+        JSON.stringify(Array.from(confusedIntervalsRef.current.entries()))
+      );
 
       navigate("/history");
     } else {
