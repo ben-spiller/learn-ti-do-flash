@@ -641,6 +641,9 @@ const PracticeHistory = () => {
                           const intervals = [...new Set(chartData.map(d => d.interval).filter(i => i))].sort();
                           const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3'];
                           
+                          // Get the interval from the latest session
+                          const latestInterval = exerciseSessions[exerciseSessions.length - 1]?.settings.intervalToFind;
+                          
                           // Transform to have each interval as a separate line
                           const transformedData = chartData.map((point, idx) => {
                             const dataPoint: any = { idx, date: point.date };
@@ -657,18 +660,21 @@ const PracticeHistory = () => {
                               <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
                               <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
                               <Legend />
-                              {intervals.map((interval, idx) => (
-                                <Line
-                                  key={`line-${interval}`}
-                                  type="monotone"
-                                  dataKey={interval}
-                                  name={semitonesToInterval(interval)}
-                                  stroke={colors[idx % colors.length]}
-                                  strokeWidth={2}
-                                  dot={{ r: 4 }}
-                                  connectNulls
-                                />
-                              ))}
+                              {intervals.map((interval, idx) => {
+                                const isLatest = interval === latestInterval;
+                                return (
+                                  <Line
+                                    key={`line-${interval}`}
+                                    type="monotone"
+                                    dataKey={interval}
+                                    name={isLatest ? `★ ${semitonesToInterval(interval)}` : semitonesToInterval(interval)}
+                                    stroke={colors[idx % colors.length]}
+                                    strokeWidth={isLatest ? 4 : 2}
+                                    dot={{ r: isLatest ? 6 : 4, strokeWidth: isLatest ? 2 : 0, stroke: isLatest ? '#fff' : undefined }}
+                                    connectNulls
+                                  />
+                                );
+                              })}
                             </LineChart>
                           );
                         })()}
