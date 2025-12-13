@@ -667,10 +667,10 @@ const PracticeHistory = () => {
                                     key={`line-${interval}`}
                                     type="monotone"
                                     dataKey={interval}
-                                    name={isLatest ? `★ ${semitonesToInterval(interval)}` : semitonesToInterval(interval)}
+                                    name={isLatest ? `★${semitonesToInterval(interval)}★` : semitonesToInterval(interval)}
                                     stroke={colors[idx % colors.length]}
-                                    strokeWidth={isLatest ? 4 : 2}
-                                    dot={{ r: isLatest ? 6 : 4, strokeWidth: isLatest ? 2 : 0, stroke: isLatest ? '#fff' : undefined }}
+                                    strokeWidth={isLatest ? 5 : 2}
+                                    dot={{ r: isLatest ? 6 : 4, strokeWidth: isLatest ? 2 : 0 }}
                                     connectNulls
                                   />
                                 );
