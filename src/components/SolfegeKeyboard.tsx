@@ -122,6 +122,12 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   const handleButtonPress = (pitch: SemitoneOffset, event: React.MouseEvent | React.TouchEvent) => {
     if (disabled || shouldIgnoreTouchEvent(event)) return;
 
+    // clear any previous timer before proceeding
+    if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
+      }
+
     // Check if ctrl/cmd key is pressed
     const isCtrlPressed = 'ctrlKey' in event ? event.ctrlKey || event.metaKey : false;
     
