@@ -128,11 +128,31 @@ const PracticeHistory = () => {
   const allSessions = getAllSessions();
   const recentSession = allSessions.length > 0 ? allSessions[allSessions.length - 1] : null;
   
+  // Find previous session of the same exercise type (if any)
+  const previousSession = recentSession 
+    ? allSessions.filter(s => s.exerciseName === recentSession.exerciseName).slice(-2)[0] 
+    : null;
+  const hasPreviousSession = previousSession && previousSession !== recentSession;
+  
   // Get unique exercise keys (sorted alphabetically)
   const exerciseKeys = Array.from(new Set(allSessions.map(s => s.exerciseName))).sort();
   
   // Default tab to most recent exercise
   const [selectedTab, setSelectedTab] = useState(recentSession?.exerciseName || exerciseKeys[0] || "");
+  
+  // Helper to format delta values
+  const formatDelta = (current: number, previous: number, suffix: string = '', lowerIsBetter: boolean = false, decimals: number = 0) => {
+    const delta = current - previous;
+    if (delta === 0) return null;
+    const isPositive = lowerIsBetter ? delta < 0 : delta > 0;
+    const sign = delta > 0 ? '+' : '';
+    const formattedDelta = decimals > 0 ? delta.toFixed(decimals) : Math.round(delta);
+    return (
+      <span className={`text-xs font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+        {sign}{formattedDelta}{suffix}
+      </span>
+    );
+  };
   
   if (allSessions.length === 0) {
     return (
@@ -206,19 +226,31 @@ const PracticeHistory = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className={`text-3xl font-bold ${getScoreColor(recentSession.score)}`}>{recentSession.score}%</div>
+              {hasPreviousSession && (
+                <div className="mt-0.5">{formatDelta(recentSession.score, previousSession.score, '%')}</div>
+              )}
               <div className="text-sm text-muted-foreground mt-1">Score</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className="text-3xl font-bold">{(recentSession.totalSeconds/60)?.toFixed(0)}</div>
+              {hasPreviousSession && (
+                <div className="mt-0.5">{formatDelta(recentSession.totalSeconds/60, previousSession.totalSeconds/60, 'm', false, 0)}</div>
+              )}
               <div className="text-sm text-muted-foreground mt-1">Total Minutes</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className="text-3xl font-bold">{recentSession.avgSecsPerAnswer?.toFixed(1)}s</div>
+              {hasPreviousSession && (
+                <div className="mt-0.5">{formatDelta(recentSession.avgSecsPerAnswer, previousSession.avgSecsPerAnswer, 's', true, 1)}</div>
+              )}
               <div className="text-sm text-muted-foreground mt-1">Avg per Answer</div>
             </div>
             {recentSession.exerciseName !== ExerciseType.IntervalComparison &&
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
+              {hasPreviousSession && (
+                <div className="mt-0.5">{formatDelta(recentSession.needsPracticeCount, previousSession.needsPracticeCount, '', true)}</div>
+              )}
               <div className="text-sm text-muted-foreground mt-1">Needs Practice</div>
             </div>}
           </div>
