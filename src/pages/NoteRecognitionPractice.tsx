@@ -51,6 +51,8 @@ const PracticeView = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
   const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
+  /** Delta showing [oldValue, newValue] of needsPractice for the last pressed note pair */
+  const [lastNeedsPracticeDelta, setLastNeedsPracticeDelta] = useState<[number, number] | null>(null);
   /** Number of note presses that were correct */
   const [correctAttempts, setCorrectAttempts] = useState(0);
   /** Total number of note presses */
@@ -295,15 +297,18 @@ const PracticeView = () => {
       playNote(correctNote+rootMidi);
 
       // Decrement needsPractice for correct answer
-      const currentCount = needsPractice.current.get(pairKey) || 0;
-      if (currentCount > 0) {
-        const newCount = currentCount - 1;
+      const oldCount = needsPractice.current.get(pairKey) || 0;
+      let newCount = oldCount;
+      if (oldCount > 0) {
+        newCount = oldCount - 1;
         if (newCount <= 0) {
           needsPractice.current.delete(pairKey);
+          newCount = 0;
         } else {
           needsPractice.current.set(pairKey, newCount);
         }
       }
+      setLastNeedsPracticeDelta([oldCount, newCount]);
 
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
@@ -324,6 +329,7 @@ const PracticeView = () => {
       setTimeout(() => {
         setLastPressedNote(null);
         setLastPressedWasCorrect(null);
+        setLastNeedsPracticeDelta(null);
       }, 600);
     } else {
       // Play the wrong note that was pressed
@@ -340,11 +346,13 @@ const PracticeView = () => {
       confusedPairs.current.set(confusedPairKey, (confusedPairs.current.get(confusedPairKey) || 0) + 1);
 
       // Add to needsPractice for the CORRECT note (+3 if first wrong answer or in the danger zone, +1 otherwise)
-      let needsPracticeCount = (needsPractice.current.get(pairKey) || 0);
+      const oldNeedsPracticeCount = (needsPractice.current.get(pairKey) || 0);
       // put an upper bound on the severity of each one to avoid it getting crazy
       const maxNeedsPractice = 10;
-      needsPractice.current.set(pairKey, Math.min(maxNeedsPractice, needsPracticeCount + (
-        (needsPracticeCount <3) ? +3 : +1)));
+      const newNeedsPracticeCount = Math.min(maxNeedsPractice, oldNeedsPracticeCount + (
+        (oldNeedsPracticeCount <3) ? +3 : +1));
+      needsPractice.current.set(pairKey, newNeedsPracticeCount);
+      setLastNeedsPracticeDelta([oldNeedsPracticeCount, newNeedsPracticeCount]);
       
       // Also increment needsPractice for the INCORRECT note that was entered
       const incorrectPairKey = `${prevInterval},${selectedNote}`;
@@ -355,6 +363,7 @@ const PracticeView = () => {
       setTimeout(() => {
         setLastPressedNote(null);
         setLastPressedWasCorrect(null);
+        setLastNeedsPracticeDelta(null);
       }, 600);
     }
   };
@@ -541,6 +550,7 @@ const PracticeView = () => {
             onNotePress={handleNotePress}
             overlayNote={lastPressedNote}
             overlayNoteTick={lastPressedWasCorrect}
+            overlayNeedsPracticeDelta={lastNeedsPracticeDelta}
             disabled={isPlayingReference}
           />
 
