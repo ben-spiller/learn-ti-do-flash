@@ -241,7 +241,8 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {overlayNeedsPracticeDelta[0]} → {overlayNeedsPracticeDelta[1]}
+                        {Math.sign(overlayNeedsPracticeDelta[1]-overlayNeedsPracticeDelta[0]) === 1 ? "+" : ""}
+                        {overlayNeedsPracticeDelta[1]-overlayNeedsPracticeDelta[0]} (→ {overlayNeedsPracticeDelta[1]}) 
                       </div>
                     )}
                   </div>

@@ -17,6 +17,8 @@ import { PracticeHeader } from "@/components/PracticeHeader";
 const PracticeView = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const FEEDBACK_MILLIS = 800;
   
   // Initialize settings from query params (if present), otherwise from state or defaults
   const searchParams = new URLSearchParams(location.search);
@@ -49,6 +51,7 @@ const PracticeView = () => {
   const sequenceItems = useRef<Array<{ note: number; duration: number; gapAfter: number }>>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const lastPressedNoteOverlayTimeout = useRef(null);
   const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
   const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
   /** Delta showing [oldValue, newValue] of needsPractice for the last pressed note pair */
@@ -191,6 +194,7 @@ const PracticeView = () => {
   }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, started, isPlaying, isPlayingReference]);
 
   const startNewRound = () => {
+    setLastPressedNote(null); 
     prevSequence.current = [...sequence];
     //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
     const newSequence = generateNextNoteSequence();
@@ -324,13 +328,6 @@ const PracticeView = () => {
           setElapsedSeconds(elapsedSeconds + (Math.floor((Date.now() - questionStartTime) / 1000)));
         }
       }
-
-      // Clear feedback after animation
-      setTimeout(() => {
-        setLastPressedNote(null);
-        setLastPressedWasCorrect(null);
-        setLastNeedsPracticeDelta(null);
-      }, 600);
     } else {
       // Play the wrong note that was pressed
       stopSounds();
@@ -359,13 +356,13 @@ const PracticeView = () => {
       const incorrectNeedsPracticeCount = (needsPractice.current.get(incorrectPairKey) || 0);
       needsPractice.current.set(incorrectPairKey, Math.min(maxNeedsPractice, incorrectNeedsPracticeCount + 1));
       
-      // Clear feedback after animation
-      setTimeout(() => {
-        setLastPressedNote(null);
-        setLastPressedWasCorrect(null);
-        setLastNeedsPracticeDelta(null);
-      }, 600);
     }
+
+    // Clear feedback after animation
+    clearTimeout(lastPressedNoteOverlayTimeout.current);
+    lastPressedNoteOverlayTimeout.current = setTimeout(() => {
+        setLastPressedNote(null); 
+    }, FEEDBACK_MILLIS);
   };
 
   const handlePlayAgain = () => {
@@ -549,8 +546,8 @@ const PracticeView = () => {
           <SolfegeKeyboard
             onNotePress={handleNotePress}
             overlayNote={lastPressedNote}
-            overlayNoteTick={lastPressedWasCorrect}
-            overlayNeedsPracticeDelta={lastNeedsPracticeDelta}
+            overlayNoteTick={lastPressedNote !== null ? lastPressedWasCorrect : null}
+            overlayNeedsPracticeDelta={lastPressedNote !== null ? lastNeedsPracticeDelta : null}
             disabled={isPlayingReference}
           />
 
