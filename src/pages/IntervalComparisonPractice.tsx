@@ -106,7 +106,7 @@ const IntervalComparisonPractice = () => {
 
       // Number keys for selecting intervals
       if (e.key >= "1" && e.key <= "9" && started && !isQuestionComplete()) {
-        const index = parseInt(e.key, 10);
+        const index = parseInt(e.key, 10)+1;
         if (index > 0 && index < sequence.length) {
           e.preventDefault();
           handleIntervalSelect(index);
