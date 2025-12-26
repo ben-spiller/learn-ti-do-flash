@@ -342,12 +342,9 @@ const PracticeHistory = () => {
                             className="h-full bg-gradient-to-r from-orange-500/70 to-orange-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                             style={{ width: `${widthPercent}%` }}
                           >
-                            {widthPercent > 15 && (
-                              <span className="text-xs font-bold text-white">{pair.count}</span>
-                            )}
+                              <span className="text-xs font-bold text-white">{pair.count} times</span>
                           </div>
                         </div>
-                        <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">{pair.count} times</span>
                       </div>
                     );
                   })}
@@ -407,12 +404,9 @@ const PracticeHistory = () => {
                         className="h-full bg-gradient-to-r from-red-500/70 to-red-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                         style={{ width: `${widthPercent}%` }}
                       >
-                        {widthPercent > 15 && (
-                          <span className="text-xs font-bold text-white">{pair.count}</span>
-                        )}
+                        <span className="text-xs font-bold text-white">{pair.count} wrong</span>
                       </div>
                     </div>
-                    <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">{pair.count} wrong</span>
                   </div>
                 );
               })}
@@ -490,12 +484,9 @@ const PracticeHistory = () => {
                           className="h-full bg-gradient-to-r from-orange-500/70 to-orange-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                           style={{ width: `${widthPercent}%` }}
                         >
-                          {widthPercent > 15 && (
-                            <span className="text-xs font-bold text-white">{pair.count}</span>
-                          )}
+                            <span className="text-xs font-bold text-white">{pair.count} times</span>
                         </div>
                       </div>
-                      <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">{pair.count} times</span>
                     </div>
                   );
                 })}
@@ -595,14 +586,9 @@ const PracticeHistory = () => {
                                 className="h-full bg-gradient-to-r from-amber-500/70 to-amber-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                                 style={{ width: `${widthPercent}%` }}
                               >
-                                {widthPercent > 15 && (
-                                  <span className="text-xs font-bold text-white">{pair.count}</span>
-                                )}
+                                  <span className="text-xs font-bold text-white">{pair.count} severity</span>
                               </div>
                             </div>
-                            <span className="text-sm text-muted-foreground w-20 text-right flex-shrink-0">
-                              {pair.count} severity
-                            </span>
                           </div>
                         );
                       })}
