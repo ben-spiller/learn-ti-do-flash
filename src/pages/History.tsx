@@ -658,7 +658,7 @@ const PracticeHistory = () => {
                                     name={isLatest ? `★${semitonesToInterval(interval)}★` : semitonesToInterval(interval)}
                                     stroke={colors[idx % colors.length]}
                                     strokeWidth={isLatest ? 5 : 2}
-                                    dot={{ r: isLatest ? 6 : 4, strokeWidth: isLatest ? 2 : 0 }}
+                                    dot={{ r: isLatest ? 2 : 1, strokeWidth: 1 }}
                                     connectNulls
                                   />
                                 );
