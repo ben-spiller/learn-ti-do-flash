@@ -19,6 +19,8 @@ const PracticeView = () => {
   const navigate = useNavigate();
 
   const FEEDBACK_MILLIS = 800;
+  // put an upper bound on the severity of each one to avoid it getting crazy
+  const maxNeedsPractice = 10;
   
   // Initialize settings from query params (if present), otherwise from state or defaults
   const searchParams = new URLSearchParams(location.search);
@@ -344,8 +346,6 @@ const PracticeView = () => {
 
       // Add to needsPractice for the CORRECT note (+3 if first wrong answer or in the danger zone, +1 otherwise)
       const oldNeedsPracticeCount = (needsPractice.current.get(pairKey) || 0);
-      // put an upper bound on the severity of each one to avoid it getting crazy
-      const maxNeedsPractice = 10;
       const newNeedsPracticeCount = Math.min(maxNeedsPractice, oldNeedsPracticeCount + (
         (oldNeedsPracticeCount <3) ? +3 : +1));
       needsPractice.current.set(pairKey, newNeedsPracticeCount);
@@ -547,7 +547,11 @@ const PracticeView = () => {
             onNotePress={handleNotePress}
             overlayNote={lastPressedNote}
             overlayNoteTick={lastPressedNote !== null ? lastPressedWasCorrect : null}
-            overlayNeedsPracticeDelta={lastPressedNote !== null ? lastNeedsPracticeDelta : null}
+            overlayMessage={lastPressedNote !== null 
+                && lastNeedsPracticeDelta
+                && lastNeedsPracticeDelta[0] !== lastNeedsPracticeDelta[1] || lastNeedsPracticeDelta[1] === maxNeedsPractice
+                ? `Practice needed: ${Math.sign(lastNeedsPracticeDelta[1]-lastNeedsPracticeDelta[0]) === 1 ? "+" : ""}${lastNeedsPracticeDelta[1]-lastNeedsPracticeDelta[0]} (→ ${lastNeedsPracticeDelta[1]})`
+                : null}
             disabled={isPlayingReference}
           />
 
@@ -555,11 +559,33 @@ const PracticeView = () => {
           <Card className="relative">
             <CardHeader>
               <CardTitle className="text-center">
-                {isPlayingReference ? (
-                  <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
-                ) : (
-                  "Identify the notes"
-                )}
+                <div className="flex items-center justify-center gap-4">
+                  <div>
+                    {isPlayingReference ? (
+                      <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
+                    ) : (
+                      (isQuestionComplete(currentPosition) ? <span>Question complete! 🎉</span> : <span>Identify the notes</span>)
+                    )}
+                  </div>
+
+                  {isQuestionComplete(currentPosition) && (
+                    <span className="flex items-center gap-3">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={startNewRound} size="lg">
+                              Next
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Press N or Enter</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </span>
+                  )}
+                </div>
+
               </CardTitle>
             </CardHeader>
             <CardContent>                
@@ -570,32 +596,18 @@ const PracticeView = () => {
                   const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
                   
                   return (
+                  <div className="flex align-items-center gap-4">
                     <div
                       key={index}
                       className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
                     >
                       {noteSolfege}
                     </div>
-                  );
+                    <br/>
+
+                  </div>);
                 })}
               </div>
-              {isQuestionComplete(currentPosition) && (
-                <div className="mt-4 flex items-center justify-center gap-3">
-                  <span className="text-lg font-semibold text-success">Complete! 🎉</span>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button onClick={startNewRound} size="lg">
-                          Next
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Press N or Enter</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
