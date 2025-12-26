@@ -9,6 +9,8 @@ interface SolfegeKeyboardProps {
   /** If true, show a tick overlay icon, if false a cross, if null then nothing. */
   overlayNoteTick: boolean | null;
   overlayNote: SemitoneOffset | null;
+  /** Optional: show needsPractice delta below the tick/cross. [oldValue, newValue] */
+  overlayNeedsPracticeDelta?: [number, number] | null;
   disabled: boolean;
   /** Range of semitones to display [min, max]. Default [0, 12] for one octave. */
   range?: [SemitoneOffset, SemitoneOffset];
@@ -24,6 +26,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   onNotePress,
   overlayNote = null,
   overlayNoteTick = null,
+  overlayNeedsPracticeDelta = null,
   disabled = false,
   range = [0, 11],
   showChordLabels = false,
@@ -224,7 +227,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
               >
                 {solfege}{buttonSuffix}
                 {isLastPressed && overlayNoteTick !== null && (
-                  <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
+                  <div className={`absolute inset-0 flex flex-col items-center justify-center animate-scale-in`}>
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
                       {overlayNoteTick ? (
                         <Check className="w-8 h-8 text-green-500" strokeWidth={3} />
@@ -232,6 +235,15 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                         <X className="w-8 h-8 text-red-500" strokeWidth={3} />
                       )}
                     </div>
+                    {overlayNeedsPracticeDelta && overlayNeedsPracticeDelta[0] !== overlayNeedsPracticeDelta[1] && (
+                      <div className={`mt-1 px-2 py-0.5 rounded text-xs font-bold shadow ${
+                        overlayNeedsPracticeDelta[1] < overlayNeedsPracticeDelta[0] 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {overlayNeedsPracticeDelta[0]} → {overlayNeedsPracticeDelta[1]}
+                      </div>
+                    )}
                   </div>
                 )}
               </Button>
@@ -275,7 +287,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 >
                 # / b
                 {isLastPressed && overlayNoteTick !== null && (
-                  <div className={`absolute inset-0 flex items-center justify-center animate-scale-in`}>
+                  <div className={`absolute inset-0 flex flex-col items-center justify-center animate-scale-in`}>
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
                       {overlayNoteTick ? (
                         <Check className="w-7 h-7 text-green-500" strokeWidth={3} />
@@ -283,6 +295,15 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                         <X className="w-7 h-7 text-red-500" strokeWidth={3} />
                       )}
                     </div>
+                    {overlayNeedsPracticeDelta && overlayNeedsPracticeDelta[0] !== overlayNeedsPracticeDelta[1] && (
+                      <div className={`mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold shadow ${
+                        overlayNeedsPracticeDelta[1] < overlayNeedsPracticeDelta[0] 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {overlayNeedsPracticeDelta[0]} → {overlayNeedsPracticeDelta[1]}
+                      </div>
+                    )}
                   </div>
                   )}
                 </Button>
