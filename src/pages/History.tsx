@@ -109,7 +109,7 @@ const PracticeHistory = () => {
       const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES + exerciseKey);
       return stored ? new Map(JSON.parse(stored)) : new Map();
     } catch (error) {
-      console.error('Error reading needs practice data:', error);
+      console.error('Error reading practice backlog data:', error);
       return new Map();
     }
   };
@@ -251,7 +251,7 @@ const PracticeHistory = () => {
               {hasPreviousSession && (
                 <div className="mt-0.5">{formatDelta(recentSession.needsPracticeCount, previousSession.needsPracticeCount, '', true)}</div>
               )}
-              <div className="text-sm text-muted-foreground mt-1">Needs Practice</div>
+              <div className="text-sm text-muted-foreground mt-1">Practice backlog</div>
             </div>}
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
@@ -677,7 +677,7 @@ const PracticeHistory = () => {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Needs practice</CardTitle>
+                      <CardTitle>Practice backlog</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="h-48">
@@ -698,7 +698,7 @@ const PracticeHistory = () => {
                                 <Line
                                   type="monotone"
                                   dataKey="severity"
-                                  name="Needs Practice Severity"
+                                  name="Practice backlog"
                                   stroke="red"
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
@@ -765,8 +765,8 @@ const PracticeHistory = () => {
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Time (min)</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Avg/Answer</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Attempts</th>
-                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Needs Practice</th>
-                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Total Severity</th>
+                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Needs practice</th>
+                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Practice backlog</th>
                         </tr>
                       </thead>
                       <tbody>
