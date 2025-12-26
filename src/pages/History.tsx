@@ -395,9 +395,11 @@ const PracticeHistory = () => {
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground ml-1">
-                        ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : 'Start'})
-                      </span>
+                      {recentSession.exerciseName !== ExerciseType.SingleNoteRecognition &&
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : 'Start'})
+                        </span>
+                    }
                     </div>
                     <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
                       <div 
