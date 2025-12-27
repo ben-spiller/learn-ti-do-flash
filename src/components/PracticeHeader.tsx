@@ -5,6 +5,7 @@ import { Play, Volume2, VolumeX, Volume1 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getNeedsPracticeTotalColor, getScoreColor } from "@/utils/noteStyles";
+import tuningFork from "@/assets/tuning-fork.svg";
 
 interface PracticeHeaderProps {
   showReference: boolean;
@@ -91,7 +92,7 @@ export const PracticeHeader = ({
                     onClick={onPlayReference}
                     disabled={isPlaying || isPlayingReference}
                   >
-                    <img src="/tuning-fork.svg" alt="Reference" className="h-4 w-4 mr-0" />
+                    <img src={tuningFork} alt="Reference" className="h-4 w-4 mr-0" />
                     <span className="hidden sm:inline">Reference</span>
                   </Button>
                 </TooltipTrigger>
