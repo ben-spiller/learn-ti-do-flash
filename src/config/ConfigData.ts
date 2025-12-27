@@ -8,8 +8,8 @@ import { getFavouriteInstruments } from "@/utils/instrumentStorage";
 type SemitonePair = [SemitoneOffset, SemitoneOffset];
 
 export enum ExerciseType {
-  MelodyRecognition = "Melody recognition",
   SingleNoteRecognition = "Single note recognition",
+  MelodyRecognition = "Melody recognition",
   IntervalComparison = "Interval comparison",
 }
 
@@ -138,19 +138,20 @@ export class ConfigData {
   rhythm: "fixed" | "random" = "random";
   droneType: "none" | "root" = "none";
   rootNotePitch: MidiNoteName = "C4";
-  instrument: string = "acoustic_grand_piano";
+  /** The instrument to use for this session. May be picked by the home/settings page, or when directly entering a practice page */
+  instrument?: string = "acoustic_grand_piano";
   instrumentMode: "single" | "random" = "random";
-
 
   /** Pick the instrument to use for this session based on the instrument mode */
   pickInstrument(favouriteInstruments?: string[]): string {
     if (!favouriteInstruments) {
       favouriteInstruments = getFavouriteInstruments();
     }
+    if (this.instrument) return this.instrument;
     if (this.instrumentMode === "random" && favouriteInstruments.length > 0) {
       const randomIndex = Math.floor(Math.random() * favouriteInstruments.length);
-      return favouriteInstruments[randomIndex];
-    }
+      this.instrument = favouriteInstruments[randomIndex];
+    } else { this.instrument = "acoustic_grand_piano"; }
     return this.instrument;
   }
 

@@ -442,18 +442,18 @@ const HomeSettingsView = () => {
                 <Label className="text-base font-semibold">Exercise</Label>
                 <div className="flex gap-2 flex-wrap">
                   <Button
-                    variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
-                    onClick={() => setExerciseType(ExerciseType.MelodyRecognition)}
-                    className="flex-1"
-                  >
-                    {ExerciseType.MelodyRecognition}
-                  </Button>
-                  <Button
                     variant={exerciseType === ExerciseType.SingleNoteRecognition ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.SingleNoteRecognition)}
                     className="flex-1"
                   >
                     {ExerciseType.SingleNoteRecognition}
+                  </Button>
+                  <Button
+                    variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
+                    onClick={() => setExerciseType(ExerciseType.MelodyRecognition)}
+                    className="flex-1"
+                  >
+                    {ExerciseType.MelodyRecognition}
                   </Button>
                   <Button
                     variant={exerciseType === ExerciseType.IntervalComparison ? "default" : "outline"}
