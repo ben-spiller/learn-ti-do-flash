@@ -527,6 +527,7 @@ const PracticeView = () => {
       <PracticeHeader
         showReference={true}
         correctAttempts={correctAttempts}
+        needsPracticeTotal={Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0)}
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
         started={started}

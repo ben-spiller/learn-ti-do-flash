@@ -4,12 +4,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Play, Volume2, VolumeX, Volume1 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getScoreColor } from "@/utils/noteStyles";
+import { getNeedsPracticeTotalColor, getScoreColor } from "@/utils/noteStyles";
 
 interface PracticeHeaderProps {
   showReference: boolean;
   correctAttempts: number;
   totalAttempts: number;
+  needsPracticeTotal?: number;
   elapsedSeconds: number;
   started: boolean;
   isPlaying: boolean;
@@ -26,6 +27,7 @@ export const PracticeHeader = ({
   showReference,
   correctAttempts,
   totalAttempts,
+  needsPracticeTotal,
   elapsedSeconds,
   started,
   isPlaying,
@@ -72,7 +74,8 @@ export const PracticeHeader = ({
                   >
                     <Play className="h-4 w-4 mr-1"/>
                     <span className="hidden sm:inline">Again</span>
-                  </Button>
+                  </
+                  Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Play again (keyboard shortcut: a)</p>
@@ -130,6 +133,16 @@ export const PracticeHeader = ({
                   </div>
                   <div className="text-muted-foreground text-xs">Score</div>
                 </div>
+
+                {needsPracticeTotal !== undefined && (
+                <div className="text-center" title="Practice TODO size - indicates many correct answers required before each sequence needing more practice is learned">
+                  <div className={`font-bold text-lg ${getNeedsPracticeTotalColor(needsPracticeTotal)}`}>
+                    {needsPracticeTotal}
+                  </div>
+                  <div className="text-muted-foreground text-xs">TODO</div>
+                </div>
+                )}
+
                 <div className="text-center">
                   <div className="font-bold text-lg">{(elapsedSeconds/60).toFixed(0)}</div>
                   <div className="text-muted-foreground text-xs">Min</div>

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Settings } from "lucide-react";
 import { semitonesToSolfege, semitonesToInterval } from "@/utils/audio";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getNoteButtonColor, getScoreColor, getOctaveIndicator } from "@/utils/noteStyles";
+import { getNoteButtonColor, getScoreColor, getOctaveIndicator, getNeedsPracticeTotalColor } from "@/utils/noteStyles";
 import { ConfigData, exerciseIsTonal, ExerciseType } from "@/config/ConfigData";
 import { startOfWeek, endOfWeek, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
@@ -251,7 +251,7 @@ const PracticeHistory = () => {
               {hasPreviousSession && (
                 <div className="mt-0.5">{formatDelta(recentSession.needsPracticeCount, previousSession.needsPracticeCount, '', true)}</div>
               )}
-              <div className="text-sm text-muted-foreground mt-1">Practice backlog</div>
+              <div className="text-sm text-muted-foreground mt-1">Practice TODO size</div>
             </div>}
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
@@ -677,7 +677,7 @@ const PracticeHistory = () => {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Practice backlog</CardTitle>
+                      <CardTitle>Practice TODO size</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="h-48">
@@ -698,7 +698,7 @@ const PracticeHistory = () => {
                                 <Line
                                   type="monotone"
                                   dataKey="severity"
-                                  name="Practice backlog"
+                                  name="Practice TODOs"
                                   stroke="red"
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
@@ -766,7 +766,7 @@ const PracticeHistory = () => {
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Avg/Answer</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Attempts</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Needs practice</th>
-                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Practice backlog</th>
+                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Practice TODOs</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -869,7 +869,7 @@ const PracticeHistory = () => {
                                     <td className="p-2 text-sm text-right text-amber-600 font-medium">
                                       {session.needsPracticeCount}
                                     </td>
-                                    <td className="p-2 text-sm text-right text-orange-600 font-medium">
+                                    <td className={`p-2 text-sm text-right ${getNeedsPracticeTotalColor(session.needsPracticeTotalSeverity)} font-medium`}>
                                       {session.needsPracticeTotalSeverity || 0}
                                     </td>
                                   </tr>

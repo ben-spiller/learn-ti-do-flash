@@ -22,6 +22,12 @@ export const getScoreColor = (score: number): string => {
   return "text-destructive";
 };
 
+export const getNeedsPracticeTotalColor = (score: number): string => {
+  if (score <= 10) return "text-success";
+  if (score <= 30) return "text-amber-600";
+  return "text-destructive";
+};
+
 export const getOctaveIndicator = (semitones: number): string => {
   const octaveOffset = Math.floor(semitones / 12);
   if (octaveOffset === -1) return "-1";
