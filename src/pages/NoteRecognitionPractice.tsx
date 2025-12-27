@@ -136,31 +136,31 @@ const PracticeView = () => {
     };
   }, []);
 
-  // const handleStart = async () => {
-  //   if (started) return;
+  const handleStart = async () => {
+    if (started) return;
     
-  //   // Save current configuration to local storage
-  //   saveCurrentConfiguration(settings);
+    // Save current configuration to local storage
+    saveCurrentConfiguration(settings);
     
-  //   setAudioLoading(true);
+    setAudioLoading(true);
     
-  //   // Show loading indicator only if preload takes more than 400ms
-  //   const loadingTimer = setTimeout(() => {
-  //     setShowLoadingIndicator(true);
-  //   }, 400);
+    // Show loading indicator only if preload takes more than 400ms
+    const loadingTimer = setTimeout(() => {
+      setShowLoadingIndicator(true);
+    }, 400);
     
-  //   const ok = await preloadInstrumentWithGesture(sessionInstrument);
+    const ok = await preloadInstrumentWithGesture(sessionInstrument);
     
-  //   clearTimeout(loadingTimer);
-  //   setShowLoadingIndicator(false);
-  //   setAudioLoading(false);
+    clearTimeout(loadingTimer);
+    setShowLoadingIndicator(false);
+    setAudioLoading(false);
     
-  //   if (ok) {
-  //     setStarted(true);
+    if (ok) {
+      setStarted(true);
       
-  //     doStart();
-  //   }
-  // };
+      doStart();
+    }
+  };
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
