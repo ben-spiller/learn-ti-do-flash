@@ -3,11 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones } from "@/utils/audio";
+import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones, isAudioInitialized, mustWaitForGestureBeforeAudioInit, startAudio } from "@/utils/audio";
 import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getGlobalSettings } from "@/utils/globalSettingsStorage";
-import { getFavouriteInstruments } from "@/utils/instrumentStorage";
 import { getNoteButtonColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
@@ -24,18 +23,12 @@ const PracticeView = () => {
   
   // Initialize settings from query params (if present), otherwise from state or defaults
   const searchParams = new URLSearchParams(location.search);
-  const hasQueryParams = searchParams.toString().length > 0;
-  
-  const settings = hasQueryParams 
+  const settings = searchParams.toString().length > 0 
     ? ConfigData.fromQueryParams(searchParams)
     : new ConfigData(location.state as Partial<ConfigData>);
   
-  const preloaded = searchParams.get('preloaded') === 'true';
   const globalSettings = getGlobalSettings();
   
-  // Pick the instrument to use for this session based on settings
-  const sessionInstrument = settings.pickInstrument(getFavouriteInstruments());
-
   // Calculate note duration based on tempo (BPM)
   // At 60 BPM, each beat = 1 second; at 120 BPM, each beat = 0.5 seconds
   const noteDuration = 60 / settings.tempo;
@@ -47,6 +40,9 @@ const PracticeView = () => {
   /** The previous question sequence, to avoid duplication */
   const prevSequence = useRef<SemitoneOffset[]>([]);
   const totalSequencesAnswered = useRef(0);
+
+  const [isAudioLoading, setAudioLoading] = useState(false);
+  const [isAudioLoaded, setAudioLoaded] = useState(false);
 
   /** The notes for the current question (relative to the root) */
   const [sequence, setSequence] = useState<SemitoneOffset[]>([]);
@@ -64,9 +60,6 @@ const PracticeView = () => {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isAudioLoading, setAudioLoading] = useState(false);
-  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [started, setStarted] = useState(preloaded);
   const [droneVolume, setDroneVolumeState] = useState(-8); // default volume in dB
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
@@ -99,8 +92,13 @@ const PracticeView = () => {
   };
 
 
-  async function doStart() {
-      if (settings.droneType !== "none") {
+  /** Called to actually start the first round of questions once all audio is initialized */
+  async function startPractice() {
+    setAudioLoaded(true);
+    // Save current configuration in case we came directly to this page from a bookmark (without Home/settings page)
+    saveCurrentConfiguration(settings);
+
+    if (settings.droneType !== "none") {
         // Start drone if configured
         startDrone(rootMidi, droneVolume);
       }
@@ -115,17 +113,10 @@ const PracticeView = () => {
 
       // Now start the first round
       startNewRound();
-      
-      //playReferenceAndStart();
   }
   
-  // Auto-start if coming from Settings with preloaded instrument
   useEffect(() => {
-    if (started && preloaded) {
-      // Save current configuration when auto-starting from preloaded flow
-      saveCurrentConfiguration(settings);
-      doStart();
-    }
+    startAudio(settings.pickInstrument(), true, isAudioLoaded, setAudioLoading, startPractice);    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -135,32 +126,6 @@ const PracticeView = () => {
       stopDrone();
     };
   }, []);
-
-  const handleStart = async () => {
-    if (started) return;
-    
-    // Save current configuration to local storage
-    saveCurrentConfiguration(settings);
-    
-    setAudioLoading(true);
-    
-    // Show loading indicator only if preload takes more than 400ms
-    const loadingTimer = setTimeout(() => {
-      setShowLoadingIndicator(true);
-    }, 400);
-    
-    const ok = await preloadInstrumentWithGesture(sessionInstrument);
-    
-    clearTimeout(loadingTimer);
-    setShowLoadingIndicator(false);
-    setAudioLoading(false);
-    
-    if (ok) {
-      setStarted(true);
-      
-      doStart();
-    }
-  };
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -172,14 +137,14 @@ const PracticeView = () => {
       }
 
       // Play again shortcut
-      if (e.key === 'a' && started && !isPlaying) {
+      if (e.key === 'a' && isAudioLoaded && !isPlaying) {
         e.preventDefault();
         handlePlayAgain();
         return;
       }
 
       // Reference shortcut
-      if (e.key === 'e' && started && !isPlaying && !isPlayingReference) {
+      if (e.key === 'e' && isAudioLoaded && !isPlaying && !isPlayingReference) {
         e.preventDefault();
         handlePlayReference();
         return;
@@ -193,7 +158,7 @@ const PracticeView = () => {
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, started, isPlaying, isPlayingReference]);
+  }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, isAudioLoaded, isPlaying, isPlayingReference]);
 
   const startNewRound = () => {
     setLastPressedNote(null); 
@@ -522,7 +487,23 @@ const PracticeView = () => {
   
 
 
-  return (
+  return (<>
+    {!isAudioLoaded ? (
+        <Card>
+          <CardContent className="pt-6">
+            <Button 
+              onClick={() => startAudio(settings.pickInstrument(), true, isAudioLoaded, setAudioLoading, startPractice)} 
+              disabled={isAudioLoading}
+              className="w-full"
+              size="lg"
+            >
+              {isAudioLoading ? "Loading..." : "Load sounds"}
+            </Button>
+          </CardContent>
+        </Card>
+      ) 
+  : (<>
+    
    <div className="min-h-screen bg-background flex flex-col p-4 max-w-2xl mx-auto">
       <PracticeHeader
         showReference={true}
@@ -530,7 +511,7 @@ const PracticeView = () => {
         needsPracticeTotal={Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0)}
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
-        started={started}
+        started={isAudioLoaded}
         isPlaying={isPlaying}
         isPlayingReference={isPlayingReference}
         droneType={settings.droneType}
@@ -541,79 +522,77 @@ const PracticeView = () => {
         onDroneVolumeChange={handleDroneVolumeChange}
       />
 
-      {started && (
-        <div className="w-full max-w-2xl space-y-4">
-          {/* Musical note button div at the top */}
-          <SolfegeKeyboard
-            onNotePress={handleNotePress}
-            overlayNote={lastPressedNote}
-            overlayNoteTick={lastPressedNote !== null ? lastPressedWasCorrect : null}
-            overlayMessage={lastPressedNote !== null 
-                && lastNeedsPracticeDelta
-                && (lastNeedsPracticeDelta[0] !== lastNeedsPracticeDelta[1] || lastNeedsPracticeDelta[1] === maxNeedsPractice)
-                ? `More practice needed → ${lastNeedsPracticeDelta[1]===maxNeedsPractice ? maxNeedsPractice+" (max)" : lastNeedsPracticeDelta[1]}`
-                : null}
-            disabled={isPlayingReference}
-          />
+      <div className="w-full max-w-2xl space-y-4">
+        {/* Musical note button div at the top */}
+        <SolfegeKeyboard
+          onNotePress={handleNotePress}
+          overlayNote={lastPressedNote}
+          overlayNoteTick={lastPressedNote !== null ? lastPressedWasCorrect : null}
+          overlayMessage={lastPressedNote !== null 
+              && lastNeedsPracticeDelta
+              && (lastNeedsPracticeDelta[0] !== lastNeedsPracticeDelta[1] || lastNeedsPracticeDelta[1] === maxNeedsPractice)
+              ? `More practice needed → ${lastNeedsPracticeDelta[1]===maxNeedsPractice ? maxNeedsPractice+" (max)" : lastNeedsPracticeDelta[1]}`
+              : null}
+          disabled={isPlayingReference}
+        />
 
-          {/* Progress card */}
-          <Card className="relative">
-            <CardHeader>
-              <CardTitle className="text-center">
-                <div className="flex items-center justify-center gap-4">
-                  <div>
-                    {isPlayingReference ? (
-                      <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
-                    ) : (
-                      (isQuestionComplete(currentPosition) ? <span>Question complete! 🎉</span> : <span>Identify the notes</span>)
-                    )}
-                  </div>
-
-                  {isQuestionComplete(currentPosition) && (
-                    <span className="flex items-center gap-3">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button onClick={startNewRound} size="lg">
-                              Next
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Press N or Enter</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </span>
+        {/* Progress card */}
+        <Card className="relative">
+          <CardHeader>
+            <CardTitle className="text-center">
+              <div className="flex items-center justify-center gap-4">
+                <div>
+                  {isPlayingReference ? (
+                    <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
+                  ) : (
+                    (isQuestionComplete(currentPosition) ? <span>Question complete! 🎉</span> : <span>Identify the notes</span>)
                   )}
                 </div>
 
-              </CardTitle>
-            </CardHeader>
-            <CardContent>                
-              <div className="flex gap-2 justify-center flex-wrap">
-                {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
-                  const isAnswered = index < currentPosition;
-                  const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index])) : "?";
-                  const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
-                  
-                  return (
-                  <div key={index} className="flex align-items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
-                    >
-                      {noteSolfege}
-                    </div>
-                    <br/>
-
-                  </div>);
-                })}
+                {isQuestionComplete(currentPosition) && (
+                  <span className="flex items-center gap-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button onClick={startNewRound} size="lg">
+                            Next
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Press N or Enter</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </span>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
+            </CardTitle>
+          </CardHeader>
+          <CardContent>                
+            <div className="flex gap-2 justify-center flex-wrap">
+              {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
+                const isAnswered = index < currentPosition;
+                const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index])) : "?";
+                const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
+                
+                return (
+                <div key={index} className="flex align-items-center gap-4">
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
+                  >
+                    {noteSolfege}
+                  </div>
+                  <br/>
+
+                </div>);
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
+    </>)}</>);
 };
 
 export default PracticeView;

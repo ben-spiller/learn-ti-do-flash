@@ -13,7 +13,6 @@ import {
   SemitoneOffset, 
   playNote, 
   noteNameToMidi,
-  mustWaitForFestureBeforeAudioInit, 
   preloadInstrumentWithGesture, 
   startDrone, 
   stopDrone, 
@@ -21,9 +20,9 @@ import {
   setMasterVolume,
   keypressToSemitones,
   midiToNoteName,
-  isAudioInitialized,
   NOTE_NAMES,
-  formatInstrumentName, INSTRUMENT_IDS
+  formatInstrumentName, INSTRUMENT_IDS,
+  startAudio
 } from "@/utils/audio";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
@@ -64,21 +63,20 @@ const SolfegeKeyboardPage = () => {
     }
   }, [activeTab]);
 
+  async function startPractice() {
+    setAudioLoaded(true);
+    // Set master volume
+    setMasterVolume(currentVolume);
+    
+    // Start drone if enabled
+    if (!isAudioLoaded && settings.droneEnabled) {
+      startDrone(rootMidi, settings.droneVolume);
+    }
+  }
+
   // Ensure audio is started
   useEffect(() => {
-    if (isAudioInitialized(currentInstrument)) {      
-      // Set master volume
-      setMasterVolume(currentVolume);
-      
-      // Start drone if enabled
-      if (!isAudioLoaded && settings.droneEnabled) {
-        startDrone(rootMidi, settings.droneVolume);
-      }
-      setAudioLoaded(true);
-
-    } else if (!isAudioLoading && !mustWaitForFestureBeforeAudioInit()) {
-      handleStartAudio(true);
-    }
+    startAudio(currentInstrument, false, isAudioLoaded, setAudioLoading, startPractice);
   }, []);
     
   // Cleanup drone on unmount
@@ -127,46 +125,7 @@ const SolfegeKeyboardPage = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isAudioLoaded, rootMidi,  activeTab]);
-  
-  const handleStartAudio = async (silent = false) => {
-    if (isAudioLoaded) return;
     
-    setAudioLoading(true);
-    
-    try {
-      // Try to start audio context - this will fail silently if no gesture
-      const Tone = (window as any).Tone;
-      if (Tone && typeof Tone.start === 'function') {
-        await Tone.start();
-      }
-      
-      const ok = await preloadInstrumentWithGesture(currentInstrument);
-      setAudioLoading(false);
-      
-      if (ok) {
-        setAudioLoaded(true);
-        
-        // Set master volume
-        setMasterVolume(currentVolume);
-        
-        // Start drone if enabled
-        if (settings.droneEnabled) {
-          startDrone(rootMidi, settings.droneVolume);
-        }
-      } else if (!silent) {
-        // Only show alert if this was an explicit user action
-        window.alert('Unable to initialize audio. Please try again.');
-      }
-    } catch (err) {
-      setAudioLoading(false);
-      // Silent auto-start: don't show alert, just leave start button visible
-      if (!silent) {
-        console.error('Failed to start audio:', err);
-        window.alert('Unable to initialize audio. Audio will not be available.');
-      }
-    }
-  };
-  
   const handleNotePress = (note: SemitoneOffset, isVariation: boolean = false) => {
     if (isSelectingRoot) {
       // Set the root note based on the selected semitone
@@ -341,21 +300,21 @@ const SolfegeKeyboardPage = () => {
           <h1 className="text-lg font-semibold">Solfege Keyboard</h1>
         </div>
         
-        {/* Start Button or Keyboard */}
+        {/* Start Button */}
         {!isAudioLoaded ? (
           <Card>
             <CardContent className="pt-6">
               <Button 
-                onClick={() => handleStartAudio(false)} 
+                onClick={() => startAudio(currentInstrument, false, isAudioLoaded, setAudioLoading, startPractice)} 
                 disabled={isAudioLoading}
                 className="w-full"
                 size="lg"
               >
-                {isAudioLoading ? "Loading..." : "Start Playing"}
+                {isAudioLoading ? "Loading..." : "Load sounds"}
               </Button>
             </CardContent>
           </Card>
-        ) : (
+        ) : (<>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "notes" | "chords")}>
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -402,10 +361,9 @@ const SolfegeKeyboardPage = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        )}
         
-        {/* Settings Card - Below Keyboard */}
-        <Card>
+          {/* Settings Card - Below Keyboard */}
+          <Card>
           <CardContent className="pt-6 space-y-4">
             {/* Root Note and Octave */}
             <div className="space-y-2">
@@ -595,6 +553,7 @@ const SolfegeKeyboardPage = () => {
             
           </CardContent>
         </Card>
+        </>)}
       </div>
     </div>
   );

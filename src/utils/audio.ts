@@ -433,7 +433,7 @@ const createToneInstrument = async (instrument?: string) => {
 /** Checks if we need to wait until the until clicks before we can initialize the audio - 
  * means displaying a Start button or similar to the user before proceeding., 
 */
-export const mustWaitForFestureBeforeAudioInit = (): boolean => {
+export const mustWaitForGestureBeforeAudioInit = (): boolean => {
   const ctx = getAudioContext();
   // if it's already running, we don't need to wait
   if (ctx.state === 'running') return false;
@@ -443,7 +443,7 @@ export const mustWaitForFestureBeforeAudioInit = (): boolean => {
 
 /** Ensure AudioContext is resumed/started if not already. Throws an exceotion if mustWaitForFestureBeforeAudioInit(). */
 const ensureContextRunning = async () => {
-  if (mustWaitForFestureBeforeAudioInit()) throw Error("Cannot start audio until a user gesture is received");
+  if (mustWaitForGestureBeforeAudioInit()) throw Error("Cannot start audio until a user gesture is received");
   // For Tone.js we need to call Tone.start() within a user gesture. Also resume AudioContext if present.
   try {
     if ((window as any).Tone && typeof (window as any).Tone.start === 'function') {
@@ -479,6 +479,60 @@ const getNotesBetween = (from: MidiNoteName, to: MidiNoteName) => {
   }
   return notes;
 };
+
+/** Loads audio for this UI page, unless it was already loaded (in which case we assume the instrument is already correct), 
+  * or we must wait for a user gesture. 
+  * 
+  * @param instrument The instrument to load, if loading is required
+  * @param reuseExistingInstrumentIfLoaded Ignore instrument argument if already initialized (e.g. when coming from the Home page)
+  */
+export const startAudio = async (instrument: string, reuseExistingInstrumentIfLoaded: boolean, 
+    isAudioLoaded: boolean, setAudioLoading: (loading: boolean) => void, 
+    onAudioLoaded: () => void) => 
+  {
+    if (isAudioLoaded) {
+      console.log("Audio is already loaded for this page");
+      return; // assuming we don't change instrument once this page has loaded, nothing to do in this case  
+    }
+
+    if (isAudioInitialized(reuseExistingInstrumentIfLoaded ? null : instrument)) {
+      console.log("Audio is already initialized for this instrument: "+currentInstrument);
+      onAudioLoaded();
+      return;
+    } 
+    if (!isAudioInitialized() && mustWaitForGestureBeforeAudioInit()) {
+      console.log("Waiting until user gesture (button click) before it is possible to load audio");
+      return;
+    }
+
+    console.log("Loading audio, with instrument: "+instrument);
+    setAudioLoading(true);
+    
+    try {
+      // Try to start audio context - this will fail silently if no gesture
+      const Tone = (window as any).Tone;
+      if (Tone && typeof Tone.start === 'function') {
+        await Tone.start();
+      }
+      
+      const ok = await preloadInstrumentWithGesture(instrument);
+      setAudioLoading(false);
+      
+      if (ok) {
+        console.log("Finished loading audio");
+        onAudioLoaded();
+      } else {
+        // Only show alert if this was an explicit user action
+        window.alert('Unable to initialize audio. Please try again.');
+      }
+    } catch (err) {
+      setAudioLoading(false);
+      // Silent auto-start: don't show alert, just leave start button visible
+      console.error('Failed to start audio:', err);
+      window.alert('Unable to initialize audio. Audio will not be available.');
+    }
+  };
+
 
 /**
  * Unified function to set and preload an instrument.

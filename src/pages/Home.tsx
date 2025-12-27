@@ -230,7 +230,6 @@ const HomeSettingsView = () => {
       
       // Encode settings as query params and navigate
       const queryParams = currentSettings.toQueryParams();
-      queryParams.set('preloaded', 'true');
       const route = currentSettings.exerciseType === ExerciseType.IntervalComparison 
         ? '/interval-comparison'
         : '/practice';

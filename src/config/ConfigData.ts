@@ -2,6 +2,7 @@
 // Central location for all practice-related settings, defaults, and constants
 
 import { MidiNoteName, SemitoneOffset, semitonesToSolfege } from "@/utils/audio";
+import { getFavouriteInstruments } from "@/utils/instrumentStorage";
 
 /** A pair of semi-tone offsets, e.g. for an range of possible notes relative to the root */
 type SemitonePair = [SemitoneOffset, SemitoneOffset];
@@ -142,7 +143,10 @@ export class ConfigData {
 
 
   /** Pick the instrument to use for this session based on the instrument mode */
-  pickInstrument(favouriteInstruments: string[]): string {
+  pickInstrument(favouriteInstruments?: string[]): string {
+    if (!favouriteInstruments) {
+      favouriteInstruments = getFavouriteInstruments();
+    }
     if (this.instrumentMode === "random" && favouriteInstruments.length > 0) {
       const randomIndex = Math.floor(Math.random() * favouriteInstruments.length);
       return favouriteInstruments[randomIndex];

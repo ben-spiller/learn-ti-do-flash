@@ -11,6 +11,7 @@ import {
   preloadInstrumentWithGesture,
   noteNameToMidi,
   semitonesToInterval,
+  startAudio,
 } from "@/utils/audio";
 import { ConfigData } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
@@ -29,11 +30,6 @@ const IntervalComparisonPractice = () => {
   const settings = hasQueryParams
     ? ConfigData.fromQueryParams(searchParams)
     : new ConfigData(location.state as Partial<ConfigData>);
-
-  const preloaded = searchParams.get("preloaded") === "true";
-
-  // Pick the instrument to use for this session
-  const sessionInstrument = settings.pickInstrument(getFavouriteInstruments());
 
   // Calculate note duration based on tempo
   const noteDuration = 60 / settings.tempo;
@@ -58,10 +54,8 @@ const IntervalComparisonPractice = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   
   const [isAudioLoading, setAudioLoading] = useState(false);
-  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [started, setStarted] = useState(preloaded);
+  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
 
-  const [isPlayingReference, setIsPlayingReference] = useState(false);
   const [droneVolume] = useState(-8);
 
   const totalSequencesAnswered = useRef(0);
@@ -74,17 +68,15 @@ const IntervalComparisonPractice = () => {
     return isCorrect === true;
   };
 
-  async function doStart() {
+  async function startPractice() {
+    setIsAudioLoaded(true);
     // No drone or reference for this exercise type
     startNewRound();
   }
 
-  // Auto-start if coming from Settings with preloaded instrument
+
   useEffect(() => {
-    if (started && preloaded) {
-      saveCurrentConfiguration(settings);
-      doStart();
-    }
+    startAudio(settings.pickInstrument(), true, isAudioLoaded, setAudioLoading, startPractice);    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -98,14 +90,14 @@ const IntervalComparisonPractice = () => {
       }
 
       // Play again shortcut
-      if (e.key === "a" && started && !isPlaying) {
+      if (e.key === "a" && isAudioLoaded && !isPlaying) {
         e.preventDefault();
         handlePlayAgain();
         return;
       }
 
       // Number keys for selecting intervals
-      if (e.key >= "1" && e.key <= "9" && started && !isQuestionComplete()) {
+      if (e.key >= "1" && e.key <= "9" && isAudioLoaded && !isQuestionComplete()) {
         const index = parseInt(e.key, 10)-1;
         if (index > 0 && index < sequence.length) {
           e.preventDefault();
@@ -115,30 +107,7 @@ const IntervalComparisonPractice = () => {
     };
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [sequence, started, isPlaying, isCorrect]);
-
-  const handleStart = async () => {
-    if (started) return;
-
-    saveCurrentConfiguration(settings);
-
-    setAudioLoading(true);
-
-    const loadingTimer = setTimeout(() => {
-      setShowLoadingIndicator(true);
-    }, 400);
-
-    const ok = await preloadInstrumentWithGesture(sessionInstrument);
-
-    clearTimeout(loadingTimer);
-    setShowLoadingIndicator(false);
-    setAudioLoading(false);
-
-    if (ok) {
-      setStarted(true);
-      doStart();
-    }
-  };
+  }, [sequence, isAudioLoaded, isPlaying, isCorrect]);
 
   const startNewRound = () => {
     // Generate a sequence with one target interval and other intervals from otherIntervals
@@ -308,7 +277,22 @@ const IntervalComparisonPractice = () => {
     // No drone for this exercise
   };
 
-  return (
+  return (<>
+    {!isAudioLoaded ? (
+        <Card>
+          <CardContent className="pt-6">
+            <Button 
+              onClick={() => startAudio(settings.pickInstrument(), true, isAudioLoaded, setAudioLoading, startPractice)} 
+              disabled={isAudioLoading}
+              className="w-full"
+              size="lg"
+            >
+              {isAudioLoading ? "Loading..." : "Load sounds"}
+            </Button>
+          </CardContent>
+        </Card>
+      ) 
+  : (<>
    <div className="min-h-screen bg-background flex flex-col p-4 max-w-2xl mx-auto">
 
       <PracticeHeader
@@ -316,9 +300,9 @@ const IntervalComparisonPractice = () => {
         correctAttempts={correctAttempts}
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
-        started={started}
+        started={isAudioLoaded}
         isPlaying={isPlaying}
-        isPlayingReference={isPlayingReference}
+        isPlayingReference={false}
         droneType="none"
         droneVolume={droneVolume}
         onPlayAgain={handlePlayAgain}
@@ -327,8 +311,7 @@ const IntervalComparisonPractice = () => {
         onDroneVolumeChange={handleDroneVolumeChange}
       />
 
-      {started && (
-        <Card className="w-full max-w-2xl">
+     <Card className="w-full max-w-2xl">
           <CardContent className="pt-6">
               <div className="space-y-6">
               <div className="text-center">
@@ -431,9 +414,8 @@ const IntervalComparisonPractice = () => {
             </div>
           </CardContent>
         </Card>
-      )}
     </div>
-  );
+    </>)}</>);
 };
 
 export default IntervalComparisonPractice;
