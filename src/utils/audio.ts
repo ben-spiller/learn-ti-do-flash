@@ -1,3 +1,5 @@
+import * as Tone from "tone";
+
 /** Specifies the number of semitones above (or for negative numbers, below)
  * the root ("do") note. Add this to rootMidi to get the absolute MIDI note number.
  * This can extend beyond the octave (0-11) range. Use %12 to get the pitch class.  
@@ -119,7 +121,6 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
 
 let audioContext: AudioContext | null = null;
 let toneInstrument: any = null; // Tone.js synth / sampler instance
-let toneLoaded = false;
 let currentInstrument = 'acoustic_grand_piano';
 let droneSynth: any = null; // PolySynth for background drone
 let masterVolume: number = -8; // Master volume in dB
@@ -230,7 +231,6 @@ const createMidiJsPlayerUsingTone = async (instrument: string) => {
   if (!sf) throw new Error('Soundfont data not found for ' + instrument);
 
   // Use Tone's raw audio context when available so everything shares the same context
-  const Tone = (window as any).Tone;
   const toneRawCtx: BaseAudioContext | null = Tone && (Tone.getContext ? Tone.getContext().rawContext : Tone.context && Tone.context.rawContext) || null;
   const audioCtx = (toneRawCtx as any) || getAudioContext();
 
@@ -339,28 +339,6 @@ const getAudioContext = () => {
   return audioContext;
 };
 
-// Load Tone.js from CDN and initialize a synth/sampler-based instrument.
-const loadToneScript = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if ((window as any).Tone) {
-      toneLoaded = true;
-      resolve();
-      return;
-    }
-
-    const script = document.createElement('script');
-    // Using a specific build that exposes window.Tone
-    script.src = 'https://unpkg.com/tone@14.8.39/build/Tone.js';
-    script.async = true;
-    script.onload = () => {
-      toneLoaded = true;
-      resolve();
-    };
-    script.onerror = () => reject(new Error('Failed to load Tone.js from CDN'));
-    document.head.appendChild(script);
-  });
-};
-
 /**
  * Create a Tone.js instrument for the given instrument name.
  * We use lightweight synths (PolySynth/Synth/FMSynth/AMSynth) mapped to instrument names.
@@ -376,13 +354,6 @@ const createToneInstrument = async (instrument?: string) => {
   }
 
   if (toneInstrument) return toneInstrument;
-
-  if (!toneLoaded) {
-    await loadToneScript();
-  }
-
-  const Tone = (window as any).Tone;
-  if (!Tone) throw new Error('Tone.js is not available after loading');
 
   // Map some friendly instrument names to Tone synth constructs.
   const name = currentInstrument.toLowerCase();
@@ -446,9 +417,7 @@ const ensureContextRunning = async () => {
   if (mustWaitForGestureBeforeAudioInit()) throw Error("Cannot start audio until a user gesture is received");
   // For Tone.js we need to call Tone.start() within a user gesture. Also resume AudioContext if present.
   try {
-    if ((window as any).Tone && typeof (window as any).Tone.start === 'function') {
-      await (window as any).Tone.start();
-    }
+    await Tone.start();
   } catch (e) { 
     console.warn('Error starting Tone.js', e);
     // ignore
@@ -510,7 +479,6 @@ export const startAudio = async (instrument: string, reuseExistingInstrumentIfLo
     
     try {
       // Try to start audio context - this will fail silently if no gesture
-      const Tone = (window as any).Tone;
       if (Tone && typeof Tone.start === 'function') {
         await Tone.start();
       }
@@ -636,7 +604,6 @@ export const preloadInstrumentWithGesture = async (
         try {
           await loadMidiJsSoundfontScript(currentInstrument);
           const sf = _midiJsData[currentInstrument];
-          const Tone = (window as any).Tone;
           const toneRawCtx: BaseAudioContext | null = Tone && (Tone.getContext ? Tone.getContext().rawContext : Tone.context && Tone.context.rawContext) || null;
           const audioCtx = (toneRawCtx as any) || getAudioContext();
           const total = notesToDecode.length;
@@ -703,12 +670,12 @@ export const getCurrentInstrument = () => currentInstrument;
 
 export const isAudioInitialized = (instrument?: string) => {
   const targetInstrument = instrument || currentInstrument;
-  return toneLoaded && toneInstrument !== null && currentInstrument === targetInstrument;
+  return toneInstrument !== null && currentInstrument === targetInstrument;
 };
 
 export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, durationSecs: number = 0.7, when?: number, cancelOtherNotes?: boolean) => {
   if (cancelOtherNotes) {
-    (window as any).Tone.Transport.cancel();
+    Tone.Transport.cancel();
   }
 
   // note may be a MIDI number (preferred), or a note name like 'C4'
@@ -724,7 +691,7 @@ export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, duration
     console.error('Invalid note for playNote', midiNote);
     return;
   }
-  //console.log(`Playing note ${noteName} for ${durationSecs} at ${when}; now is ${getAudioContext().currentTime} / ${(window as any).Tone.now()}`);
+  //console.log(`Playing note ${noteName} for ${durationSecs} at ${when}; now is ${getAudioContext().currentTime} / ${Tone.now()}`);
 
   await ensureContextRunning();
   try {
@@ -743,7 +710,6 @@ export const playNote = async (midiNote: MidiNoteNumber | MidiNoteName, duration
       console.debug(`  using triggerAttack`);
       // Tone's PolySynth scheduling: use Tone.now() relative if available
       try {
-        const Tone = (window as any).Tone;
         if (when && Tone && typeof Tone.now === 'function') {
           const offset = when - (Tone.now ? Tone.now() : 0);
           console.debug(`  scheduling note ${noteName} at Tone offset ${offset} (when=${when}, now=${Tone.now()})`);
@@ -771,7 +737,7 @@ type SequenceItem = { note: MidiNoteNumber | MidiNoteName; duration?: number; ga
 
 export const playSequence = async (items: Array<SequenceItem | MidiNoteNumber | MidiNoteName>, 
     defaultGap: number = 0.1, defaultDuration: number = 0.7) => {
-  (window as any).Tone.Transport.cancel();
+  Tone.Transport.cancel();
 
   // Convert items to SequenceItem
   const seq: SequenceItem[] = items.map(it => {
@@ -780,7 +746,6 @@ export const playSequence = async (items: Array<SequenceItem | MidiNoteNumber | 
   });
 
   // Schedule using AudioContext currentTime so notes don't cut off each other
-  const Tone = (window as any).Tone;
   let time = Tone && typeof Tone.now === 'function' ? Tone.now() : getAudioContext().currentTime;
   time += 0.05; // small scheduling offset
   for (let i = 0; i < seq.length; i++) {
@@ -802,13 +767,6 @@ export const playSequence = async (items: Array<SequenceItem | MidiNoteNumber | 
  * Uses a square wave PolySynth from Tone.js.
  */
 export const startDrone = async (noteNameOrMidi: MidiNoteName | MidiNoteNumber, volume: number) => {
-  await loadToneScript();
-  const Tone = (window as any).Tone;
-  if (!Tone) {
-    console.error('Tone.js not loaded, cannot start drone');
-    return;
-  }
-
   // Stop any existing drone first
   stopDrone();
 
@@ -900,7 +858,7 @@ export const stopSounds = () => {
   
   // Stop instrument notes (if using Tone.js PolySynth)
   if (toneInstrument) {
-    (window as any).Tone.Transport.cancel();
+    Tone.Transport.cancel();
     try {
       if (typeof toneInstrument.releaseAll === 'function') {
         toneInstrument.releaseAll();
