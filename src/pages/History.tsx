@@ -254,7 +254,7 @@ const PracticeHistory = () => {
               {hasPreviousSession && (
                 <div className="mt-0.5">{formatDelta(recentSession.needsPracticeCount, previousSession.needsPracticeCount, '', true)}</div>
               )}
-              <div className="text-sm text-muted-foreground mt-1">Practice TODO size</div>
+              <div className="text-sm text-muted-foreground mt-1">Practice To-Do size</div>
             </div>}
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
@@ -680,7 +680,7 @@ const PracticeHistory = () => {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Practice TODO size</CardTitle>
+                      <CardTitle>Practice To-Do size</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="h-48">
@@ -701,7 +701,7 @@ const PracticeHistory = () => {
                                 <Line
                                   type="monotone"
                                   dataKey="severity"
-                                  name="Practice TODOs"
+                                  name="Practice To-Do's"
                                   stroke="red"
                                   strokeWidth={2}
                                   dot={{ r: 4 }}
@@ -769,7 +769,7 @@ const PracticeHistory = () => {
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Avg/Answer</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Attempts</th>
                           <th className="text-right p-2 text-sm font-medium text-muted-foreground">Needs practice</th>
-                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Practice TODOs</th>
+                          <th className="text-right p-2 text-sm font-medium text-muted-foreground">Practice To-Do's</th>
                         </tr>
                       </thead>
                       <tbody>
