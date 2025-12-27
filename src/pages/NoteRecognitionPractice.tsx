@@ -597,9 +597,8 @@ const PracticeView = () => {
                   const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
                   
                   return (
-                  <div className="flex align-items-center gap-4">
+                  <div key={index} className="flex align-items-center gap-4">
                     <div
-                      key={index}
                       className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
                     >
                       {noteSolfege}
