@@ -1,0 +1,33 @@
+<svg
+  width="64"
+  height="64"
+  viewBox="25 0 15 64"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- U-shaped prongs -->
+  <path
+    d="M22 8 v22 a10 10 0 0 0 20 0 V8"
+    fill="none"
+    stroke="black"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- Handle -->
+  <line
+    x1="32"
+    y1="40"
+    x2="32"
+    y2="54"
+    stroke="black"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+  <!-- Bottom knob -->
+  <circle
+    cx="32"
+    cy="58"
+    r="3"
+    fill="black"
+  />
+</svg>

@@ -70,8 +70,8 @@ export const PracticeHeader = ({
                     onClick={onPlayAgain}
                     disabled={isPlaying}
                   >
-                    <Play className="h-4 w-4 mr-1" />
-                    Again
+                    <Play className="h-4 w-4 mr-1"/>
+                    <span className="hidden sm:inline">Again</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -88,8 +88,8 @@ export const PracticeHeader = ({
                     onClick={onPlayReference}
                     disabled={isPlaying || isPlayingReference}
                   >
-                    <Volume2 className="h-4 w-4 mr-1" />
-                    Reference
+                    <img src="/tuning-fork.svg" alt="Reference" className="h-4 w-4 mr-0" />
+                    <span className="hidden sm:inline">Reference</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
