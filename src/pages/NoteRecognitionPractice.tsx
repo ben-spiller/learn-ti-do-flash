@@ -279,6 +279,7 @@ const PracticeView = () => {
           needsPractice.current.set(pairKey, newCount);
         }
       }
+      console.log("Needs practice for "+pairKey+" decreased from "+oldCount+" to "+newCount);
       setLastNeedsPracticeDelta([oldCount, newCount]);
 
       setCorrectAttempts(correctAttempts + 1);
@@ -315,12 +316,13 @@ const PracticeView = () => {
         (oldNeedsPracticeCount <3) ? +3 : +1));
       needsPractice.current.set(pairKey, newNeedsPracticeCount);
       setLastNeedsPracticeDelta([oldNeedsPracticeCount, newNeedsPracticeCount]);
+      console.log("Needs practice for "+pairKey+" increased from "+oldNeedsPracticeCount+" to "+newNeedsPracticeCount);
       
       // Also increment needsPractice for the INCORRECT note that was entered
       const incorrectPairKey = `${prevInterval},${selectedNote}`;
       const incorrectNeedsPracticeCount = (needsPractice.current.get(incorrectPairKey) || 0);
-      needsPractice.current.set(incorrectPairKey, Math.min(maxNeedsPractice, incorrectNeedsPracticeCount + 1));
-      
+      needsPractice.current.set(incorrectPairKey, Math.min(maxNeedsPractice, Math.min(maxNeedsPractice, incorrectNeedsPracticeCount + 1)));
+      console.log("Needs practice for "+incorrectPairKey+" increased from "+incorrectNeedsPracticeCount+" to "+(incorrectNeedsPracticeCount + 1));
     }
 
     // Clear feedback after animation
