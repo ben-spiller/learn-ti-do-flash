@@ -130,7 +130,10 @@ const PracticeHistory = () => {
   
   // Find previous session of the same exercise type (if any)
   const previousSession = recentSession 
-    ? allSessions.filter(s => s.exerciseName === recentSession.exerciseName).slice(-2)[0] 
+    ? allSessions.filter(s => s.exerciseName === recentSession.exerciseName)
+    .filter(s => s.exerciseName !== ExerciseType.IntervalComparison 
+      || s.settings.intervalToFind === recentSession.settings.intervalToFind)
+    .slice(-2)[0] 
     : null;
   const hasPreviousSession = previousSession && previousSession !== recentSession;
   
