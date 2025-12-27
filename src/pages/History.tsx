@@ -481,7 +481,7 @@ const PracticeHistory = () => {
                           )}
                         </div>
                       </div>
-                      <span className="text-xs text-muted-foreground ml-1">
+                      <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
                         ({Math.abs(pair.note1Value-pair.note2Value)} semitones)
                       </span>
                       <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
