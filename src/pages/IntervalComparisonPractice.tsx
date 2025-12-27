@@ -117,28 +117,28 @@ const IntervalComparisonPractice = () => {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [sequence, started, isPlaying, isCorrect]);
 
-  const handleStart = async () => {
-    if (started) return;
+  // const handleStart = async () => {
+  //   if (started) return;
 
-    saveCurrentConfiguration(settings);
+  //   saveCurrentConfiguration(settings);
 
-    setAudioLoading(true);
+  //   setAudioLoading(true);
 
-    const loadingTimer = setTimeout(() => {
-      setShowLoadingIndicator(true);
-    }, 400);
+  //   const loadingTimer = setTimeout(() => {
+  //     setShowLoadingIndicator(true);
+  //   }, 400);
 
-    const ok = await preloadInstrumentWithGesture(sessionInstrument);
+  //   const ok = await preloadInstrumentWithGesture(sessionInstrument);
 
-    clearTimeout(loadingTimer);
-    setShowLoadingIndicator(false);
-    setAudioLoading(false);
+  //   clearTimeout(loadingTimer);
+  //   setShowLoadingIndicator(false);
+  //   setAudioLoading(false);
 
-    if (ok) {
-      setStarted(true);
-      doStart();
-    }
-  };
+  //   if (ok) {
+  //     setStarted(true);
+  //     doStart();
+  //   }
+  // };
 
   const startNewRound = () => {
     // Generate a sequence with one target interval and other intervals from otherIntervals
