@@ -128,72 +128,72 @@ const HomeSettingsView = () => {
     });
   };
 
-  const loadConfig = (id: string) => {
-    const settings = loadConfiguration(id);
-    if (!settings) return;
+  // const loadConfig = (id: string) => {
+  //   const settings = loadConfiguration(id);
+  //   if (!settings) return;
     
-    setExerciseType(settings.exerciseType);
-    setSelectedNotes(settings.selectedNotes);
-    setNumberOfNotes(settings.numberOfNotes);
-    setPlayExtraNotes(settings.playExtraNotes);
-    setConsecutiveIntervals(settings.consecutiveIntervals);
-    setQuestionNoteRange(settings.questionNoteRange);
-    setTargetInterval(settings.intervalToFind);
-    setIntervalComparisonRange(settings.intervalComparisonRange);
-    setIntervalDirection(settings.intervalDirection);
-    setTempo(settings.tempo);
-    setRhythm(settings.rhythm);
-    setDroneType(settings.droneType);
-    setRootNotePitch(settings.rootNotePitch);
-    setSelectedInstrument(settings.instrument);
-    setInstrumentMode(settings.instrumentMode);
-  };
+  //   setExerciseType(settings.exerciseType);
+  //   setSelectedNotes(settings.selectedNotes);
+  //   setNumberOfNotes(settings.numberOfNotes);
+  //   setPlayExtraNotes(settings.playExtraNotes);
+  //   setConsecutiveIntervals(settings.consecutiveIntervals);
+  //   setQuestionNoteRange(settings.questionNoteRange);
+  //   setTargetInterval(settings.intervalToFind);
+  //   setIntervalComparisonRange(settings.intervalComparisonRange);
+  //   setIntervalDirection(settings.intervalDirection);
+  //   setTempo(settings.tempo);
+  //   setRhythm(settings.rhythm);
+  //   setDroneType(settings.droneType);
+  //   setRootNotePitch(settings.rootNotePitch);
+  //   setSelectedInstrument(settings.instrument);
+  //   setInstrumentMode(settings.instrumentMode);
+  // };
 
-  const handleSaveConfig = () => {
-    if (!configName.trim()) {
-      toast({
-        title: "Name Required",
-        description: "Please enter a name for this configuration.",
-        variant: "destructive",
-      });
-      return;
-    }
+  // const handleSaveConfig = () => {
+  //   if (!configName.trim()) {
+  //     toast({
+  //       title: "Name Required",
+  //       description: "Please enter a name for this configuration.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
     
-    const currentSettings = getCurrentSettings();
-    const existingConfig = savedConfigs.find(c => c.name === configName.trim());
+  //   const currentSettings = getCurrentSettings();
+  //   const existingConfig = savedConfigs.find(c => c.name === configName.trim());
     
-    saveConfiguration(configName.trim(), currentSettings);
-    setSavedConfigs(getSavedConfigurations());
-    setConfigName("");
-    setSaveDialogOpen(false);
+  //   saveConfiguration(configName.trim(), currentSettings);
+  //   setSavedConfigs(getSavedConfigurations());
+  //   setConfigName("");
+  //   setSaveDialogOpen(false);
     
-    toast({
-      title: existingConfig ? "Configuration Updated" : "Configuration Saved",
-      description: existingConfig 
-        ? `"${configName.trim()}" has been updated.`
-        : `"${configName.trim()}" has been saved.`,
-    });
-  };
+  //   toast({
+  //     title: existingConfig ? "Configuration Updated" : "Configuration Saved",
+  //     description: existingConfig 
+  //       ? `"${configName.trim()}" has been updated.`
+  //       : `"${configName.trim()}" has been saved.`,
+  //   });
+  // };
 
-  const handleDeleteConfig = (id: string, name: string) => {
-    deleteConfiguration(id);
-    setSavedConfigs(getSavedConfigurations());
-    if (selectedConfigId === id) {
-      setSelectedConfigId("");
-    }
+  // const handleDeleteConfig = (id: string, name: string) => {
+  //   deleteConfiguration(id);
+  //   setSavedConfigs(getSavedConfigurations());
+  //   if (selectedConfigId === id) {
+  //     setSelectedConfigId("");
+  //   }
     
-    toast({
-      title: "Configuration Deleted",
-      description: `"${name}" has been removed.`,
-    });
-  };
+  //   toast({
+  //     title: "Configuration Deleted",
+  //     description: `"${name}" has been removed.`,
+  //   });
+  // };
 
 
-  const handleNoteToggle = (interval: number) => {
-    setSelectedNotes((prev) =>
-      prev.includes(interval) ? prev.filter((n) => n !== interval) : [...prev, interval]
-    );
-  };
+  // const handleNoteToggle = (interval: number) => {
+  //   setSelectedNotes((prev) =>
+  //     prev.includes(interval) ? prev.filter((n) => n !== interval) : [...prev, interval]
+  //   );
+  // };
 
   const handleStart = async () => {
     if (selectedNotes.length < 2) {
@@ -625,7 +625,7 @@ const HomeSettingsView = () => {
                             }
                           }}
                         >
-                          Major Scale
+                          Scale Notes
                         </Button>
                         <Button
                           variant={JSON.stringify(selectedNotes) === JSON.stringify([1, 3, 6, 8, 10]) ? "default" : "outline"}
@@ -639,7 +639,7 @@ const HomeSettingsView = () => {
                             }
                           }}
                         >
-                          Chromatic Only
+                          Non-scale Notes
                         </Button>
                         <Button
                           variant={selectedNotes.length === 12 ? "default" : "outline"}
