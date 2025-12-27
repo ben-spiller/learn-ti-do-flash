@@ -545,7 +545,7 @@ const PracticeView = () => {
                   {isPlayingReference ? (
                     <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
                   ) : (
-                    (isQuestionComplete(currentPosition) ? <span>Question complete! 🎉</span> : <span>Identify the notes</span>)
+                    (isQuestionComplete(currentPosition) ? <span>Correct! 🎉</span> : <span>Identify the notes</span>)
                   )}
                 </div>
 
