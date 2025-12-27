@@ -200,6 +200,13 @@ const HomeSettingsView = () => {
       alert("Please select at least 2 notes to practice");
       return;
     }
+
+    if (exerciseType === ExerciseType.IntervalComparison && intervalComparisonRange[0] === intervalComparisonRange[1]
+      && intervalComparisonRange[0] === intervalToFind
+    ) {
+      alert("The interval comparison range must include at least one interval different from the target interval to find");
+      return;
+    }
     
     setAudioLoading(true);
     
