@@ -11,7 +11,7 @@ import { getNoteButtonColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 import { PracticeHeader } from "@/components/PracticeHeader";
-
+import tuningFork from "@/assets/tuning-fork.svg";
 
 const PracticeView = () => {
   const location = useLocation();
@@ -544,9 +544,9 @@ const PracticeView = () => {
             <CardTitle className="text-center">
               <div className="flex items-center justify-center gap-4">
                 <div>
-                  {isPlayingReference ? (
-                    <span className="text-primary animate-pulse">🎵 Playing reference "{midiToNoteName(rootMidi)}"...</span>
-                  ) : (
+                  {isPlayingReference ? (<><img src={tuningFork} alt="Tuning Fork" className="w-6 h-6 mr-2 inline-block" />
+                    <span className="animate-pulse">Playing reference "{midiToNoteName(rootMidi)}"...</span>
+                  </>) : (
                     (isQuestionComplete(currentPosition) ? <span>Correct! 🎉</span> : <span>Identify the notes</span>)
                   )}
                 </div>
