@@ -50,6 +50,7 @@ const PracticeView = () => {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastPressedOverlay, setLastPressedOverlay] = useState<Overlay | null>(null);
+  const [lastAnswerInfo, setLastAnswerInfo] = useState<string | null>(null);
   /** Number of note presses that were correct */
   const [correctAttempts, setCorrectAttempts] = useState(0);
   /** Total number of note presses */
@@ -158,6 +159,7 @@ const PracticeView = () => {
 
   const startNewRound = () => {
     setLastPressedOverlay(null);
+    setLastAnswerInfo(null);
     prevSequence.current = [...sequence];
     //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
     const newSequence = generateNextNoteSequence();
@@ -250,7 +252,7 @@ const PracticeView = () => {
     const isCorrect = semitonesToOneOctave(selectedNote) === semitonesToOneOctave(correctNote);
 
     // We'll build the overlay after updating needsPractice so it can include the delta
-    let overlayMessage: string;
+    let lastAnswerInfo: string;
 
     // Update practice tracking
     const correctInterval = correctNote;
@@ -275,7 +277,7 @@ const PracticeView = () => {
         }
       }
       console.log("Needs practice for "+pairKey+" decreased from "+oldCount+" to "+newCount);
-      overlayMessage = getOverlayMessage(true, oldCount, newCount);
+      lastAnswerInfo = getLastAnswerInfo(true, oldCount, newCount);
 
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
@@ -310,7 +312,7 @@ const PracticeView = () => {
       const newNeedsPracticeCount = Math.min(maxNeedsPractice, oldNeedsPracticeCount + (
         (oldNeedsPracticeCount <3) ? +3 : +1));
       needsPractice.current.set(pairKey, newNeedsPracticeCount);
-      overlayMessage = getOverlayMessage(false, oldNeedsPracticeCount, newNeedsPracticeCount);
+      lastAnswerInfo = getLastAnswerInfo(false, oldNeedsPracticeCount, newNeedsPracticeCount);
       console.log("Needs practice for "+pairKey+" increased from "+oldNeedsPracticeCount+" to "+newNeedsPracticeCount);
       
       // Also increment needsPractice for the INCORRECT note that was entered
@@ -322,15 +324,19 @@ const PracticeView = () => {
 
     // Show overlay (including needs-practice delta) and schedule automatic clear
     clearTimeout(lastPressedOverlay?.timeoutId);
-    setLastPressedOverlay({ note: selectedNote, isCorrect, message: overlayMessage, 
+    setLastPressedOverlay({ note: selectedNote, isCorrect,  
       timeoutId: setTimeout(() => {
         setLastPressedOverlay(null);
+        if (isCorrect && !isQuestionComplete(currentPosition)) {
+          setLastAnswerInfo(null); // after this timeout, clear the info for correct answer (wrong )
+        }
     }, FEEDBACK_MILLIS) });
+    setLastAnswerInfo(lastAnswerInfo);
   };
 
-  const getOverlayMessage = (isCorrect: boolean, oldCount: number, newCount: number): string | null => {
+  const getLastAnswerInfo = (isCorrect: boolean, oldCount: number, newCount: number): string | null => {
     if ((oldCount !== newCount) || newCount === maxNeedsPractice) {
-      return `More practice needed → ${newCount === maxNeedsPractice ? maxNeedsPractice + " (max)" : newCount}`;
+      return `Practice reps needed for this sequence is now: ${newCount === maxNeedsPractice ? maxNeedsPractice + " (max)" : newCount}`;
     }
     return null;
   }
@@ -586,6 +592,9 @@ const PracticeView = () => {
 
                 </div>);
               })}
+            </div>
+            <div className="text-center mt-4 text-sm">
+              {lastAnswerInfo}
             </div>
           </CardContent>
         </Card>
