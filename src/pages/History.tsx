@@ -336,7 +336,7 @@ const PracticeHistory = () => {
                             {pair.targetName}
                           </div>
                           <span className="text-muted-foreground">↔</span>
-                          <div className="px-3 py-2 rounded-lg bg-destructive/20 border border-destructive/30 font-bold text-sm">
+                          <div className="px-3 py-2 rounded-lg bg-destructive/20 border border-destructive/30 font-bold text-sm" style={{ width: "7em" }}>
                             {pair.selectedName}
                           </div>
                         </div>
@@ -345,7 +345,7 @@ const PracticeHistory = () => {
                             className="h-full bg-gradient-to-r from-orange-500/70 to-orange-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                             style={{ width: `${widthPercent}%` }}
                           >
-                              <span className="text-xs font-bold text-white">{pair.count}{widthPercent>50 && ' times'}</span>
+                              <span className="text-xs font-bold text-white">{pair.count}{widthPercent>30 && index===0 && ' times'}</span>
                           </div>
                         </div>
                       </div>
@@ -540,7 +540,7 @@ const PracticeHistory = () => {
               }
             })
             .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
-            .filter(pair => pair.count > 1) // Only show patterns (count > 1)
+            .filter(pair => pair.count > 2) // Only show more common ones
             .sort((a, b) => b.count - a.count);
 
           const maxCount = needsPracticePairs[0]?.count || 1;
@@ -556,7 +556,7 @@ const PracticeHistory = () => {
                 <CardContent>
                   {needsPracticePairs.length > 0 ? (
                     <div className="space-y-3">
-                      {needsPracticePairs.map((pair) => {
+                      {needsPracticePairs.map((pair, index) => {
                         const widthPercent = (pair.count / maxCount) * 100;
                         
                         return (
@@ -591,7 +591,7 @@ const PracticeHistory = () => {
                                 className="h-full bg-gradient-to-r from-amber-500/70 to-amber-600/70 transition-all duration-500 flex items-center justify-end pr-3"
                                 style={{ width: `${widthPercent}%` }}
                               >
-                                  <span className="text-xs font-bold text-white">{pair.count}{widthPercent>30 && ' severity'}</span>
+                                  <span className="text-xs font-bold text-white">{pair.count}{widthPercent>30 && index == 0 && ' severity'}</span>
                               </div>
                             </div>
                           </div>
