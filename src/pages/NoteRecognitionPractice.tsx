@@ -162,6 +162,7 @@ const PracticeView = () => {
 
   const startNewRound = () => {
     setLastPressedNote(null); 
+    setLastPressedWasCorrect(null);
     prevSequence.current = [...sequence];
     //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
     const newSequence = generateNextNoteSequence();
@@ -328,7 +329,8 @@ const PracticeView = () => {
     // Clear feedback after animation
     clearTimeout(lastPressedNoteOverlayTimeout.current);
     lastPressedNoteOverlayTimeout.current = setTimeout(() => {
-        setLastPressedNote(null); 
+        setLastPressedNote(null);
+        setLastPressedWasCorrect(null); 
     }, FEEDBACK_MILLIS);
   };
 
@@ -529,9 +531,9 @@ const PracticeView = () => {
         <SolfegeKeyboard
           onNotePress={handleNotePress}
           overlayNote={lastPressedNote}
-          overlayNoteTick={lastPressedNote !== null ? lastPressedWasCorrect : null}
-          overlayMessage={lastPressedNote !== null 
-              && lastNeedsPracticeDelta
+          overlayNoteTick={lastPressedWasCorrect}
+          overlayMessage={ 
+              lastNeedsPracticeDelta
               && (lastNeedsPracticeDelta[0] !== lastNeedsPracticeDelta[1] || lastNeedsPracticeDelta[1] === maxNeedsPractice)
               ? JSON.stringify(lastPressedWasCorrect)+` - More practice needed → ${lastNeedsPracticeDelta[1]===maxNeedsPractice ? maxNeedsPractice+" (max)" : lastNeedsPracticeDelta[1]}`
               : null}
