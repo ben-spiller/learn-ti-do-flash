@@ -49,11 +49,9 @@ const PracticeView = () => {
   const sequenceItems = useRef<Array<{ note: number; duration: number; gapAfter: number }>>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const lastPressedNoteOverlayTimeout = useRef(null);
-  const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
-  const [lastPressedWasCorrect, setLastPressedWasCorrect] = useState<boolean | null>(null);
-  /** Delta showing [oldValue, newValue] of needsPractice for the last pressed note pair */
-  const [lastNeedsPracticeDelta, setLastNeedsPracticeDelta] = useState<[number, number] | null>(null);
+  const lastPressedNoteOverlayTimeout = useRef<any>(null);
+  type Overlay = { note: SemitoneOffset; isCorrect: boolean; lastNeedsPracticeDelta?: [number, number] };
+  const [lastPressedOverlay, setLastPressedOverlay] = useState<Overlay | null>(null);
   /** Number of note presses that were correct */
   const [correctAttempts, setCorrectAttempts] = useState(0);
   /** Total number of note presses */
@@ -161,8 +159,7 @@ const PracticeView = () => {
   }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, isAudioLoaded, isPlaying, isPlayingReference]);
 
   const startNewRound = () => {
-    setLastPressedNote(null); 
-    setLastPressedWasCorrect(null);
+    setLastPressedOverlay(null);
     prevSequence.current = [...sequence];
     //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
     const newSequence = generateNextNoteSequence();
@@ -254,9 +251,8 @@ const PracticeView = () => {
     // Check if the notes match
     const isCorrect = semitonesToOneOctave(selectedNote) === semitonesToOneOctave(correctNote);
 
-    // Store the pressed note and feedback
-    setLastPressedWasCorrect(isCorrect);
-    setLastPressedNote(selectedNote);
+    // We'll build the overlay after updating needsPractice so it can include the delta
+    let lastNeedsPracticeDeltaLocal: [number, number] | null = null;
 
     // Update practice tracking
     const correctInterval = correctNote;
@@ -281,7 +277,7 @@ const PracticeView = () => {
         }
       }
       console.log("Needs practice for "+pairKey+" decreased from "+oldCount+" to "+newCount);
-      setLastNeedsPracticeDelta([oldCount, newCount]);
+      lastNeedsPracticeDeltaLocal = [oldCount, newCount];
 
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
@@ -316,7 +312,7 @@ const PracticeView = () => {
       const newNeedsPracticeCount = Math.min(maxNeedsPractice, oldNeedsPracticeCount + (
         (oldNeedsPracticeCount <3) ? +3 : +1));
       needsPractice.current.set(pairKey, newNeedsPracticeCount);
-      setLastNeedsPracticeDelta([oldNeedsPracticeCount, newNeedsPracticeCount]);
+      lastNeedsPracticeDeltaLocal = [oldNeedsPracticeCount, newNeedsPracticeCount];
       console.log("Needs practice for "+pairKey+" increased from "+oldNeedsPracticeCount+" to "+newNeedsPracticeCount);
       
       // Also increment needsPractice for the INCORRECT note that was entered
@@ -326,12 +322,13 @@ const PracticeView = () => {
       console.log("Needs practice for "+incorrectPairKey+" increased from "+incorrectNeedsPracticeCount+" to "+(incorrectNeedsPracticeCount + 1));
     }
 
-    // Clear feedback after animation
+    // Show overlay (including needs-practice delta) and schedule automatic clear
     clearTimeout(lastPressedNoteOverlayTimeout.current);
     lastPressedNoteOverlayTimeout.current = setTimeout(() => {
-        setLastPressedNote(null);
-        setLastPressedWasCorrect(null); 
-    }, FEEDBACK_MILLIS);
+      setLastPressedOverlay(null);
+      lastPressedNoteOverlayTimeout.current = null;
+    }, FEEDBACK_MILLIS) as unknown as number;
+    setLastPressedOverlay({ note: selectedNote, isCorrect, lastNeedsPracticeDelta: lastNeedsPracticeDeltaLocal ?? undefined });
   };
 
   const handlePlayAgain = () => {
@@ -530,13 +527,15 @@ const PracticeView = () => {
         {/* Musical note button div at the top */}
         <SolfegeKeyboard
           onNotePress={handleNotePress}
-          overlayNote={lastPressedNote}
-          overlayNoteTick={lastPressedWasCorrect}
-          overlayMessage={ 
-              lastNeedsPracticeDelta
-              && (lastNeedsPracticeDelta[0] !== lastNeedsPracticeDelta[1] || lastNeedsPracticeDelta[1] === maxNeedsPractice)
-              ? JSON.stringify(lastPressedWasCorrect)+` - More practice needed → ${lastNeedsPracticeDelta[1]===maxNeedsPractice ? maxNeedsPractice+" (max)" : lastNeedsPracticeDelta[1]}`
-              : null}
+          overlayNote={lastPressedOverlay?.note ?? null}
+          overlayNoteTick={lastPressedOverlay?.isCorrect ?? null}
+          overlayMessage={
+            lastPressedOverlay && lastPressedOverlay.lastNeedsPracticeDelta && (
+              (lastPressedOverlay.lastNeedsPracticeDelta[0] !== lastPressedOverlay.lastNeedsPracticeDelta[1]) || lastPressedOverlay.lastNeedsPracticeDelta[1] === maxNeedsPractice
+            )
+              ? `${JSON.stringify(lastPressedOverlay.isCorrect)} - More practice needed → ${lastPressedOverlay.lastNeedsPracticeDelta[1] === maxNeedsPractice ? maxNeedsPractice + " (max)" : lastPressedOverlay.lastNeedsPracticeDelta[1]}`
+              : null
+          }
           disabled={isPlayingReference}
         />
 
