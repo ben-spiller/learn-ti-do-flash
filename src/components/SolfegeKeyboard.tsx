@@ -140,6 +140,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
     if (isCtrlPressed) {
       // Immediate variation trigger
       onNotePress(pitch, true);
+      event.preventDefault(); // Prevent any default behavior, e.g. duplicate triggering for touch+mouse
     } else {
       // Normal press - will be triggered on release if not long press
       isPressedRef.current = true;
@@ -149,6 +150,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
         if (isPressedRef.current) {
           // Long press detected - trigger variation
           onNotePress(pitch, true);
+          event.preventDefault(); // Prevent any default behavior, e.g. duplicate triggering for touch+mouse
           isPressedRef.current = false; // Prevent normal press on release
         }
       }, 500);
@@ -164,6 +166,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
     // If still marked as pressed, it's a normal click (not long press or ctrl)
     if (isPressedRef.current && !shouldIgnoreTouchEvent(event)) {
       onNotePress(pitch, false);
+      event.preventDefault(); // Prevent any default behavior, e.g. duplicate triggering for touch+mouse
     }
     
     isPressedRef.current = false;
@@ -219,6 +222,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
               className={`relative ${!inMainOctave ? 'flex justify-end' : ''}`} 
               style={index < majorScaleNotes.length - 1 ? gapStyle : undefined}
             >
+              {/* Should maybe use onPointer instead */}
               <Button
                 onMouseDown={(e) => handleButtonPress(pitch, e)}
                 onMouseUp={(e) => handleButtonRelease(pitch, e)}
