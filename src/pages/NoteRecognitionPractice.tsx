@@ -336,7 +336,7 @@ const PracticeView = () => {
 
   const getLastAnswerInfo = (isCorrect: boolean, oldCount: number, newCount: number): string | null => {
     if ((oldCount !== newCount) || newCount === maxNeedsPractice) {
-      return `Practice reps needed for this sequence is now: ${newCount === maxNeedsPractice ? maxNeedsPractice + " (max)" : newCount}`;
+      return `${newCount === maxNeedsPractice ? maxNeedsPractice + " (max)" : newCount} more reps needed for this interval`;
     }
     return null;
   }
