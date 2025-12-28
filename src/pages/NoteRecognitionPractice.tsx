@@ -251,11 +251,11 @@ const PracticeView = () => {
     setTotalAttempts(totalAttempts + 1);
 
     // Check if the notes match
-    const isCorrect = semitonesToOneOctave(selectedNote)=== semitonesToOneOctave(correctNote);
+    const isCorrect = semitonesToOneOctave(selectedNote) === semitonesToOneOctave(correctNote);
 
     // Store the pressed note and feedback
-    setLastPressedNote(selectedNote);
     setLastPressedWasCorrect(isCorrect);
+    setLastPressedNote(selectedNote);
 
     // Update practice tracking
     const correctInterval = correctNote;
