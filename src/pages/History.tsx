@@ -399,7 +399,7 @@ const PracticeHistory = () => {
                         )}
                       </div>
                       {recentSession.exerciseName !== ExerciseType.SingleNoteRecognition &&
-                        <span className="text-xs text-muted-foreground ml-1">
+                        <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
                           ({pair.prevNoteValue !== null ? semitonesToInterval(pair.noteValue - pair.prevNoteValue) : 'Start'})
                         </span>
                     }
