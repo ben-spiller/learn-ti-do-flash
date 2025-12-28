@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,8 @@ import {
   startAudio
 } from "@/utils/audio";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
-import SolfegeKeyboard from "@/components/SolfegeKeyboard";
+import SolfegeKeyboard, { Overlay } from "@/components/SolfegeKeyboard";
+
 
 const SolfegeKeyboardPage = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const SolfegeKeyboardPage = () => {
   
   const [settings, setSettings] = useState<KeyboardSettings>(getKeyboardSettings());
   const [rootMidi, setRootMidi] = useState<MidiNoteNumber>(noteNameToMidi(settings.rootNote));
-  const [lastPressedNote, setLastPressedNote] = useState<SemitoneOffset | null>(null);
+  const [lastPressedOverlay, setLastPressedOverlay] = useState<Overlay | null>(null);
   const [isAudioLoading, setAudioLoading] = useState(false);
   const [isAudioLoaded, setAudioLoaded] = useState(false);
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
@@ -211,12 +212,11 @@ const SolfegeKeyboardPage = () => {
         playNote(note + rootMidi);
       }
       
-      setLastPressedNote(note);
-      
-      // Clear visual feedback after animation
-      setTimeout(() => {
-        setLastPressedNote(null);
-      }, 300);
+      // Show overlay and clear after animation
+      clearTimeout(lastPressedOverlay?.timeoutId);
+      setLastPressedOverlay({ note, isCorrect: null, timeoutId: setTimeout(() => {
+        setLastPressedOverlay(null);
+      }, 300) });
     }
   };
   
@@ -326,8 +326,7 @@ const SolfegeKeyboardPage = () => {
                 <CardContent className="pt-6">
                   <SolfegeKeyboard
                     onNotePress={handleNotePress}
-                    overlayNote={lastPressedNote}
-                    overlayNoteTick={null}
+                    overlay={lastPressedOverlay}
                     disabled={false}
                     range={[-12, 24]}
                   />
@@ -345,8 +344,7 @@ const SolfegeKeyboardPage = () => {
                 <CardContent className="pt-6">
                   <SolfegeKeyboard
                     onNotePress={handleNotePress}
-                    overlayNote={lastPressedNote}
-                    overlayNoteTick={null}
+                    overlay={lastPressedOverlay}
                     disabled={false}
                     range={[0, 11]}
                     showChordLabels={true}

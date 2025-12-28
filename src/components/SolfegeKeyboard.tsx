@@ -4,14 +4,19 @@ import { Check, X } from "lucide-react";
 import { SemitoneOffset, MAJOR_SCALE_PITCH_CLASSES, semitonesToSolfege } from "@/utils/audio";
 import { getNoteButtonColor } from "@/utils/noteStyles";
 
+export type Overlay = { 
+  note: SemitoneOffset; 
+  isCorrect?: boolean; 
+  /** Optional: Message to show below the overlaid note and tick, e.g. with information about the score change */
+  message?: string;
+  /** Optional place to store the timeout. Always clear existing timeout before resetting  */
+  timeoutId?: number | NodeJS.Timeout;
+}
+
 interface SolfegeKeyboardProps {
   onNotePress: (note: SemitoneOffset, isVariation?: boolean) => void;
-  /** If true, show a tick overlay icon, if false a cross, if null then nothing. */
-  overlayNoteTick: boolean | null;
-  overlayNote: SemitoneOffset | null;
-  /** Optional: Message to show below the overlaid note and tick, e.g. with information about the score change */
-  overlayMessage?: string;
   disabled: boolean;
+  overlay?: Overlay;
   /** Range of semitones to display [min, max]. Default [0, 12] for one octave. */
   range?: [SemitoneOffset, SemitoneOffset];
   /** If true, show chord labels with Roman numerals. */
@@ -24,9 +29,7 @@ interface SolfegeKeyboardProps {
 
 const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
   onNotePress,
-  overlayNote = null,
-  overlayNoteTick = null,
-  overlayMessage = null,
+  overlay = null,
   disabled = false,
   range = [0, 11],
   showChordLabels = false,
@@ -205,7 +208,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           // use rem-based inline margin so units match the chromatic column math
           const gapStyle = { marginBottom: `${hasChromatic ? WIDE_GAP_REM : NARROW_GAP_REM}rem` } as React.CSSProperties;
           
-          const isLastPressed = overlayNote === pitch;
+          const isLastPressed = overlay?.note === pitch;
           const inMainOctave = isInMainOctave(pitch);
           const isCenterOfMainOctave = pitch === 5; // Fa is roughly in the center of main octave
           
@@ -226,22 +229,22 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 disabled={disabled}
               >
                 {solfege}{buttonSuffix}
-                {isLastPressed && overlayNoteTick !== null && (
+                {isLastPressed && overlay?.isCorrect !== null && (
                   <div className={`absolute inset-0 flex flex-col items-center justify-center animate-scale-in`}>
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
-                      {overlayNoteTick ? (
+                      {overlay?.isCorrect ? (
                         <Check className="w-8 h-8 text-green-500" strokeWidth={3} />
                       ) : (
                         <X className="w-8 h-8 text-red-500" strokeWidth={3} />
                       )}
                     </div>
-                    {overlayMessage && (
+                    {overlay?.message && (
                       <div className={`mt-1 px-2 py-0.5 rounded text-xs font-bold shadow ${
-                        overlayNoteTick 
+                        overlay?.isCorrect 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {overlayMessage}
+                        {overlay?.message}
                       </div>
                     )}
                   </div>
@@ -269,7 +272,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
           const topOfAbove = diatonicTopMap.get(noteAbove) ?? 0;
           const top = topOfAbove + buttonHeightREM + (gapWidth / 2) - (flatButtonHeightREM / 2);
 
-          const isLastPressed = overlayNote === pitch;
+          const isLastPressed = overlay?.note === pitch;
           const inMainOctave = isInMainOctave(pitch);
 
           return (
@@ -286,22 +289,22 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                   title={semitonesToSolfege(pitch, true, showChordLabels)}
                 >
                 # / b
-                {isLastPressed && overlayNoteTick !== null && (
+                {isLastPressed && overlay?.isCorrect !== null && (
                   <div className={`absolute inset-0 flex flex-col items-center justify-center animate-scale-in`}>
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
-                      {overlayNoteTick ? (
+                      {overlay?.isCorrect ? (
                         <Check className="w-7 h-7 text-green-500" strokeWidth={3} />
                       ) : (
                         <X className="w-7 h-7 text-red-500" strokeWidth={3} />
                       )}
                     </div>
-                    {overlayMessage && (
+                    {overlay?.message && (
                       <div className={`mt-1 px-2 py-0.5 rounded text-xs font-bold shadow ${
-                        overlayNoteTick 
+                        overlay?.isCorrect 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {overlayMessage}
+                        {overlay?.message}
                       </div>
                     )}
                   </div>

@@ -673,8 +673,6 @@ const HomeSettingsView = () => {
                               }
                             });
                           }}
-                          overlayNote={null}
-                          overlayNoteTick={null}
                           disabled={false}
                           range={[0, 11]}
                           selectedNotes={selectedNotes}

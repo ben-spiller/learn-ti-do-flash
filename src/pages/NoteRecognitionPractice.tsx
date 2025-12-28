@@ -9,7 +9,7 @@ import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getGlobalSettings } from "@/utils/globalSettingsStorage";
 import { getNoteButtonColor } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
-import SolfegeKeyboard from "@/components/SolfegeKeyboard";
+import SolfegeKeyboard, { Overlay } from "@/components/SolfegeKeyboard";
 import { PracticeHeader } from "@/components/PracticeHeader";
 import tuningFork from "@/assets/tuning-fork.svg";
 
@@ -49,8 +49,6 @@ const PracticeView = () => {
   const sequenceItems = useRef<Array<{ note: number; duration: number; gapAfter: number }>>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const lastPressedNoteOverlayTimeout = useRef<any>(null);
-  type Overlay = { note: SemitoneOffset; isCorrect: boolean; lastNeedsPracticeDelta?: [number, number] };
   const [lastPressedOverlay, setLastPressedOverlay] = useState<Overlay | null>(null);
   /** Number of note presses that were correct */
   const [correctAttempts, setCorrectAttempts] = useState(0);
@@ -252,7 +250,7 @@ const PracticeView = () => {
     const isCorrect = semitonesToOneOctave(selectedNote) === semitonesToOneOctave(correctNote);
 
     // We'll build the overlay after updating needsPractice so it can include the delta
-    let lastNeedsPracticeDeltaLocal: [number, number] | null = null;
+    let overlayMessage: string;
 
     // Update practice tracking
     const correctInterval = correctNote;
@@ -277,7 +275,7 @@ const PracticeView = () => {
         }
       }
       console.log("Needs practice for "+pairKey+" decreased from "+oldCount+" to "+newCount);
-      lastNeedsPracticeDeltaLocal = [oldCount, newCount];
+      overlayMessage = getOverlayMessage(true, oldCount, newCount);
 
       setCorrectAttempts(correctAttempts + 1);
       setCurrentPosition(currentPosition + 1);
@@ -312,7 +310,7 @@ const PracticeView = () => {
       const newNeedsPracticeCount = Math.min(maxNeedsPractice, oldNeedsPracticeCount + (
         (oldNeedsPracticeCount <3) ? +3 : +1));
       needsPractice.current.set(pairKey, newNeedsPracticeCount);
-      lastNeedsPracticeDeltaLocal = [oldNeedsPracticeCount, newNeedsPracticeCount];
+      overlayMessage = getOverlayMessage(false, oldNeedsPracticeCount, newNeedsPracticeCount);
       console.log("Needs practice for "+pairKey+" increased from "+oldNeedsPracticeCount+" to "+newNeedsPracticeCount);
       
       // Also increment needsPractice for the INCORRECT note that was entered
@@ -323,13 +321,19 @@ const PracticeView = () => {
     }
 
     // Show overlay (including needs-practice delta) and schedule automatic clear
-    clearTimeout(lastPressedNoteOverlayTimeout.current);
-    lastPressedNoteOverlayTimeout.current = setTimeout(() => {
-      setLastPressedOverlay(null);
-      lastPressedNoteOverlayTimeout.current = null;
-    }, FEEDBACK_MILLIS) as unknown as number;
-    setLastPressedOverlay({ note: selectedNote, isCorrect, lastNeedsPracticeDelta: lastNeedsPracticeDeltaLocal ?? undefined });
+    clearTimeout(lastPressedOverlay?.timeoutId);
+    setLastPressedOverlay({ note: selectedNote, isCorrect, message: overlayMessage, 
+      timeoutId: setTimeout(() => {
+        setLastPressedOverlay(null);
+    }, FEEDBACK_MILLIS) });
   };
+
+  const getOverlayMessage = (isCorrect: boolean, oldCount: number, newCount: number): string | null => {
+    if ((oldCount !== newCount) || newCount === maxNeedsPractice) {
+      return `More practice needed → ${newCount === maxNeedsPractice ? maxNeedsPractice + " (max)" : newCount}`;
+    }
+    return null;
+  }
 
   const handlePlayAgain = () => {
     playSequenceWithDelay();
@@ -527,15 +531,7 @@ const PracticeView = () => {
         {/* Musical note button div at the top */}
         <SolfegeKeyboard
           onNotePress={handleNotePress}
-          overlayNote={lastPressedOverlay?.note ?? null}
-          overlayNoteTick={lastPressedOverlay?.isCorrect ?? null}
-          overlayMessage={
-            lastPressedOverlay && lastPressedOverlay.lastNeedsPracticeDelta && (
-              (lastPressedOverlay.lastNeedsPracticeDelta[0] !== lastPressedOverlay.lastNeedsPracticeDelta[1]) || lastPressedOverlay.lastNeedsPracticeDelta[1] === maxNeedsPractice
-            )
-              ? `${JSON.stringify(lastPressedOverlay.isCorrect)} - More practice needed → ${lastPressedOverlay.lastNeedsPracticeDelta[1] === maxNeedsPractice ? maxNeedsPractice + " (max)" : lastPressedOverlay.lastNeedsPracticeDelta[1]}`
-              : null
-          }
+          overlay={lastPressedOverlay}
           disabled={isPlayingReference}
         />
 
