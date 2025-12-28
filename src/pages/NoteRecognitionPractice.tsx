@@ -533,7 +533,7 @@ const PracticeView = () => {
           overlayMessage={lastPressedNote !== null 
               && lastNeedsPracticeDelta
               && (lastNeedsPracticeDelta[0] !== lastNeedsPracticeDelta[1] || lastNeedsPracticeDelta[1] === maxNeedsPractice)
-              ? `More practice needed → ${lastNeedsPracticeDelta[1]===maxNeedsPractice ? maxNeedsPractice+" (max)" : lastNeedsPracticeDelta[1]}`
+              ? JSON.stringify(lastPressedWasCorrect)+` - More practice needed → ${lastNeedsPracticeDelta[1]===maxNeedsPractice ? maxNeedsPractice+" (max)" : lastNeedsPracticeDelta[1]}`
               : null}
           disabled={isPlayingReference}
         />
