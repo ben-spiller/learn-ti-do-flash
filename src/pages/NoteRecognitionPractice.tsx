@@ -17,7 +17,7 @@ const PracticeView = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const FEEDBACK_MILLIS = 800;
+  const FEEDBACK_MILLIS = 1000;
   // put an upper bound on the severity of each one to avoid it getting crazy
   const maxNeedsPractice = 10;
   
