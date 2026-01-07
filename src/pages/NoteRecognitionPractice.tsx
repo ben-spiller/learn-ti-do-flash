@@ -75,6 +75,13 @@ const PracticeView = () => {
     const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_PAIRS+settings.exerciseType);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
+  /** Initial needsPracticeTotal at session start (undefined if no prior data) */
+  const initialNeedsPracticeTotal = useRef<number | undefined>((() => {
+    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_PAIRS+settings.exerciseType);
+    if (!stored) return undefined;
+    const map = new Map<string, number>(JSON.parse(stored));
+    return map.size > 0 ? Array.from(map.values()).reduce((a, b) => a + b, 0) : undefined;
+  })());
 
  const isQuestionComplete = (currentPosition: number): boolean => {
     return currentPosition >= settings.numberOfNotes 
@@ -520,6 +527,7 @@ const PracticeView = () => {
         showReference={true}
         correctAttempts={correctAttempts}
         needsPracticeTotal={Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0)}
+        initialNeedsPracticeTotal={initialNeedsPracticeTotal.current}
         totalAttempts={totalAttempts}
         elapsedSeconds={elapsedSeconds}
         started={isAudioLoaded}
