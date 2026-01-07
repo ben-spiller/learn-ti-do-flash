@@ -472,7 +472,8 @@ const HomeSettingsView = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setNumberOfNotes(Math.max(CONSTRAINTS.numberOfNotes.min, numberOfNotes - 1))}
+                    onClick={() => setNumberOfNotes(Math.max(
+                      exerciseType === ExerciseType.IntervalComparison ? 3 : CONSTRAINTS.numberOfNotes.min, numberOfNotes - 1))}
                   >
                     -
                   </Button>
