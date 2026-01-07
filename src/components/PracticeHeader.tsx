@@ -136,7 +136,7 @@ export const PracticeHeader = ({
                 </div>
 
                 {needsPracticeTotal !== undefined && (
-                <div className="text-center" title="Practice To-Do size - indicates many correct answers required before each sequence needing more practice is learned">
+                <div className="text-center" title="Practice To-Do size - number of correct answers required to fix the note pairs that need more practice">
                   <div className={`font-bold text-lg ${getNeedsPracticeTotalColor(needsPracticeTotal)}`}>
                     {needsPracticeTotal}
                   </div>

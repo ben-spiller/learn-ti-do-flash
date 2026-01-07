@@ -11,13 +11,13 @@ import { ConfigData, exerciseIsTonal, ExerciseType } from "@/config/ConfigData";
 import { startOfWeek, endOfWeek, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
 
-export const STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES = "wrong2NoteSequences"
+export const STORED_FREQUENTLY_WRONG_PAIRS = "wrong2NoteSequences"
 /** Notes that are confused for each other (in either direction) */
 export const STORED_FREQUENTLY_CONFUSED_PAIRS = "wrongConfusedPairs"
 /** Intervals that are confused for each other in interval comparison exercises */
 export const STORED_CONFUSED_INTERVALS = "confusedIntervals"
 
-export const STORED_NEEDS_PRACTICE_SEQUENCES = "needsPracticeNotePairs:"
+export const STORED_NEEDS_PRACTICE_PAIRS = "needsPracticeNotePairs:"
 
 export interface SessionHistory {
   sessionDate: number;
@@ -84,7 +84,7 @@ const PracticeHistory = () => {
   // Get wrongAnswerHistory from localStorage with error handling
   const getWrongAnswerHistory = (exerciseKey: string): Map<string, number> => {
     try {
-      const stored = localStorage.getItem(STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES);
+      const stored = localStorage.getItem(STORED_FREQUENTLY_WRONG_PAIRS);
       return stored ? new Map(JSON.parse(stored)) : new Map();
     } catch (error) {
       console.error('Error reading wrong answer history:', error);
@@ -106,7 +106,7 @@ const PracticeHistory = () => {
   // Get needsPractice from localStorage with error handling
   const getNeedsPractice = (exerciseKey: string): Map<string, number> => {
     try {
-      const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES + exerciseKey);
+      const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_PAIRS + exerciseKey);
       return stored ? new Map(JSON.parse(stored)) : new Map();
     } catch (error) {
       console.error('Error reading practice backlog data:', error);
@@ -226,7 +226,26 @@ const PracticeHistory = () => {
           <CardTitle>Latest session results</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
+            {recentSession.exerciseName !== ExerciseType.IntervalComparison &&
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
+              {hasPreviousSession && (
+                <div className="mt-0.5">{formatDelta(recentSession.needsPracticeTotalSeverity, previousSession.needsPracticeTotalSeverity, '', true)}</div>
+              )}
+              <div className="text-sm text-muted-foreground mt-1" title="Number of correct answers required to fix the pairs that need practice">To-Do practice backlog</div>
+            </div>}
+
+            {recentSession.exerciseName !== ExerciseType.IntervalComparison &&
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
+              {hasPreviousSession && (
+                <div className="mt-0.5">{formatDelta(recentSession.needsPracticeCount, previousSession.needsPracticeCount, '', true)}</div>
+              )}
+              <div className="text-sm text-muted-foreground mt-1">Note pairs needing more practice</div>
+            </div>}
+
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className={`text-3xl font-bold ${getScoreColor(recentSession.score)}`}>{recentSession.score}%</div>
               {hasPreviousSession && (
@@ -248,14 +267,8 @@ const PracticeHistory = () => {
               )}
               <div className="text-sm text-muted-foreground mt-1">Avg per Answer</div>
             </div>
-            {recentSession.exerciseName !== ExerciseType.IntervalComparison &&
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
-              {hasPreviousSession && (
-                <div className="mt-0.5">{formatDelta(recentSession.needsPracticeCount, previousSession.needsPracticeCount, '', true)}</div>
-              )}
-              <div className="text-sm text-muted-foreground mt-1">Practice To-Do size</div>
-            </div>}
+
+
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
             {recentSession.correctAttempts} correct out of {recentSession.totalAttempts} attempts
@@ -264,7 +277,7 @@ const PracticeHistory = () => {
             <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
                 💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
-                Focus on the specific intervals and note sequences that you find most challenging,
+                Focus on the specific intervals and note pairs that you find most challenging,
                 {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType === "none" ? 
                   " add a drone note to build a tonal mental model for hearing the notes, " : " reduce the tempo, "}
                 or try single note practice for a while.
@@ -362,7 +375,7 @@ const PracticeHistory = () => {
       {recentSession.exerciseName != ExerciseType.IntervalComparison && (<>
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Frequent wrong sequences ({recentSession.exerciseName} - latest session)</CardTitle>
+          <CardTitle>Frequent wrong note pairs ({recentSession.exerciseName} - latest session)</CardTitle>
         </CardHeader>
         <CardContent>
           {wrongAnswerPairs.length > 0 ? (
@@ -551,7 +564,7 @@ const PracticeHistory = () => {
               {exerciseKey !== ExerciseType.IntervalComparison && (<>
               <Card>
                 <CardHeader>
-                  <CardTitle>Sequences needing more practice</CardTitle>
+                  <CardTitle>Note pairs needing more practice</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {needsPracticePairs.length > 0 ? (

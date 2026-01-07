@@ -8,7 +8,7 @@ import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getGlobalSettings } from "@/utils/globalSettingsStorage";
 import { getNoteButtonColor } from "@/utils/noteStyles";
-import { SessionHistory, STORED_NEEDS_PRACTICE_SEQUENCES, STORED_FREQUENTLY_WRONG_2_NOTE_SEQUENCES as STORED_WRONG_2_NOTE_SEQUENCES, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
+import { SessionHistory, STORED_NEEDS_PRACTICE_PAIRS, STORED_FREQUENTLY_WRONG_PAIRS, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
 import SolfegeKeyboard, { Overlay } from "@/components/SolfegeKeyboard";
 import { PracticeHeader } from "@/components/PracticeHeader";
 import tuningFork from "@/assets/tuning-fork.svg";
@@ -61,8 +61,8 @@ const PracticeView = () => {
   const [isPlayingReference, setIsPlayingReference] = useState(false);
 
   /** Count of wrong answers: Maps "prevNote,note" -> count (prevNote="" for note at start of sequence) */
-  const wrong2NoteSequences = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem(STORED_WRONG_2_NOTE_SEQUENCES);
+  const wrongNotePairs = useRef<Map<string, number>>((() => {
+    const stored = localStorage.getItem(STORED_FREQUENTLY_WRONG_PAIRS);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());  
   /** Pairs of notes that are confused with each other (bidirectional): Maps "noteA,noteB" -> count where noteA < noteB */
@@ -70,9 +70,9 @@ const PracticeView = () => {
     const stored = localStorage.getItem(STORED_FREQUENTLY_CONFUSED_PAIRS);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
-  /** 2-note sequences that need more practice */
+  /** 2-note pairs that need more practice */
   const needsPractice = useRef<Map<string, number>>((() => {
-    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.exerciseType);
+    const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_PAIRS+settings.exerciseType);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
 
@@ -83,9 +83,9 @@ const PracticeView = () => {
 
   // Helper to persist practice data to localStorage
   const savePracticeData = () => {
-    localStorage.setItem(STORED_WRONG_2_NOTE_SEQUENCES, JSON.stringify(Array.from(wrong2NoteSequences.current.entries())));
+    localStorage.setItem(STORED_FREQUENTLY_WRONG_PAIRS, JSON.stringify(Array.from(wrongNotePairs.current.entries())));
     localStorage.setItem(STORED_FREQUENTLY_CONFUSED_PAIRS, JSON.stringify(Array.from(confusedPairs.current.entries())));
-    localStorage.setItem(STORED_NEEDS_PRACTICE_SEQUENCES+settings.exerciseType, JSON.stringify(Array.from(needsPractice.current.entries())));
+    localStorage.setItem(STORED_NEEDS_PRACTICE_PAIRS+settings.exerciseType, JSON.stringify(Array.from(needsPractice.current.entries())));
   };
 
 
@@ -105,7 +105,7 @@ const PracticeView = () => {
       // Add gap before exercise
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      wrong2NoteSequences.current.clear();
+      wrongNotePairs.current.clear();
       confusedPairs.current.clear();
 
       // Now start the first round
@@ -299,7 +299,7 @@ const PracticeView = () => {
       playNote(moveNoteToMostRecentOctave(selectedNote)+rootMidi);
 
       // Update wrong answer count
-      wrong2NoteSequences.current.set(pairKey, (wrong2NoteSequences.current.get(pairKey) || 0) + 1);
+      wrongNotePairs.current.set(pairKey, (wrongNotePairs.current.get(pairKey) || 0) + 1);
 
       // Track confused pairs (bidirectional - normalize so smaller note comes first)
       const note1 = Math.min(correctInterval, selectedNote);
