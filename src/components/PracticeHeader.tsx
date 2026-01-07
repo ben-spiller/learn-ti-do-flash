@@ -12,6 +12,7 @@ interface PracticeHeaderProps {
   correctAttempts: number;
   totalAttempts: number;
   needsPracticeTotal?: number;
+  initialNeedsPracticeTotal?: number;
   elapsedSeconds: number;
   started: boolean;
   isPlaying: boolean;
@@ -29,6 +30,7 @@ export const PracticeHeader = ({
   correctAttempts,
   totalAttempts,
   needsPracticeTotal,
+  initialNeedsPracticeTotal,
   elapsedSeconds,
   started,
   isPlaying,
@@ -139,6 +141,15 @@ export const PracticeHeader = ({
                 <div className="text-center" title="Practice To-Do size - number of correct answers required to fix the note pairs that need more practice">
                   <div className={`font-bold text-lg ${getNeedsPracticeTotalColor(needsPracticeTotal)}`}>
                     {needsPracticeTotal}
+                    {initialNeedsPracticeTotal !== undefined && needsPracticeTotal !== initialNeedsPracticeTotal && (
+                      <span className={`ml-1 text-sm ${
+                        needsPracticeTotal < initialNeedsPracticeTotal 
+                          ? 'text-green-600' 
+                          : 'text-red-600'
+                      }`}>
+                        ({needsPracticeTotal < initialNeedsPracticeTotal ? '' : '+'}{needsPracticeTotal - initialNeedsPracticeTotal})
+                      </span>
+                    )}
                   </div>
                   <div className="text-muted-foreground text-xs">To-Do</div>
                 </div>
