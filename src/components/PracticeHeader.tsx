@@ -130,20 +130,13 @@ export const PracticeHeader = ({
                 </Popover>
               )}
               <div className="flex gap-3 text-sm ml-2">
-                <div className="text-center">
-                  <div className={`font-bold text-lg ${getScoreColor(scorePercent)}`}>
-                    {scorePercent}%
-                  </div>
-                  <div className="text-muted-foreground text-xs">Score</div>
-                </div>
-
                 {needsPracticeTotal !== undefined && (
                 <div className="text-center" title="Practice To-Do size - number of correct answers required to fix the note pairs that need more practice">
                   <div className={`font-bold text-lg ${getNeedsPracticeTotalColor(needsPracticeTotal)}`}>
                     {needsPracticeTotal}
-                    {initialNeedsPracticeTotal !== undefined && needsPracticeTotal !== initialNeedsPracticeTotal && (
+                    {initialNeedsPracticeTotal !== undefined && (
                       <span className={`ml-1 text-sm ${
-                        needsPracticeTotal < initialNeedsPracticeTotal 
+                        needsPracticeTotal <= initialNeedsPracticeTotal 
                           ? 'text-green-600' 
                           : 'text-red-600'
                       }`}>
@@ -154,6 +147,13 @@ export const PracticeHeader = ({
                   <div className="text-muted-foreground text-xs">To-Do</div>
                 </div>
                 )}
+
+                <div className="text-center">
+                  <div className={`font-bold text-lg ${getScoreColor(scorePercent)}`}>
+                    {scorePercent}%
+                  </div>
+                  <div className="text-muted-foreground text-xs" title="Score for this session">Score</div>
+                </div>
 
                 <div className="text-center">
                   <div className="font-bold text-lg">{(elapsedSeconds/60).toFixed(0)}</div>
