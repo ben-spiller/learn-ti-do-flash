@@ -18,13 +18,13 @@ export const getNoteButtonColor = (note: string): string => {
 
 export const getScoreColor = (score: number): string => {
   if (score >= 90) return "text-success";
-  if (score >= 80) return "text-amber-600";
+  if (score >= 75) return "text-amber-600";
   return "text-destructive";
 };
 
 export const getNeedsPracticeTotalColor = (score: number): string => {
   if (score <= 10) return "text-success";
-  if (score <= 30) return "text-amber-600";
+  if (score <= 50) return "text-amber-600";
   return "text-destructive";
 };
 
