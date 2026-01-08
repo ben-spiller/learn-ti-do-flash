@@ -597,7 +597,7 @@ const PracticeView = () => {
                   >
                     {noteSolfege}
                     {octaveIndicator && (
-                      <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                      <span title={octaveIndicator+" octave"} className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
                         {octaveIndicator}
                       </span>
                     )}
