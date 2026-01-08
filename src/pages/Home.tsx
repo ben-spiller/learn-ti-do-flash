@@ -311,10 +311,10 @@ const HomeSettingsView = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="flex justify-center mb-4">
-            <img src={appIcon} alt="LearnTiDo" className="w-16 h-16" />
+            <img src={appIcon} alt="Me-Do-Solfege" className="w-16 h-16" />
           </div>
-          <CardTitle className="text-3xl font-bold" title={`Copyright (C) Ben Spiller 2025-present\n\nBuild date: ${__BUILD_TIMESTAMP__}`}>LearnTiDo</CardTitle>
-          <CardDescription>Functional ear practice with solfege keyboard</CardDescription>
+          <CardTitle className="text-3xl font-bold" title={`Copyright (C) Ben Spiller 2025-present\n\nBuild date: ${__BUILD_TIMESTAMP__}`}>Me-Do-Solfege Ear Trainer</CardTitle>
+          <CardDescription>Tonal ear trainer with solfege keyboard</CardDescription>
         </CardHeader>
         <CardContent>
         {/* 

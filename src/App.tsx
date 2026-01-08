@@ -13,9 +13,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Derive router basename from Vite's BASE_URL when it's an absolute path
-// (e.g. '/learn-ti-do-flash/'). If BASE_URL is relative (like './') or '/'
-// we leave basename undefined so BrowserRouter behaves normally in dev.
 const App = () => {
   return (
   <QueryClientProvider client={queryClient}>
