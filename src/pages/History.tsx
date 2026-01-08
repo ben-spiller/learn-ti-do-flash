@@ -230,7 +230,7 @@ const PracticeHistory = () => {
 
             {recentSession.exerciseName !== ExerciseType.IntervalComparison &&
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeCount}</div>
+              <div className="text-3xl font-bold text-amber-600">{recentSession.needsPracticeTotalSeverity}</div>
               {hasPreviousSession && (
                 <div className="mt-0.5">{formatDelta(recentSession.needsPracticeTotalSeverity, previousSession.needsPracticeTotalSeverity, '', true)}</div>
               )}
