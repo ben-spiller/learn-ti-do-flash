@@ -7,7 +7,7 @@ import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, sem
 import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getGlobalSettings } from "@/utils/globalSettingsStorage";
-import { getNoteButtonColor } from "@/utils/noteStyles";
+import { getNoteButtonColor, getOctaveIndicator } from "@/utils/noteStyles";
 import { SessionHistory, STORED_NEEDS_PRACTICE_PAIRS, STORED_FREQUENTLY_WRONG_PAIRS, STORED_FREQUENTLY_CONFUSED_PAIRS } from "./History";
 import SolfegeKeyboard, { Overlay } from "@/components/SolfegeKeyboard";
 import { PracticeHeader } from "@/components/PracticeHeader";
@@ -587,6 +587,7 @@ const PracticeView = () => {
               {Array.from({ length: settings.numberOfNotes }).map((_, index) => {
                 const isAnswered = index < currentPosition;
                 const noteSolfege = isAnswered ? (semitonesToSolfege(sequence[index])) : "?";
+                const octaveIndicator = isAnswered ? getOctaveIndicator(sequence[index]) : "";
                 const colorClass = isAnswered ? getNoteButtonColor(noteSolfege) : "bg-muted";
                 
                 return (
@@ -595,6 +596,7 @@ const PracticeView = () => {
                     className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
                   >
                     {noteSolfege}
+                    {octaveIndicator && <sup className="text-xs ml-0.5">{octaveIndicator}</sup>}
                   </div>
                   <br/>
 
