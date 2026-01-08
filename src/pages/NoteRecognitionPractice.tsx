@@ -593,10 +593,14 @@ const PracticeView = () => {
                 return (
                 <div key={index} className="flex align-items-center gap-4">
                   <div
-                    className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white ${colorClass}`}
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-colors text-white relative ${colorClass}`}
                   >
                     {noteSolfege}
-                    {octaveIndicator && <sup className="text-xs ml-0.5">{octaveIndicator}</sup>}
+                    {octaveIndicator && (
+                      <span className="absolute top-0.5 right-0.5 text-[10px] font-bold bg-black/30 px-1 rounded">
+                        {octaveIndicator}
+                      </span>
+                    )}
                   </div>
                   <br/>
 
