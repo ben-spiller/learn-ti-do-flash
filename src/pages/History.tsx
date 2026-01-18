@@ -34,6 +34,9 @@ export interface SessionHistory {
 
   exerciseName: string;
   settings: ConfigData;
+  
+  /** Per-interval scores for IntervalComparison exercises: Map<interval, {correct, total}> */
+  intervalScores?: Record<number, { correct: number; total: number }>;
 }
 
 const PracticeHistory = () => {
@@ -129,10 +132,11 @@ const PracticeHistory = () => {
   const recentSession = allSessions.length > 0 ? allSessions[allSessions.length - 1] : null;
   
   // Find previous session of the same exercise type (if any)
+  // For interval comparison, compare based on overlap of intervalsToFind
   const previousSession = recentSession 
     ? allSessions.filter(s => s.exerciseName === recentSession.exerciseName)
     .filter(s => s.exerciseName !== ExerciseType.IntervalComparison 
-      || s.settings.intervalToFind === recentSession.settings.intervalToFind)
+      || s.settings.intervalsToFind?.some(i => recentSession.settings.intervalsToFind?.includes(i)))
     .slice(-2)[0] 
     : null;
   const hasPreviousSession = previousSession && previousSession !== recentSession;
@@ -628,42 +632,57 @@ const PracticeHistory = () => {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         {(() => {
-                          // Build chart data with each session as a separate point
-                          const chartData = exerciseSessions.map((session, idx) => {
-                            const interval = session.settings.intervalToFind;
-                            return {
+                          // Build chart data using intervalScores from each session
+                          // Each session can have scores for multiple intervals
+                          type ChartPoint = {
+                            idx: number;
+                            date: string;
+                            [key: number]: number; // interval -> score %
+                          };
+                          
+                          const chartData: ChartPoint[] = [];
+                          const allIntervals = new Set<number>();
+                          
+                          exerciseSessions.forEach((session, idx) => {
+                            const dataPoint: ChartPoint = {
                               idx,
                               date: format(new Date(session.sessionDate), 'dd/MM HH:mm'),
-                              interval,
-                              score: session.score,
                             };
-                          });
-                          
-                          // Get all unique intervals
-                          const intervals = [...new Set(chartData.map(d => d.interval).filter(i => i))].sort();
-                          const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3'];
-                          
-                          // Get the interval from the latest session
-                          const latestInterval = exerciseSessions[exerciseSessions.length - 1]?.settings.intervalToFind;
-                          
-                          // Transform to have each interval as a separate line
-                          const transformedData = chartData.map((point, idx) => {
-                            const dataPoint: any = { idx, date: point.date };
-                            if (point.interval) {
-                              dataPoint[point.interval] = point.score;
+                            
+                            // Use intervalScores if available, otherwise fall back to session score for all configured intervals
+                            if (session.intervalScores) {
+                              Object.entries(session.intervalScores).forEach(([intervalStr, scores]) => {
+                                const interval = parseInt(intervalStr);
+                                if (scores.total > 0) {
+                                  dataPoint[interval] = Math.round((scores.correct / scores.total) * 100);
+                                  allIntervals.add(interval);
+                                }
+                              });
+                            } else if (session.settings.intervalsToFind?.length === 1) {
+                              // Legacy: single interval sessions without intervalScores
+                              const interval = session.settings.intervalsToFind[0];
+                              dataPoint[interval] = session.score;
+                              allIntervals.add(interval);
                             }
-                            return dataPoint;
+                            
+                            chartData.push(dataPoint);
                           });
+                          
+                          const intervals = [...allIntervals].sort((a, b) => a - b);
+                          const colors = ['#7c3aed', '#f59e0b', '#16a34a', '#0891b2', '#c026d3', '#dc2626', '#2563eb', '#84cc16'];
+                          
+                          // Get the intervals from the latest session
+                          const latestIntervals = exerciseSessions[exerciseSessions.length - 1]?.settings.intervalsToFind || [];
                           
                           return (
-                            <LineChart data={transformedData}>
+                            <LineChart data={chartData}>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
                               <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
                               <YAxis domain={[0, 100]} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
                               <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
                               <Legend />
                               {intervals.map((interval, idx) => {
-                                const isLatest = interval === latestInterval;
+                                const isLatest = latestIntervals.includes(interval as any);
                                 return (
                                   <Line
                                     key={`line-${interval}`}

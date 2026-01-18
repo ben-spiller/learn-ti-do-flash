@@ -70,10 +70,10 @@ const PROPERTY_METADATA: PropertyMetadata[] = [
     },
   },
   {
-    key: 'intervalToFind',
-    defaultValue: 3 as SemitoneOffset,
-    serialize: (value) => value.toString(),
-    deserialize: (value) => parseInt(value, 10) as SemitoneOffset,
+    key: 'intervalsToFind',
+    defaultValue: [3] as SemitoneOffset[],
+    serialize: (value) => value.sort((a: number, b: number) => a - b).join(','),
+    deserialize: (value) => value.split(',').map((n: string) => parseInt(n, 10)) as SemitoneOffset[],
   },
   {
     key: 'intervalComparisonRange',
@@ -131,7 +131,7 @@ export class ConfigData {
   playExtraNotes: number = 0;
   consecutiveIntervals: SemitonePair = [0, 11];
   questionNoteRange: SemitonePair = [0, 12];
-  intervalToFind: SemitoneOffset = 3;
+  intervalsToFind: SemitoneOffset[] = [3];
   intervalComparisonRange: SemitonePair = [2, 5];
   intervalDirection: "random" | "ascending" | "descending" = "random";
   tempo: number = 200;
@@ -209,7 +209,7 @@ export class ConfigData {
 
       case ExerciseType.IntervalComparison:
         defaults.numberOfNotes = 4;
-        defaults.intervalToFind = 3;
+        defaults.intervalsToFind = [3];
         defaults.intervalComparisonRange = [5, 5];
         defaults.tempo = 60; // start a lot slower cos this is a hard exercise
         defaults.intervalDirection = 'random';
@@ -309,7 +309,7 @@ export const CONSTRAINTS = {
   tempo: { min: 40, max: 400, step: 10 },
   consecutiveIntervals: { min: 0, max: 12+12 },
   questionNoteRange: { min: -12, max: 24 }, // -1 octave to +2 octaves
-  intervalToFind: { min: 1, max: 12 }, // 1 semitone (minor 2nd) to 12 semitones (octave)
+  intervalsToFind: { min: 1, max: 12 }, // 1 semitone (minor 2nd) to 12 semitones (octave)
   intervalComparisonRange: { min: 1, max: 12 },
 } as const;
 
