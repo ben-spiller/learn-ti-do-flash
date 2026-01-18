@@ -61,6 +61,13 @@ const IntervalComparisonPractice = () => {
   const totalSequencesAnswered = useRef(0);
   const lastQuestionKey = useRef<string>("");
   
+  // Track which interval we're currently looking for (cycles through intervalsToFind)
+  const [currentIntervalIndex, setCurrentIntervalIndex] = useState(0);
+  const currentTargetInterval = settings.intervalsToFind[currentIntervalIndex % settings.intervalsToFind.length];
+  
+  // Track per-interval scores: Map<interval, {correct, total}>
+  const intervalScoresRef = useRef<Map<number, { correct: number; total: number }>>(new Map());
+  
   // Track confused intervals for this session: Map<"targetInterval,selectedInterval", count>
   const confusedIntervalsRef = useRef<Map<string, number>>(new Map());
 
@@ -134,16 +141,16 @@ const IntervalComparisonPractice = () => {
     // Track which intervals we use to check for duplicates
     const usedIntervals: number[] = [];
     
-    // Generate pool of other intervals from range
+    // Generate pool of other intervals from range (excluding all target intervals)
     const otherIntervalsPool: SemitoneOffset[] = [];
     for (let i = settings.intervalComparisonRange[0]; i <= settings.intervalComparisonRange[1]; i++) {
-      if (i !== settings.intervalToFind) {
+      if (!settings.intervalsToFind.includes(i as SemitoneOffset)) {
         otherIntervalsPool.push(i as SemitoneOffset);
       }
     }
     
     for (let i = 1; i < sequenceLength; i++) {
-      const intervalToUse = i === targetIndex ? settings.intervalToFind : 
+      const intervalToUse = i === targetIndex ? currentTargetInterval : 
         otherIntervalsPool[Math.floor(Math.random() * otherIntervalsPool.length)];
       usedIntervals.push(intervalToUse);
       currentOffset += isAscending ? intervalToUse : (-intervalToUse);
@@ -210,6 +217,10 @@ const IntervalComparisonPractice = () => {
 
     setCurrentGuess(index);
     setTotalAttempts(totalAttempts + 1);
+    
+    // Update per-interval tracking
+    const currentScores = intervalScoresRef.current.get(currentTargetInterval) || { correct: 0, total: 0 };
+    currentScores.total += 1;
 
     const correct = index === differentIntervalIndex;
     setIsCorrect(correct);
@@ -217,18 +228,23 @@ const IntervalComparisonPractice = () => {
     if (correct) {
       setCorrectAttempts(correctAttempts + 1);
       totalSequencesAnswered.current += 1;
+      currentScores.correct += 1;
 
       if (Date.now() - questionStartTime < 60000) {
         setElapsedSeconds(elapsedSeconds + Math.floor((Date.now() - questionStartTime) / 1000));
       }
+      
+      // Move to next interval in the cycle
+      setCurrentIntervalIndex((prev) => prev + 1);
     } else {
       // Track the confusion: target interval vs what user selected
-      const targetInterval = settings.intervalToFind;
       const selectedInterval = Math.abs(sequence[index] - sequence[index - 1]);
-      const confusionKey = `${targetInterval},${selectedInterval}`;
+      const confusionKey = `${currentTargetInterval},${selectedInterval}`;
       const currentCount = confusedIntervalsRef.current.get(confusionKey) || 0;
       confusedIntervalsRef.current.set(confusionKey, currentCount + 1);
     }
+    
+    intervalScoresRef.current.set(currentTargetInterval, currentScores);
   };
 
   const handlePlayAgain = () => {
@@ -242,6 +258,12 @@ const IntervalComparisonPractice = () => {
   const handleFinish = () => {
     saveCurrentConfiguration(settings);
     if (totalSequencesAnswered.current > 0) {
+      // Convert intervalScores ref to plain object for storage
+      const intervalScoresObj: Record<number, { correct: number; total: number }> = {};
+      intervalScoresRef.current.forEach((value, key) => {
+        intervalScoresObj[key] = value;
+      });
+      
       const session = {
         sessionDate: Date.now(),
         score: Math.round((correctAttempts / totalAttempts) * 100),
@@ -254,6 +276,7 @@ const IntervalComparisonPractice = () => {
         needsPracticeTotalSeverity: 0,
         exerciseName: settings.exerciseType,
         settings: settings,
+        intervalScores: intervalScoresObj,
       } satisfies SessionHistory;
 
       const sessionsStr = localStorage.getItem("practiceSessions");
@@ -317,7 +340,12 @@ const IntervalComparisonPractice = () => {
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Interval comparison</h3>
                 <p className="text-sm text-muted-foreground">
-                  Find the <b>{semitonesToInterval(settings.intervalToFind)}</b> among the other intervals
+                  Find the <b>{semitonesToInterval(currentTargetInterval)}</b> among the other intervals
+                  {settings.intervalsToFind.length > 1 && (
+                    <span className="ml-2 text-xs text-muted-foreground/70">
+                      ({(currentIntervalIndex % settings.intervalsToFind.length) + 1}/{settings.intervalsToFind.length})
+                    </span>
+                  )}
                 </p>
               </div>
 

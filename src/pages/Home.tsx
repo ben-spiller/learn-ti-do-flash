@@ -65,7 +65,7 @@ const HomeSettingsView = () => {
     setPlayExtraNotes(configToUse.playExtraNotes);
     setConsecutiveIntervals(configToUse.consecutiveIntervals);
     setQuestionNoteRange(configToUse.questionNoteRange);
-    setTargetInterval(configToUse.intervalToFind);
+    setIntervalsToFind(configToUse.intervalsToFind);
     setIntervalComparisonRange(configToUse.intervalComparisonRange);
     setIntervalDirection(configToUse.intervalDirection);
     setTempo(configToUse.tempo);
@@ -80,7 +80,7 @@ const HomeSettingsView = () => {
   const [playExtraNotes, setPlayExtraNotes] = useState(defaults.playExtraNotes);
   const [consecutiveIntervals, setConsecutiveIntervals] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.consecutiveIntervals);
   const [questionNoteRange, setQuestionNoteRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.questionNoteRange);
-  const [intervalToFind, setTargetInterval] = useState<SemitoneOffset>(defaults.intervalToFind);
+  const [intervalsToFind, setIntervalsToFind] = useState<SemitoneOffset[]>(defaults.intervalsToFind);
   const [intervalComparisonRange, setIntervalComparisonRange] = useState<[SemitoneOffset, SemitoneOffset]>(defaults.intervalComparisonRange);
   const [intervalDirection, setIntervalDirection] = useState<'random' | 'ascending' | 'descending'>(defaults.intervalDirection);
   const [tempo, setTempo] = useState(defaults.tempo);
@@ -116,7 +116,7 @@ const HomeSettingsView = () => {
       playExtraNotes,
       consecutiveIntervals,
       questionNoteRange,
-      intervalToFind,
+      intervalsToFind,
       intervalComparisonRange,
       intervalDirection,
       tempo,
@@ -202,9 +202,9 @@ const HomeSettingsView = () => {
     }
 
     if (exerciseType === ExerciseType.IntervalComparison && intervalComparisonRange[0] === intervalComparisonRange[1]
-      && intervalComparisonRange[0] === intervalToFind
+      && intervalsToFind.includes(intervalComparisonRange[0] as SemitoneOffset)
     ) {
-      alert("The interval comparison range must include at least one interval different from the target interval to find");
+      alert("The interval comparison range must include at least one interval different from the target intervals to find");
       return;
     }
     
@@ -546,17 +546,28 @@ const HomeSettingsView = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
-                    Target interval to find: {semitonesToInterval(intervalToFind)}
+                    Target intervals to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
                   </Label>
-                  <Slider
-                    value={[intervalToFind]}
-                    onValueChange={(values) => {
-                      setTargetInterval(values[0] as SemitoneOffset);
-                    }}
-                    min={1}
-                    max={12}
-                    step={1}
-                  />
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((interval) => (
+                      <div key={interval} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`interval-${interval}`}
+                          checked={intervalsToFind.includes(interval as SemitoneOffset)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setIntervalsToFind([...intervalsToFind, interval as SemitoneOffset].sort((a, b) => a - b));
+                            } else if (intervalsToFind.length > 1) {
+                              setIntervalsToFind(intervalsToFind.filter(i => i !== interval));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`interval-${interval}`} className="text-sm cursor-pointer">
+                          {semitonesToInterval(interval)}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
