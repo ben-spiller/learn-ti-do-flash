@@ -1,8 +1,10 @@
 import * as Tone from "tone";
 
 /** Specifies the number of semitones above (or for negative numbers, below)
- * the root ("do") note. Add this to rootMidi to get the absolute MIDI note number.
- * This can extend beyond the octave (0-11) range. Use %12 to get the pitch class.  
+ * another note, usually the root ("do") note. Add this to rootMidi to get the absolute MIDI note number.
+ * This can extend beyond the octave (0-11) range. Use %12 to get the pitch class.
+ * 
+ * Can also be used to indicate an interval between two arbitrary notes.  
  */
 export type SemitoneOffset = number;
 
