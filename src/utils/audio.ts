@@ -127,6 +127,7 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
       'Digit5': 7,  // sol
       'Digit6': 9,  // la
       'Digit7': 11, // ti
+      'Digit8': 12, // do octave
       // Numpad number keys 1-7 for scale degrees
       'Numpad1': 0,  // do
       'Numpad2': 2,  // re
@@ -135,6 +136,7 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
       'Numpad5': 7,  // sol
       'Numpad6': 9,  // la
       'Numpad7': 11, // ti
+      'Numpad8': 12, // do octave
     };
 
     // Map letters using e.key (lowercase) for language-independence
