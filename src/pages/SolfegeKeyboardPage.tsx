@@ -333,7 +333,7 @@ const SolfegeKeyboardPage = () => {
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
                       ? "Click a note to set as root note" 
-                      : "Click notes to play, or use keyboard shortcuts d/r/m/... or 1/2/3/..."}
+                      : "Keys: D/R/M/F/S/L/T or 1-7 for scale • Q/W/E/Y/U for chromatics • Shift/Ctrl for octave"}
                   </div>
                 </CardContent>
               </Card>

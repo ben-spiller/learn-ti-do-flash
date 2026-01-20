@@ -75,50 +75,82 @@ export const midiToNoteName = (midi: MidiNoteNumber) => {
 };
 
 
-/** Gets the note indicated by the specified window keydown event */
+/** 
+ * Gets the note indicated by the specified window keydown event.
+ * Uses event.code for language-neutral key detection.
+ * 
+ * Major scale notes: D/R/M/F/S/L/T or 1-7
+ * Chromatic notes: Q/W/E/R/T/Y (between scale degrees)
+ * Octave modifiers: Shift/+/= for octave up, Ctrl/- for octave down
+ */
 export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
-    // Map keys to solfege intervals (semitones from root)
-    const keyToInterval: Record<string, number> = {
-      '1': 0, 'd': 0,  // do
-      '2': 2, 'r': 2,  // re
-      '3': 4, 'm': 4,  // mi
-      '4': 5, 'f': 5,  // fa
-      '5': 7, 's': 7,  // sol
-      '6': 9, 'l': 9,  // la
-      '7': 11, 't': 11, // ti
+    // Map key codes to solfege intervals (semitones from root)
+    // Using event.code for language-neutral detection
+    const codeToInterval: Record<string, number> = {
+      // Number keys 1-7 for scale degrees
+      'Digit1': 0,  // do
+      'Digit2': 2,  // re
+      'Digit3': 4,  // mi
+      'Digit4': 5,  // fa
+      'Digit5': 7,  // sol
+      'Digit6': 9,  // la
+      'Digit7': 11, // ti
+      // Letter keys for scale degrees (QWERTY layout positions)
+      'KeyD': 0,    // do
+      'KeyR': 2,    // re (also serves as 're')
+      'KeyM': 4,    // mi
+      'KeyF': 5,    // fa
+      'KeyS': 7,    // sol
+      'KeyL': 9,    // la
+      'KeyT': 11,   // ti
     };
 
-    // Map shifted number keys to sharp intervals
-    const shiftedKeyToInterval: Record<string, number> = {
-      '!': 1,  // SHIFT+1 → do#
-      '@': 3,  // SHIFT+2 → re#
-      '#': 5,  // SHIFT+3 → mi#
-      '$': 6,  // SHIFT+4 → fa#
-      '%': 8,  // SHIFT+5 → sol#
-      '^': 10, // SHIFT+6 → la#
-      '&': 12, // SHIFT+7 → ti#
-      '"': 3,  // UK layout SHIFT+2
-      '£': 5,  // UK layout SHIFT+3
-      '€': 6,  // Some layouts SHIFT+4
+    // Chromatic notes using QWERTY row (between scale degrees)
+    // These represent the semitones between diatonic notes
+    const chromaticCodeToInterval: Record<string, number> = {
+      'KeyQ': 1,   // ra (b2) - between do and re
+      'KeyW': 3,   // me (b3) - between re and mi
+      // no chromatic between mi-fa (natural semitone)
+      'KeyE': 6,   // se (b5/tritone) - between fa and sol
+      // KeyR is used for 're', so skip
+      // KeyT is used for 'ti', so skip
+      'KeyY': 8,   // le (b6) - between sol and la
+      'KeyU': 10,  // te (b7) - between la and ti
     };
 
-    const key = e.key.toLowerCase();
+    // Check for octave modifier keys (these don't produce notes themselves)
+    const isOctaveUpModifier = e.shiftKey || e.code === 'Equal' || e.code === 'NumpadAdd';
+    const isOctaveDownModifier = e.ctrlKey || e.code === 'Minus' || e.code === 'NumpadSubtract';
     
-    // Check for shifted number keys first
-    if (e.key in shiftedKeyToInterval) {
-      console.log('Shifted key detected:', { key: e.key, code: e.code, shiftKey: e.shiftKey });
-      return shiftedKeyToInterval[e.key];
+    // Don't process if only modifier key pressed
+    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || 
+        e.code === 'ControlLeft' || e.code === 'ControlRight' ||
+        e.code === 'Equal' || e.code === 'Minus' ||
+        e.code === 'NumpadAdd' || e.code === 'NumpadSubtract') {
+      return null;
     }
-    // Then check regular keys
-    else if (key in keyToInterval) {
-      let interval = keyToInterval[key];
-      // If SHIFT is held with letter keys, play the sharp (semitone higher)
-      if (e.shiftKey && /[drmfslt]/.test(key)) {
-        interval += 1;
-      }
-      return interval;
+
+    let interval: number | null = null;
+
+    // Check chromatic notes first (QWERTY row)
+    if (e.code in chromaticCodeToInterval) {
+      interval = chromaticCodeToInterval[e.code];
     }
-    return null;
+    // Then check diatonic notes
+    else if (e.code in codeToInterval) {
+      interval = codeToInterval[e.code];
+    }
+    
+    if (interval === null) return null;
+
+    // Apply octave modifier
+    if (isOctaveUpModifier) {
+      interval += 12;
+    } else if (isOctaveDownModifier) {
+      interval -= 12;
+    }
+
+    return interval;
 }
 
 let audioContext: AudioContext | null = null;
