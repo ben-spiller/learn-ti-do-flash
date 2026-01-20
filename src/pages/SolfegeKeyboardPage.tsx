@@ -19,8 +19,8 @@ import {
   setDroneVolume as setAudioDroneVolume,
   setMasterVolume,
   keypressToSemitones,
-  handleOctaveModifierDown,
-  handleOctaveModifierUp,
+  handleSemitoneModifierDown,
+  handleSemitoneModifierUp,
   midiToNoteName,
   NOTE_NAMES,
   formatInstrumentName, INSTRUMENT_IDS,
@@ -113,11 +113,11 @@ const SolfegeKeyboardPage = () => {
     };
   }, []);
   
-  // Handle keyboard shortcuts with octave modifier tracking
+  // Handle keyboard shortcuts with semitone modifier tracking
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Track octave modifier keys
-      handleOctaveModifierDown(e);
+      // Track semitone modifier keys (+/=/-) 
+      handleSemitoneModifierDown(e);
       
       if (!isAudioLoaded) return;
       
@@ -129,7 +129,7 @@ const SolfegeKeyboardPage = () => {
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
-      handleOctaveModifierUp(e);
+      handleSemitoneModifierUp(e);
     };
     
     window.addEventListener('keydown', handleKeyDown);
@@ -346,7 +346,7 @@ const SolfegeKeyboardPage = () => {
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
                       ? "Click a note to set as root note" 
-                      : "Keys: D/R/M/F/S/L/T or 1-7 • Hold Shift/+/= for octave up • Ctrl/-  for octave down"}
+                      : "Keys: D/R/M/F/S/L/T or 1-7 • Shift/Ctrl for octave • +/- for semitone"}
                   </div>
                 </CardContent>
               </Card>
