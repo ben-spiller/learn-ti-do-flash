@@ -75,13 +75,45 @@ export const midiToNoteName = (midi: MidiNoteNumber) => {
 };
 
 
+// Track pseudo-modifier key states for octave shifting
+// These are updated by keydown/keyup handlers in components
+let octaveUpHeld = false;
+let octaveDownHeld = false;
+
+/** Call this on keydown to track octave modifier keys */
+export function handleOctaveModifierDown(e: KeyboardEvent): boolean {
+  if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+    octaveUpHeld = true;
+    return true;
+  }
+  if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+    octaveDownHeld = true;
+    return true;
+  }
+  return false;
+}
+
+/** Call this on keyup to track octave modifier keys */
+export function handleOctaveModifierUp(e: KeyboardEvent): boolean {
+  if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+    octaveUpHeld = false;
+    return true;
+  }
+  if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+    octaveDownHeld = false;
+    return true;
+  }
+  return false;
+}
+
 /** 
  * Gets the note indicated by the specified window keydown event.
  * Uses event.code for language-neutral key detection.
  * 
  * Major scale notes: D/R/M/F/S/L/T or 1-7
- * Chromatic notes: Q/W/E/R/T/Y (between scale degrees)
  * Octave modifiers: Shift/+/= for octave up, Ctrl/- for octave down
+ * 
+ * Note: +=/- are tracked separately via handleOctaveModifierDown/Up
  */
 export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
     // Map key codes to solfege intervals (semitones from root)
@@ -95,9 +127,9 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
       'Digit5': 7,  // sol
       'Digit6': 9,  // la
       'Digit7': 11, // ti
-      // Letter keys for scale degrees (QWERTY layout positions)
+      // Letter keys for scale degrees
       'KeyD': 0,    // do
-      'KeyR': 2,    // re (also serves as 're')
+      'KeyR': 2,    // re
       'KeyM': 4,    // mi
       'KeyF': 5,    // fa
       'KeyS': 7,    // sol
@@ -105,22 +137,9 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
       'KeyT': 11,   // ti
     };
 
-    // Chromatic notes using QWERTY row (between scale degrees)
-    // These represent the semitones between diatonic notes
-    const chromaticCodeToInterval: Record<string, number> = {
-      'KeyQ': 1,   // ra (b2) - between do and re
-      'KeyW': 3,   // me (b3) - between re and mi
-      // no chromatic between mi-fa (natural semitone)
-      'KeyE': 6,   // se (b5/tritone) - between fa and sol
-      // KeyR is used for 're', so skip
-      // KeyT is used for 'ti', so skip
-      'KeyY': 8,   // le (b6) - between sol and la
-      'KeyU': 10,  // te (b7) - between la and ti
-    };
-
-    // Check for octave modifier keys (these don't produce notes themselves)
-    const isOctaveUpModifier = e.shiftKey || e.code === 'Equal' || e.code === 'NumpadAdd';
-    const isOctaveDownModifier = e.ctrlKey || e.code === 'Minus' || e.code === 'NumpadSubtract';
+    // Check for octave modifiers (true modifiers + tracked pseudo-modifiers)
+    const isOctaveUpModifier = e.shiftKey || octaveUpHeld;
+    const isOctaveDownModifier = e.ctrlKey || octaveDownHeld;
     
     // Don't process if only modifier key pressed
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || 
@@ -132,12 +151,8 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
 
     let interval: number | null = null;
 
-    // Check chromatic notes first (QWERTY row)
-    if (e.code in chromaticCodeToInterval) {
-      interval = chromaticCodeToInterval[e.code];
-    }
-    // Then check diatonic notes
-    else if (e.code in codeToInterval) {
+    // Check diatonic notes
+    if (e.code in codeToInterval) {
       interval = codeToInterval[e.code];
     }
     

@@ -19,6 +19,8 @@ import {
   setDroneVolume as setAudioDroneVolume,
   setMasterVolume,
   keypressToSemitones,
+  handleOctaveModifierDown,
+  handleOctaveModifierUp,
   midiToNoteName,
   NOTE_NAMES,
   formatInstrumentName, INSTRUMENT_IDS,
@@ -111,9 +113,12 @@ const SolfegeKeyboardPage = () => {
     };
   }, []);
   
-  // Handle keyboard shortcuts
+  // Handle keyboard shortcuts with octave modifier tracking
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Track octave modifier keys
+      handleOctaveModifierDown(e);
+      
       if (!isAudioLoaded) return;
       
       const note = keypressToSemitones(e);
@@ -123,9 +128,17 @@ const SolfegeKeyboardPage = () => {
       }
     };
     
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isAudioLoaded, rootMidi,  activeTab]);
+    const handleKeyUp = (e: KeyboardEvent) => {
+      handleOctaveModifierUp(e);
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isAudioLoaded, rootMidi, activeTab]);
     
   const handleNotePress = (note: SemitoneOffset, isVariation: boolean = false) => {
     if (isSelectingRoot) {
@@ -333,7 +346,7 @@ const SolfegeKeyboardPage = () => {
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
                       ? "Click a note to set as root note" 
-                      : "Keys: D/R/M/F/S/L/T or 1-7 for scale • Q/W/E/Y/U for chromatics • Shift/Ctrl for octave"}
+                      : "Keys: D/R/M/F/S/L/T or 1-7 • Hold Shift/+/= for octave up • Ctrl/-  for octave down"}
                   </div>
                 </CardContent>
               </Card>
