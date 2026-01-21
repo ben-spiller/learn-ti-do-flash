@@ -121,7 +121,8 @@ const SolfegeKeyboardPage = () => {
       
       if (!isAudioLoaded) return;
       
-      const note = keypressToSemitones(e);
+      const disableOctaves = activeTab === "chords";
+      const note = keypressToSemitones(e, disableOctaves);
       if (note !== null) {
         e.preventDefault();
         handleNotePress(note);
@@ -346,7 +347,7 @@ const SolfegeKeyboardPage = () => {
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
                       ? "Click a note to set as root note" 
-                      : "Keys: D/R/M/F/S/L/T or 1-7 • Shift/Ctrl for octave • +/- for semitone"}
+                      : "Keys: 1-7 (or d/r/m/f/s/l/t) • Shift/Ctrl for octave • +/- or #/b for semitone"}
                   </div>
                 </CardContent>
               </Card>

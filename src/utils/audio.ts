@@ -82,11 +82,11 @@ let semitoneDownHeld = false;
 
 /** Call this on keydown to track semitone modifier keys (+/=/-) */
 export function handleSemitoneModifierDown(e: KeyboardEvent): boolean {
-  if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+  if (e.code === 'Equal' || e.code === 'NumpadAdd' || e.key.toLowerCase() === '#') {
     semitoneUpHeld = true;
     return true;
   }
-  if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+  if (e.code === 'Minus' || e.code === 'NumpadSubtract' || e.key.toLowerCase() === 'b') {
     semitoneDownHeld = true;
     return true;
   }
@@ -95,11 +95,11 @@ export function handleSemitoneModifierDown(e: KeyboardEvent): boolean {
 
 /** Call this on keyup to track semitone modifier keys (+/=/-) */
 export function handleSemitoneModifierUp(e: KeyboardEvent): boolean {
-  if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+  if (e.code === 'Equal' || e.code === 'NumpadAdd' || e.key.toLowerCase() === '#') {
     semitoneUpHeld = false;
     return true;
   }
-  if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+  if (e.code === 'Minus' || e.code === 'NumpadSubtract' || e.key.toLowerCase() === 'b') {
     semitoneDownHeld = false;
     return true;
   }
@@ -116,7 +116,7 @@ export function handleSemitoneModifierUp(e: KeyboardEvent): boolean {
  * 
  * Note: +=/- are tracked separately via handleSemitoneModifierDown/Up
  */
-export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
+export function keypressToSemitones(e: KeyboardEvent, disableOctaves?: boolean): SemitoneOffset | null {
     // Map number key codes to solfege intervals (semitones from root)
     const codeToInterval: Record<string, number> = {
       // Number keys 1-7 for scale degrees (main keyboard)
@@ -152,8 +152,8 @@ export function keypressToSemitones(e: KeyboardEvent): SemitoneOffset | null {
     };
 
     // Check for modifiers
-    const isOctaveUpModifier = e.shiftKey;
-    const isOctaveDownModifier = e.ctrlKey;
+    const isOctaveUpModifier = e.shiftKey && !disableOctaves;
+    const isOctaveDownModifier = e.ctrlKey && !disableOctaves;
     const isSemitoneUpModifier = semitoneUpHeld;
     const isSemitoneDownModifier = semitoneDownHeld;
     
