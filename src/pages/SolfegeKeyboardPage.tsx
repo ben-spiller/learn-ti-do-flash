@@ -44,6 +44,8 @@ const SolfegeKeyboardPage = () => {
   const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
   const [chordVariationMode, setChordVariationMode] = useState<"7th" | "Major/minor toggle">("7th");
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  const [highlightedChordNotes, setHighlightedChordNotes] = useState<number[]>([]);
+  const chordHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const currentInstrument = activeTab === "notes" ? settings.notesInstrument : settings.chordsInstrument;
   const currentVolume = activeTab === "notes" ? settings.notesVolume : settings.chordsVolume;
@@ -82,11 +84,14 @@ const SolfegeKeyboardPage = () => {
     startAudio(currentInstrument, false, isAudioLoaded, setAudioLoading, startPractice);
   }, []);
     
-  // Cleanup drone on unmount
+  // Cleanup drone and chord highlight timeout on unmount
   useEffect(() => {
     return () => {
       stopDrone();
       stopSounds();
+      if (chordHighlightTimeoutRef.current) {
+        clearTimeout(chordHighlightTimeoutRef.current);
+      }
     };
   }, []);
   
@@ -221,6 +226,26 @@ const SolfegeKeyboardPage = () => {
         if (seventh !== null) {
           playNote(rootNote4 + seventh, 2);
         }
+        
+        // Highlight chord notes (as pitch classes 0-11)
+        const chordPitchClasses = [
+          scaleDegree,
+          (scaleDegree + third) % 12,
+          (scaleDegree + fifth) % 12,
+          ...(seventh !== null ? [(scaleDegree + seventh) % 12] : [])
+        ];
+        
+        // Clear any existing highlight timeout
+        if (chordHighlightTimeoutRef.current) {
+          clearTimeout(chordHighlightTimeoutRef.current);
+        }
+        
+        setHighlightedChordNotes(chordPitchClasses);
+        
+        // Start fade-out timeout (2 seconds)
+        chordHighlightTimeoutRef.current = setTimeout(() => {
+          setHighlightedChordNotes([]);
+        }, 2000);
       } else {
         // Normal single note playing
         playNote(note + rootMidi);
@@ -363,6 +388,7 @@ const SolfegeKeyboardPage = () => {
                     range={[0, 11]}
                     showChordLabels={true}
                     buttonSuffix={isCtrlPressed ? (chordVariationMode.indexOf(" ")>0 ? " + ":" ")+chordVariationMode : ""}
+                    selectedNotes={highlightedChordNotes}
                   />
                   <div className="mt-4 text-sm text-muted-foreground text-center">
                     {isSelectingRoot 
