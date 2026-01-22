@@ -3,18 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Settings, Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Settings } from "lucide-react";
+import { ClearHistoryButton } from "@/components/ClearHistoryButton";
 import { semitonesToSolfege, semitonesToInterval } from "@/utils/audio";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getNoteButtonColor, getScoreColor, getOctaveIndicator, getNeedsPracticeTotalColor } from "@/utils/noteStyles";
@@ -798,49 +788,7 @@ const PracticeHistory = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Session history</CardTitle>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Clear
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Clear {exerciseKey} history?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete all {exerciseSessions.length} session{exerciseSessions.length !== 1 ? 's' : ''} for "{exerciseKey}". 
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          onClick={() => {
-                            // Filter out sessions for this exercise type
-                            const allSessionsNow = JSON.parse(localStorage.getItem('practiceSessions') || '[]');
-                            const filteredSessions = allSessionsNow.filter((s: SessionHistory) => s.exerciseName !== exerciseKey);
-                            localStorage.setItem('practiceSessions', JSON.stringify(filteredSessions));
-                            
-                            // Clear related localStorage items
-                            localStorage.removeItem(STORED_NEEDS_PRACTICE_PAIRS + exerciseKey);
-                            if (exerciseKey === ExerciseType.IntervalComparison) {
-                              localStorage.removeItem(STORED_CONFUSED_INTERVALS);
-                            } else {
-                              localStorage.removeItem(STORED_FREQUENTLY_WRONG_PAIRS);
-                              localStorage.removeItem(STORED_FREQUENTLY_CONFUSED_PAIRS);
-                            }
-                            
-                            // Refresh the page to show updated data
-                            window.location.reload();
-                          }}
-                        >
-                          Delete All
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <ClearHistoryButton exerciseKey={exerciseKey} sessionCount={exerciseSessions.length} />
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
