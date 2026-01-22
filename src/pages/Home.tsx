@@ -546,10 +546,83 @@ const HomeSettingsView = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
-                    Target intervals to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
+                    {intervalComparisonRange[0] !== intervalComparisonRange[1] ?
+                      `Comparison intervals: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
+                      : `Comparison interval: ${semitonesToInterval(intervalComparisonRange[0])}`
+                    }
                   </Label>
+                  <Slider
+                    value={intervalComparisonRange}
+                    onValueChange={(values) => {
+                      const newRange: [number, number] = [values[0], values[1]];
+                      setIntervalComparisonRange(newRange);
+                      // Ensure at least one valid interval is selected
+                      const validIntervals = intervalsToFind.filter(
+                        i => i >= newRange[0] && i <= newRange[1]
+                      );
+                      if (validIntervals.length === 0) {
+                        // Select the first interval in the new range
+                        setIntervalsToFind([newRange[0] as SemitoneOffset]);
+                      } else if (validIntervals.length !== intervalsToFind.length) {
+                        setIntervalsToFind(validIntervals);
+                      }
+                    }}
+                    min={CONSTRAINTS.intervalComparisonRange.min}
+                    max={CONSTRAINTS.intervalComparisonRange.max}
+                    step={1}
+                    minStepsBetweenThumbs={0}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">
+                      Target intervals to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
+                    </Label>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          // Select all intervals in the comparison range
+                          const allInRange: SemitoneOffset[] = [];
+                          for (let i = intervalComparisonRange[0]; i <= intervalComparisonRange[1]; i++) {
+                            allInRange.push(i as SemitoneOffset);
+                          }
+                          setIntervalsToFind(allInRange);
+                        }}
+                      >
+                        All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          if (intervalsToFind.length > 1) {
+                            // Select only the first interval
+                            setIntervalsToFind([intervalsToFind[0]]);
+                          } else {
+                            // Move to the next interval in the range
+                            const current = intervalsToFind[0];
+                            let next = current + 1;
+                            if (next > intervalComparisonRange[1]) {
+                              next = intervalComparisonRange[0];
+                            }
+                            setIntervalsToFind([next as SemitoneOffset]);
+                          }
+                        }}
+                      >
+                        &gt;
+                      </Button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-4 gap-2">
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((interval) => (
+                    {Array.from(
+                      { length: intervalComparisonRange[1] - intervalComparisonRange[0] + 1 }, 
+                      (_, i) => intervalComparisonRange[0] + i
+                    ).map((interval) => (
                       <div key={interval} className="flex items-center space-x-2">
                         <Checkbox
                           id={`interval-${interval}`}
@@ -568,25 +641,6 @@ const HomeSettingsView = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold">
-                    {intervalComparisonRange[0] !== intervalComparisonRange[1] ?
-                      `Comparison intervals: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
-                      : `Comparison interval: ${semitonesToInterval(intervalComparisonRange[0])}`
-                    }
-                  </Label>
-                  <Slider
-                    value={intervalComparisonRange}
-                    onValueChange={(values) => {
-                      setIntervalComparisonRange([values[0], values[1]]);
-                    }}
-                    min={CONSTRAINTS.intervalComparisonRange.min}
-                    max={CONSTRAINTS.intervalComparisonRange.max}
-                    step={1}
-                    minStepsBetweenThumbs={0}
-                  />
                 </div>
                 
                 <div className="space-y-2">
