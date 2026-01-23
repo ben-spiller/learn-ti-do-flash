@@ -8,8 +8,6 @@ import {
   MidiNoteNumber,
   SemitoneOffset,
   playSequence,
-  preloadInstrumentWithGesture,
-  noteNameToMidi,
   semitonesToInterval,
   startAudio,
 } from "@/utils/audio";
@@ -141,10 +139,10 @@ const IntervalComparisonPractice = () => {
     // Track which intervals we use to check for duplicates
     const usedIntervals: number[] = [];
     
-    // Generate pool of other intervals from range (excluding all target intervals)
+    // Generate pool of other intervals from range excluding the target interval
     const otherIntervalsPool: SemitoneOffset[] = [];
     for (let i = settings.intervalComparisonRange[0]; i <= settings.intervalComparisonRange[1]; i++) {
-      if (!settings.intervalsToFind.includes(i as SemitoneOffset)) {
+      if (i != currentTargetInterval) {
         otherIntervalsPool.push(i as SemitoneOffset);
       }
     }
@@ -340,7 +338,8 @@ const IntervalComparisonPractice = () => {
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Interval comparison</h3>
                 <p className="text-sm text-muted-foreground">
-                  Find the <b>{semitonesToInterval(currentTargetInterval)}</b> among the other intervals
+                  {isQuestionComplete() ? "Correct! Up next: find " : "Find "}
+                  the <b>{semitonesToInterval(currentTargetInterval)}</b> among the other intervals
                   {settings.intervalsToFind.length > 1 && (
                     <span className="ml-2 text-xs text-muted-foreground/70">
                       ({(currentIntervalIndex % settings.intervalsToFind.length) + 1}/{settings.intervalsToFind.length})
