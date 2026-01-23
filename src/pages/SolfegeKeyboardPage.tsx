@@ -42,7 +42,7 @@ const SolfegeKeyboardPage = () => {
   const [isAudioLoaded, setAudioLoaded] = useState(false);
   const [isSelectingRoot, setIsSelectingRoot] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "chords">("notes");
-  const [chordVariationMode, setChordVariationMode] = useState<"7th" | "Major/minor toggle">("7th");
+  const [chordVariationMode, setChordVariationMode] = useState<"7th" | "Maj<->Min">("7th");
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [highlightedChordNotes, setHighlightedChordNotes] = useState<number[]>([]);
   const chordHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -196,7 +196,7 @@ const SolfegeKeyboardPage = () => {
             } else {
               seventh = 10; // minor 7th
             }
-          } else if (chordVariationMode === "Major/minor toggle") {
+          } else if (chordVariationMode === "Maj<->Min") {
             // Toggle major/minor (swap 3rd)
             if (isDiminished) {
               // Diminished becomes minor
@@ -478,9 +478,9 @@ const SolfegeKeyboardPage = () => {
                       7th Chord
                     </Button>
                     <Button
-                      variant={chordVariationMode === "Major/minor toggle" ? "default" : "outline"}
+                      variant={chordVariationMode === "Maj<->Min" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setChordVariationMode("Major/minor toggle")}
+                      onClick={() => setChordVariationMode("Maj<->Min")}
                       className="flex-1"
                     >
                       Major/Minor toggle
