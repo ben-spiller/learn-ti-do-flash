@@ -547,7 +547,7 @@ const HomeSettingsView = () => {
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
                     {intervalComparisonRange[0] !== intervalComparisonRange[1] ?
-                      `Comparison intervals: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
+                      `Intervals to play: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
                       : `Comparison interval: ${semitonesToInterval(intervalComparisonRange[0])}`
                     }
                   </Label>
@@ -558,7 +558,7 @@ const HomeSettingsView = () => {
                       setIntervalComparisonRange(newRange);
                       // Ensure at least one valid interval is selected
                       const validIntervals = intervalsToFind.filter(
-                        i => i >= newRange[0] && i <= newRange[1]
+                        i => i >= newRange[0] && i < newRange[1]
                       );
                       if (validIntervals.length === 0) {
                         // Select the first interval in the new range
@@ -570,14 +570,14 @@ const HomeSettingsView = () => {
                     min={CONSTRAINTS.intervalComparisonRange.min}
                     max={CONSTRAINTS.intervalComparisonRange.max}
                     step={1}
-                    minStepsBetweenThumbs={0}
+                    minStepsBetweenThumbs={1}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-base font-semibold">
-                      Target intervals to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
+                      {intervalsToFind.length==1?"Interval ":"Intervals "} to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
                     </Label>
                     <div className="flex gap-1">
                       <Button
@@ -614,7 +614,7 @@ const HomeSettingsView = () => {
                           }
                         }}
                       >
-                        &gt;
+                        Next &gt;
                       </Button>
                     </div>
                   </div>

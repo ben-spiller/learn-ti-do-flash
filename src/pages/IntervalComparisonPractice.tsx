@@ -336,7 +336,7 @@ const IntervalComparisonPractice = () => {
           <CardContent className="pt-6">
               <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Interval comparison</h3>
+                <h3 className="text-lg font-semibold mb-2">Interval identification</h3>
                 <p className="text-sm text-muted-foreground">
                   {isQuestionComplete() ? "Correct! Up next: find " : "Find "}
                   the <b>{semitonesToInterval(currentTargetInterval)}</b> among the other intervals

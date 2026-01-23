@@ -10,7 +10,7 @@ type SemitonePair = [SemitoneOffset, SemitoneOffset];
 export enum ExerciseType {
   SingleNoteRecognition = "Single note recognition",
   MelodyRecognition = "Melody recognition",
-  IntervalComparison = "Interval comparison",
+  IntervalComparison = "Interval id",
 }
 
 /** True for exercises where there is a reference note and a drone can be configured */
