@@ -229,7 +229,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                 onMouseLeave={(e) => handleButtonRelease(pitch, e)}
                 onTouchStart={(e) => handleButtonPress(pitch, e)}
                 onTouchEnd={(e) => handleButtonRelease(pitch, e)}
-                className={`h-14 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : ''}`}
+                className={`h-14 text-xl font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch))} ${!inMainOctave ? 'opacity-70 w-2/3' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-[4px] ring-primary' : ''}`}
                 disabled={disabled}
               >
                 {solfege}{buttonSuffix}
