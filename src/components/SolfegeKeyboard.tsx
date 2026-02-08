@@ -260,7 +260,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
       </div>
       
       {/* Chromatic notes column */}
-      <div className="w-24 relative" style={{ height: `${totalHeightRem}rem` }}>
+      <div className="w-36 relative" style={{ height: `${totalHeightRem}rem` }}>
         {/* Chromatic notes positioned in gaps */}
         {chromaticNotes.map((pitch) => {
           // Determine the diatonic note just above this chromatic note within the stack
