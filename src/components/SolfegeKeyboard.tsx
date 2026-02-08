@@ -288,11 +288,11 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                   onMouseLeave={(e) => handleButtonRelease(pitch, e)}
                   onTouchStart={(e) => handleButtonPress(pitch, e)}
                   onTouchEnd={(e) => handleButtonRelease(pitch, e)}
-                  className={`h-10 text-lg font-bold text-white relative ${getNoteButtonColor("semitone")} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : ''}`}
+                  className={`h-10 text-lg font-bold text-white relative ${getNoteButtonColor(semitonesToSolfege(pitch+1))} ${!inMainOctave ? 'opacity-70 w-full' : 'w-full'} ${isNoteSelected(pitch) ? 'ring-4 ring-primary ring-offset-2' : ''}`}
                   disabled={disabled}
                   title={semitonesToSolfege(pitch, true, showChordLabels)}
                 >
-                # / b
+                b ({semitonesToSolfege(pitch, false, showChordLabels)})
                 {isLastPressed && overlay?.isCorrect !== null && (
                   <div className={`absolute inset-0 flex flex-col items-center justify-center animate-scale-in`}>
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">

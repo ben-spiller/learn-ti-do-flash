@@ -19,11 +19,13 @@ export type MidiNoteName = string;
 
 // Major scale intervals (semitones) from the root - do, re, me, etc
 export const MAJOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 4, 5, 7, 9, 11];
+// Major scale intervals (semitones) from the root - do, re, me, etc
+export const MINOR_SCALE_PITCH_CLASSES: SemitoneOffset[] = [0, 2, 3, 5, 7, 8, 10];
 
 export const NOTE_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
 const SOLFEGE_NAMES = ['Do (1)', 'Ra (b2)', 'Re (2)', 'Me (b3)', 'Mi (3)', 'Fa (4)', 'Se (b5)', 'Sol (5)', 'Le (b6)', 'La (6)', 'Te (b7)', 'Ti (7)'] as const;
-const CHORD_NAMES = ['Do (I)', 'Ra (bII)', 'Re (ii)', 'Me (bIII)', 'Mi (iii)', 'Fa (IV)', 'Se (bV)', 'Sol (V)', 'Le (bVI)', 'La (vi)', 'Te (bVII)', 'Ti (vii°)'] as const;
+const CHORD_NAMES_MAJOR = ['Do (I)', 'Ra (bII)', 'Re (ii)', 'Me (bIII)', 'Mi (iii)', 'Fa (IV)', 'Se (bV)', 'Sol (V)', 'Le (bVI)', 'La (vi)', 'Te (bVII)', 'Ti (vii°)'] as const;
 // not sure about bII and bV
 
 const INTERVAL_NAMES = ['octave', 'semitone', 'tone', 'min3', 'Maj3', '4th', 'aug4', '5th', 'min6', 'min6', 'min7', 'Maj7'] as const;
@@ -38,7 +40,7 @@ export function semitonesToOneOctave(semitoneOffset: SemitoneOffset): SemitoneOf
 
 export function semitonesToSolfege(semitoneOffset: SemitoneOffset, longVersion = false, chordVersion = false): string {
   const pc = semitonesToOneOctave(semitoneOffset); // normalize to 0..11
-  const name = (chordVersion ? CHORD_NAMES : SOLFEGE_NAMES)[pc];
+  const name = (chordVersion ? CHORD_NAMES_MAJOR : SOLFEGE_NAMES)[pc];
   if (longVersion) return name;
   return name.split(' ')[0];
 }

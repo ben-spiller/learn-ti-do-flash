@@ -26,6 +26,7 @@ import {
   semitonesToSolfege,
   semitonesToOneOctave,
   formatInstrumentName,
+  MINOR_SCALE_PITCH_CLASSES,
 } from "@/utils/audio";
 import {
   ConfigData,
@@ -670,10 +671,12 @@ const HomeSettingsView = () => {
                         ? "All 12 notes" 
                         : (
                         JSON.stringify(selectedNotes) == JSON.stringify(MAJOR_SCALE_PITCH_CLASSES) ?
-                        "All 7 scale notes (excluding chromatic)"
-                        :
-                        `${selectedNotes.length} notes: ${selectedNotes.map(i => semitonesToSolfege(i)).join(", ")}`
-                        )}
+                        "Major scale notes"
+                        :(
+                        JSON.stringify(selectedNotes) == JSON.stringify(MINOR_SCALE_PITCH_CLASSES) ?
+                        "Minor scale notes"
+                        :`${selectedNotes.length} notes: ${selectedNotes.map(i => semitonesToSolfege(i)).join(", ")}`
+                        ))}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
@@ -686,10 +689,10 @@ const HomeSettingsView = () => {
                     <div className="space-y-4">
                       <div className="flex gap-2">
                         <Button
-                          variant={JSON.stringify(selectedNotes) === JSON.stringify([0, 2, 4, 5, 7, 9, 11]) ? "default" : "outline"}
+                          variant={JSON.stringify(selectedNotes) === JSON.stringify(MAJOR_SCALE_PITCH_CLASSES) ? "default" : "outline"}
                           size="sm"
                           onClick={() => {
-                            const majorScale = [0, 2, 4, 5, 7, 9, 11];
+                            const majorScale = MAJOR_SCALE_PITCH_CLASSES;
                             if (JSON.stringify(selectedNotes) === JSON.stringify(majorScale)) {
                               setSelectedNotes([]);
                             } else {
@@ -697,21 +700,21 @@ const HomeSettingsView = () => {
                             }
                           }}
                         >
-                          Scale Notes
+                          Major Scale
                         </Button>
                         <Button
-                          variant={JSON.stringify(selectedNotes) === JSON.stringify([1, 3, 6, 8, 10]) ? "default" : "outline"}
+                          variant={JSON.stringify(selectedNotes) === JSON.stringify(MINOR_SCALE_PITCH_CLASSES) ? "default" : "outline"}
                           size="sm"
                           onClick={() => {
-                            const chromatic = [1, 3, 6, 8, 10];
-                            if (JSON.stringify(selectedNotes) === JSON.stringify(chromatic)) {
+                            const scale = MINOR_SCALE_PITCH_CLASSES;
+                            if (JSON.stringify(selectedNotes) === JSON.stringify(scale)) {
                               setSelectedNotes([]);
                             } else {
-                              setSelectedNotes(chromatic);
+                              setSelectedNotes(scale);
                             }
                           }}
                         >
-                          Non-scale Notes
+                          Minor Scale
                         </Button>
                         <Button
                           variant={selectedNotes.length === 12 ? "default" : "outline"}
