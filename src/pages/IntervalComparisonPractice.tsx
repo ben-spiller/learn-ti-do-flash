@@ -237,7 +237,8 @@ const IntervalComparisonPractice = () => {
     } else {
       // Track the confusion: target interval vs what user selected
       const selectedInterval = Math.abs(sequence[index] - sequence[index - 1]);
-      const confusionKey = `${currentTargetInterval},${selectedInterval}`;
+      // always put lower one first, to get one entry for each pair
+      const confusionKey = `${Math.min(currentTargetInterval,selectedInterval)},${Math.max(currentTargetInterval,selectedInterval)}`;
       const currentCount = confusedIntervalsRef.current.get(confusionKey) || 0;
       confusedIntervalsRef.current.set(confusionKey, currentCount + 1);
     }

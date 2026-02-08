@@ -348,12 +348,12 @@ const PracticeHistory = () => {
                       <div key={pair.pairKey} className="flex items-center gap-3">
                         <span className="font-medium text-muted-foreground w-6">{index + 1}.</span>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="px-3 py-2 rounded-lg bg-primary/20 border border-primary/30 font-bold text-sm">
-                            {pair.targetName}
+                          <div className="px-3 py-2 rounded-lg bg-primary/20 border border-primary/30 font-bold text-sm" style={{ width: "5em" }}>
+                            {pair.targetName.replace('semitone', 'semi')}
                           </div>
                           <span className="text-muted-foreground">↔</span>
-                          <div className="px-3 py-2 rounded-lg bg-destructive/20 border border-destructive/30 font-bold text-sm" style={{ width: "7em" }}>
-                            {pair.selectedName}
+                          <div className="px-3 py-2 rounded-lg bg-destructive/20 border border-destructive/30 font-bold text-sm" style={{ width: "5em" }}>
+                            {pair.selectedName.replace('semitone', 'semi')}
                           </div>
                         </div>
                         <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
