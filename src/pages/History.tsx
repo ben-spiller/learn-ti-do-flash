@@ -468,7 +468,7 @@ const PracticeHistory = () => {
                   }
                 })
                 .filter((pair): pair is NonNullable<typeof pair> => pair !== null)
-                .filter(pair => pair.count > 1) // Only show patterns (count > 1)
+                .filter(pair => pair.count > 2) // Only show patterns
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 8)
                 .map((pair, index, arr) => {
