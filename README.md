@@ -15,8 +15,6 @@ The key skills you need to master are:
 
 For final mastery, extend recognition to the 7 notes when they appear an octave lower or higher (compound intervals), and the "outside" #/b notes (though once you can recognize the 7 scale notes reliably this will become a lot easier). 
 
-For minor keys (and modal pieces), some people prefer to treat "do" as the root and learn to recognize the minor 3rd and minor 7th interval... but in my opinion it's easier for name the tonal centre for minor pieces "la", and then you can just use the same 7 notes you already learn only starting from a different point.  
-
 ## Implementation
 
 Many thanks to the excellent [Loveable](https://lovable.dev) AI tooling for doing most of the early heavy lifting in this project.
