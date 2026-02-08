@@ -169,14 +169,41 @@ export function keypressToSemitones(e: KeyboardEvent, disableOctaves?: boolean):
 
     let interval: number | null = null;
 
-    // Check number keys by code
-    if (e.code in codeToInterval) {
-      interval = codeToInterval[e.code];
+    // Prefer using e.key for digits because it respects NumLock and user's locale.
+    // But fall back to e.code when e.key doesn't map cleanly (for example when Shift+1 -> '!').
+    const digitKeyToInterval: Record<string, number> = {
+      '1': 0,
+      '2': 2,
+      '3': 4,
+      '4': 5,
+      '5': 7,
+      '6': 9,
+      '7': 11,
+      '8': 12,
+    };
+
+    // If e.key is a simple digit (e.g. '1' or '2'), use that mapping. This naturally respects NumLock
+    // because when NumLock is off the numpad will typically produce names like 'PageDown' instead of '1'.
+    if (typeof e.key === 'string' && e.key.length === 1 && digitKeyToInterval[e.key] !== undefined) {
+      interval = digitKeyToInterval[e.key];
+    } else if (e.code in codeToInterval) {
+      // Fallback: use e.code mapping (handles cases like Shift+1 where e.key becomes '!')
+      if (e.code.startsWith('Numpad')) {
+        try {
+          const numLockOn = typeof (e as any).getModifierState === 'function' ? (e as any).getModifierState('NumLock') : false;
+          if (numLockOn) interval = codeToInterval[e.code];
+        } catch (err) {
+          // conservative fallback: don't treat numpad as digits
+          interval = null;
+        }
+      } else {
+        interval = codeToInterval[e.code];
+      }
     }
-    
+
     // Check letter keys by key (lowercase) for language independence
     if (interval === null) {
-      const lowerKey = e.key.toLowerCase();
+      const lowerKey = String(e.key || '').toLowerCase();
       if (lowerKey in letterToInterval) {
         interval = letterToInterval[lowerKey];
       }
