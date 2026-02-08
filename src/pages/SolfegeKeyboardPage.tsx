@@ -130,7 +130,7 @@ const SolfegeKeyboardPage = () => {
       const note = keypressToSemitones(e, disableOctaves);
       if (note !== null) {
         e.preventDefault();
-        handleNotePress(note);
+        handleNotePress(note, isCtrlPressed);
       }
     };
     

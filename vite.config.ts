@@ -3,10 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
-// If deploying to GitHub Pages as a project site, set base to the repo name so
-// built assets are requested from /<repo>/assets/... instead of /. For local
-// dev we keep base as '/'. Hardcoding the GitHub repo name is gross but for now let's keep it simple
 export default defineConfig(({ mode }) => ({
   // Use a relative base for production so assets are referenced relative to
   // the HTML file. This avoids hardcoding the repo name and works both for
