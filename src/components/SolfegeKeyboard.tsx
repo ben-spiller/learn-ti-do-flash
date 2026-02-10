@@ -292,7 +292,7 @@ const SolfegeKeyboard: React.FC<SolfegeKeyboardProps> = ({
                   disabled={disabled}
                   title={semitonesToSolfege(pitch, true, showChordLabels)}
                 >
-                b ({semitonesToSolfege(pitch, false, showChordLabels)})
+                ♭ ({semitonesToSolfege(pitch, false, showChordLabels)})
                 {isLastPressed && overlay?.isCorrect !== null && (
                   <div className={`absolute inset-0 flex flex-col items-center justify-center animate-scale-in`}>
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
