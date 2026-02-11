@@ -54,10 +54,10 @@ export function semitonesToInterval(semitoneOffset: SemitoneOffset): string {
   return INTERVAL_NAMES[pc];
 }
 
-//returns MidiNoteNumber
+//returns MidiNoteNumber. Note name can use b/# or the unicode symbols 
 export const noteNameToMidi = (note: MidiNoteName) => {
   if (!note || typeof note !== 'string') throw new Error('Invalid note name: ' + note);
-  const match = note.match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
+  const match = note.replace(/♭/g, 'b').replace(/♯/g, '#').match(/^([A-G])(#{0,1}|b{0,1})(\d+)$/);
   if (!match) throw new Error('Invalid note name: ' + note);
   const [, pitch, accidental, octaveStr] = match;
   const octave = parseInt(octaveStr, 10);

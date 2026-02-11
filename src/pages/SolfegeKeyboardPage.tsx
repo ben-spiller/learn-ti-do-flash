@@ -24,7 +24,8 @@ import {
   midiToNoteName,
   NOTE_NAMES,
   formatInstrumentName, INSTRUMENT_IDS,
-  startAudio
+  startAudio,
+  splitNoteName
 } from "@/utils/audio";
 import { getKeyboardSettings, saveKeyboardSettings, KeyboardSettings } from "@/utils/keyboardStorage";
 import SolfegeKeyboard, { Overlay } from "@/components/SolfegeKeyboard";
@@ -262,8 +263,8 @@ const SolfegeKeyboardPage = () => {
   const handleRootNoteChange = (noteName: string) => {
     const newRootMidi = noteNameToMidi(noteName);
     setRootMidi(newRootMidi);
-    setSettings({ ...settings, rootNote: noteName });
-    
+    // don't use original noteNote as it may be in a different format
+    setSettings({ ...settings, rootNote: midiToNoteName(newRootMidi) });
     // Restart drone if it's playing
     if (settings.droneEnabled && isAudioLoaded) {
       stopDrone();
@@ -321,9 +322,8 @@ const SolfegeKeyboardPage = () => {
     
   // Parse note name properly to handle sharps and any octave number
   const parseNoteName = (fullNote: string) => {
-    const match = fullNote.match(/^([A-G][#b]?)(-?\d+)$/);
-    if (!match) return { noteName: 'C', octave: 4 }; // Fallback
-    return { noteName: match[1], octave: parseInt(match[2]) };
+    const { pitch, accidental, octave } = splitNoteName(fullNote);
+    return { noteName: pitch + (accidental === 1 ? '#' : accidental === -1 ? '♭' : ''), octave };
   };
   
   const { noteName: currentNoteName, octave: currentOctave } = parseNoteName(settings.rootNote);
