@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle, Settings as SettingsIcon } from "lucide-react";
+import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle, Settings as SettingsIcon, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
 import keyboardIcon from "@/assets/solfege-keyboard.png";
@@ -439,6 +440,7 @@ const HomeSettingsView = () => {
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
+              {/* Exercise Type - always visible */}
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Practice</Label>
                 <div className="flex gap-2 flex-wrap">
@@ -448,7 +450,6 @@ const HomeSettingsView = () => {
                     className="flex-1"
                   >
                     Single Notes
-                    {/* {ExerciseType.SingleNoteRecognition} */}
                   </Button>
                   <Button
                     variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
@@ -467,6 +468,7 @@ const HomeSettingsView = () => {
                 </div>
               </div>
 
+              {/* Notes per question - always visible (except single note) */}
               {exerciseType !== ExerciseType.SingleNoteRecognition && (
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Notes per question</Label>
@@ -491,35 +493,10 @@ const HomeSettingsView = () => {
                   </Button>
                 </div>
               </div>
-            )}
+              )}
 
-            {exerciseType !== ExerciseType.IntervalComparison && (<>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Play extra notes</Label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setPlayExtraNotes(Math.max(CONSTRAINTS.playExtraNotes.min, playExtraNotes - 1))}
-                  >
-                    -
-                  </Button>
-                  <div className="flex-1 text-center">
-                    <span className="text-2xl font-bold">{playExtraNotes}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setPlayExtraNotes(Math.min(CONSTRAINTS.playExtraNotes.max, playExtraNotes + 1))}
-                  >
-                    +
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Random notes played after the sequence (don't need to guess)
-                </p>
-              </div>
+              {/* === Note Recognition: always-visible settings === */}
+              {exerciseType !== ExerciseType.IntervalComparison && (<>
               <div className="space-y-4">
                 <Label className="text-base font-semibold">
                   Question note range: {formatQuestionRangeLabel(questionNoteRange[0])} ... {formatQuestionRangeLabel(questionNoteRange[1])}
@@ -542,127 +519,7 @@ const HomeSettingsView = () => {
                   minStepsBetweenThumbs={1}
                 />
               </div>
-              </>)}
 
-              {exerciseType === ExerciseType.IntervalComparison && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold">
-                    {intervalComparisonRange[0] !== intervalComparisonRange[1] ?
-                      `Intervals to play: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
-                      : `Comparison interval: ${semitonesToInterval(intervalComparisonRange[0])}`
-                    }
-                  </Label>
-                  <Slider
-                    value={intervalComparisonRange}
-                    onValueChange={(values) => {
-                      const newRange: [number, number] = [values[0], values[1]];
-                      setIntervalComparisonRange(newRange);
-                      // Ensure at least one valid interval is selected
-                      const validIntervals = intervalsToFind.filter(
-                        i => i >= newRange[0] && i < newRange[1]
-                      );
-                      if (validIntervals.length === 0) {
-                        // Select the first interval in the new range
-                        setIntervalsToFind([newRange[0] as SemitoneOffset]);
-                      } else if (validIntervals.length !== intervalsToFind.length) {
-                        setIntervalsToFind(validIntervals);
-                      }
-                    }}
-                    min={CONSTRAINTS.intervalComparisonRange.min}
-                    max={CONSTRAINTS.intervalComparisonRange.max}
-                    step={1}
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">
-                      {intervalsToFind.length==1?"Interval ":"Intervals "} to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
-                    </Label>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => {
-                          // Select all intervals in the comparison range
-                          const allInRange: SemitoneOffset[] = [];
-                          for (let i = intervalComparisonRange[0]; i <= intervalComparisonRange[1]; i++) {
-                            allInRange.push(i as SemitoneOffset);
-                          }
-                          setIntervalsToFind(allInRange);
-                        }}
-                      >
-                        All
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => {
-                          if (intervalsToFind.length > 1) {
-                            // Select only the first interval
-                            setIntervalsToFind([intervalsToFind[0]]);
-                          } else {
-                            // Move to the next interval in the range
-                            const current = intervalsToFind[0];
-                            let next = current + 1;
-                            if (next > intervalComparisonRange[1]) {
-                              next = intervalComparisonRange[0];
-                            }
-                            setIntervalsToFind([next as SemitoneOffset]);
-                          }
-                        }}
-                      >
-                        Next &gt;
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {Array.from(
-                      { length: intervalComparisonRange[1] - intervalComparisonRange[0] + 1 }, 
-                      (_, i) => intervalComparisonRange[0] + i
-                    ).map((interval) => (
-                      <div key={interval} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`interval-${interval}`}
-                          checked={intervalsToFind.includes(interval as SemitoneOffset)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setIntervalsToFind([...intervalsToFind, interval as SemitoneOffset].sort((a, b) => a - b));
-                            } else if (intervalsToFind.length > 1) {
-                              setIntervalsToFind(intervalsToFind.filter(i => i !== interval));
-                            }
-                          }}
-                        />
-                        <Label htmlFor={`interval-${interval}`} className="text-sm cursor-pointer">
-                          {semitonesToInterval(interval)}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold">Direction</Label>
-                  <Select value={intervalDirection} onValueChange={(value: 'random' | 'ascending' | 'descending') => setIntervalDirection(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="random">Random each question</SelectItem>
-                      <SelectItem value="ascending">Ascending (fixed for session)</SelectItem>
-                      <SelectItem value="descending">Descending (fixed for session)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              )}
-
-              {exerciseType !== ExerciseType.IntervalComparison && (
-              <>
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Notes to practice</Label>
                 <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
@@ -755,78 +612,233 @@ const HomeSettingsView = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+              </>)}
 
+              {/* === Interval Comparison: always-visible settings === */}
+              {exerciseType === ExerciseType.IntervalComparison && (
               <div className="space-y-4">
-                <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
-                  Consecutive intervals: {semitonesToInterval(consecutiveIntervals[0])} ... {semitonesToInterval(consecutiveIntervals[1])}</Label>
-                <Slider
-                  value={consecutiveIntervals}
-                  onValueChange={(values) => {
-                    // Ensure min and max are always different
-                    if (values[0] === values[1]) {
-                      return;
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    {intervalComparisonRange[0] !== intervalComparisonRange[1] ?
+                      `Intervals to play: ${semitonesToInterval(intervalComparisonRange[0])} ... ${semitonesToInterval(intervalComparisonRange[1])}`
+                      : `Comparison interval: ${semitonesToInterval(intervalComparisonRange[0])}`
                     }
-                    setConsecutiveIntervals([values[0], values[1]]);
-                  }}
-                  min={CONSTRAINTS.consecutiveIntervals.min}
-                  max={CONSTRAINTS.consecutiveIntervals.max}
-                  step={1}
-                  minStepsBetweenThumbs={1}
-                />
-              </div>
+                  </Label>
+                  <Slider
+                    value={intervalComparisonRange}
+                    onValueChange={(values) => {
+                      const newRange: [number, number] = [values[0], values[1]];
+                      setIntervalComparisonRange(newRange);
+                      const validIntervals = intervalsToFind.filter(
+                        i => i >= newRange[0] && i < newRange[1]
+                      );
+                      if (validIntervals.length === 0) {
+                        setIntervalsToFind([newRange[0] as SemitoneOffset]);
+                      } else if (validIntervals.length !== intervalsToFind.length) {
+                        setIntervalsToFind(validIntervals);
+                      }
+                    }}
+                    min={CONSTRAINTS.intervalComparisonRange.min}
+                    max={CONSTRAINTS.intervalComparisonRange.max}
+                    step={1}
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
 
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Background drone note</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={droneType === "root" ? "default" : "outline"}
-                    onClick={() => setDroneType("root")}
-                    className="flex-1"
-                  >
-                    Root note (do)
-                  </Button>
-                  <Button
-                    variant={droneType === "none" ? "default" : "outline"}
-                    onClick={() => setDroneType("none")}
-                    className="flex-1"
-                  >
-                    Off
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">
+                      {intervalsToFind.length==1?"Interval ":"Intervals "} to find: {intervalsToFind.map(i => semitonesToInterval(i)).join(', ')}
+                    </Label>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          const allInRange: SemitoneOffset[] = [];
+                          for (let i = intervalComparisonRange[0]; i <= intervalComparisonRange[1]; i++) {
+                            allInRange.push(i as SemitoneOffset);
+                          }
+                          setIntervalsToFind(allInRange);
+                        }}
+                      >
+                        All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          if (intervalsToFind.length > 1) {
+                            setIntervalsToFind([intervalsToFind[0]]);
+                          } else {
+                            const current = intervalsToFind[0];
+                            let next = current + 1;
+                            if (next > intervalComparisonRange[1]) {
+                              next = intervalComparisonRange[0];
+                            }
+                            setIntervalsToFind([next as SemitoneOffset]);
+                          }
+                        }}
+                      >
+                        Next &gt;
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from(
+                      { length: intervalComparisonRange[1] - intervalComparisonRange[0] + 1 }, 
+                      (_, i) => intervalComparisonRange[0] + i
+                    ).map((interval) => (
+                      <div key={interval} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`interval-${interval}`}
+                          checked={intervalsToFind.includes(interval as SemitoneOffset)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setIntervalsToFind([...intervalsToFind, interval as SemitoneOffset].sort((a, b) => a - b));
+                            } else if (intervalsToFind.length > 1) {
+                              setIntervalsToFind(intervalsToFind.filter(i => i !== interval));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`interval-${interval}`} className="text-sm cursor-pointer">
+                          {semitonesToInterval(interval)}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              </>
               )}
 
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Rhythm</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={rhythm === "fixed" ? "default" : "outline"}
-                    onClick={() => setRhythm("fixed")}
-                    className="flex-1"
-                  >
-                    Fixed
-                  </Button>
-                  <Button
-                    variant={rhythm === "random" ? "default" : "outline"}
-                    onClick={() => setRhythm("random")}
-                    className="flex-1"
-                  >
-                    Random
-                  </Button>
-                </div>
-              </div>
+              {/* === Collapsible Customize section === */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-2 border-t pt-4">
+                  <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                  Customize
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-6 pt-4">
 
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
-                <Slider
-                  value={[tempo]}
-                  onValueChange={(v) => setTempo(v[0])}
-                  min={CONSTRAINTS.tempo.min}
-                  max={CONSTRAINTS.tempo.max}
-                  step={CONSTRAINTS.tempo.step}
-                />
-              </div>
+                  {/* Note recognition customize settings */}
+                  {exerciseType !== ExerciseType.IntervalComparison && (<>
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Play extra notes</Label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setPlayExtraNotes(Math.max(CONSTRAINTS.playExtraNotes.min, playExtraNotes - 1))}
+                      >
+                        -
+                      </Button>
+                      <div className="flex-1 text-center">
+                        <span className="text-2xl font-bold">{playExtraNotes}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setPlayExtraNotes(Math.min(CONSTRAINTS.playExtraNotes.max, playExtraNotes + 1))}
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Random notes played after the sequence (don't need to guess)
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold" title="Use this to focus on the common small intervals (e.g. 2 <= 4 semitones) until you've mastered the differences. Later you could use it to do focused practice on large intervals.">
+                      Consecutive intervals: {semitonesToInterval(consecutiveIntervals[0])} ... {semitonesToInterval(consecutiveIntervals[1])}</Label>
+                    <Slider
+                      value={consecutiveIntervals}
+                      onValueChange={(values) => {
+                        if (values[0] === values[1]) {
+                          return;
+                        }
+                        setConsecutiveIntervals([values[0], values[1]]);
+                      }}
+                      min={CONSTRAINTS.consecutiveIntervals.min}
+                      max={CONSTRAINTS.consecutiveIntervals.max}
+                      step={1}
+                      minStepsBetweenThumbs={1}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Background drone note</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={droneType === "root" ? "default" : "outline"}
+                        onClick={() => setDroneType("root")}
+                        className="flex-1"
+                      >
+                        Root note (do)
+                      </Button>
+                      <Button
+                        variant={droneType === "none" ? "default" : "outline"}
+                        onClick={() => setDroneType("none")}
+                        className="flex-1"
+                      >
+                        Off
+                      </Button>
+                    </div>
+                  </div>
+                  </>)}
+
+                  {/* Interval customize settings */}
+                  {exerciseType === ExerciseType.IntervalComparison && (
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold">Direction</Label>
+                    <Select value={intervalDirection} onValueChange={(value: 'random' | 'ascending' | 'descending') => setIntervalDirection(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="random">Random each question</SelectItem>
+                        <SelectItem value="ascending">Ascending (fixed for session)</SelectItem>
+                        <SelectItem value="descending">Descending (fixed for session)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  )}
+
+                  {/* Common customize settings: rhythm + tempo */}
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Rhythm</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={rhythm === "fixed" ? "default" : "outline"}
+                        onClick={() => setRhythm("fixed")}
+                        className="flex-1"
+                      >
+                        Fixed
+                      </Button>
+                      <Button
+                        variant={rhythm === "random" ? "default" : "outline"}
+                        onClick={() => setRhythm("random")}
+                        className="flex-1"
+                      >
+                        Random
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
+                    <Slider
+                      value={[tempo]}
+                      onValueChange={(v) => setTempo(v[0])}
+                      min={CONSTRAINTS.tempo.min}
+                      max={CONSTRAINTS.tempo.max}
+                      step={CONSTRAINTS.tempo.step}
+                    />
+                  </div>
+
+                </CollapsibleContent>
+              </Collapsible>
 
             </TabsContent>
 
@@ -907,14 +919,17 @@ const HomeSettingsView = () => {
             </TabsContent>
           </Tabs>
 
+          <div className="h-20" /> {/* spacer for sticky button */}
+        </CardContent>
+        <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t">
           <Button
-            className="w-full h-14 text-lg font-semibold mt-6"
+            className="w-full h-14 text-lg font-semibold"
             onClick={handleStart}
             disabled={selectedNotes.length < 2 || isAudioLoading}
           >
             {showLoadingIndicator ? "Loading sounds..." : "Start Practice"}
           </Button>
-        </CardContent>
+        </div>
       </Card>
       </div>
     </div>
