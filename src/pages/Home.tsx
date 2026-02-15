@@ -433,33 +433,6 @@ const HomeSettingsView = () => {
                 </div>
               </div>
 
-              {/* Notes per question - always visible (except single note) */}
-              {exerciseType !== ExerciseType.SingleNoteRecognition && (
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Notes per question</Label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setNumberOfNotes(Math.max(
-                      exerciseType === ExerciseType.IntervalComparison ? 3 : CONSTRAINTS.numberOfNotes.min, numberOfNotes - 1))}
-                  >
-                    -
-                  </Button>
-                  <div className="flex-1 text-center">
-                    <span className="text-2xl font-bold">{numberOfNotes}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setNumberOfNotes(Math.min(CONSTRAINTS.numberOfNotes.max, numberOfNotes + 1))}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-              )}
-
               {/* === Note Recognition: always-visible settings === */}
               {exerciseType !== ExerciseType.IntervalComparison && (<>
               <div className="space-y-4">
@@ -678,6 +651,70 @@ const HomeSettingsView = () => {
               </div>
               )}
 
+              {/* Notes per question - always visible (except single note) */}
+              {exerciseType !== ExerciseType.SingleNoteRecognition && (
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Notes per question</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setNumberOfNotes(Math.max(
+                      exerciseType === ExerciseType.IntervalComparison ? 3 : CONSTRAINTS.numberOfNotes.min, numberOfNotes - 1))}
+                  >
+                    -
+                  </Button>
+                  <div className="flex-1 text-center">
+                    <span className="text-2xl font-bold">{numberOfNotes}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setNumberOfNotes(Math.min(CONSTRAINTS.numberOfNotes.max, numberOfNotes + 1))}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+              )}
+
+
+              {exerciseType === ExerciseType.IntervalComparison && (<>
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
+                <Slider
+                  value={[tempo]}
+                  onValueChange={(v) => setTempo(v[0])}
+                  min={CONSTRAINTS.tempo.min}
+                  max={CONSTRAINTS.tempo.max}
+                  step={CONSTRAINTS.tempo.step}
+                />
+              </div>
+              </>)}
+
+              {/* Note recognition extra settings */}
+              {exerciseType !== ExerciseType.IntervalComparison && (<>
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Background helper note</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={droneType === "root" ? "default" : "outline"}
+                      onClick={() => setDroneType("root")}
+                      className="flex-1"
+                    >
+                      Root note (do)
+                    </Button>
+                    <Button
+                      variant={droneType === "none" ? "default" : "outline"}
+                      onClick={() => setDroneType("none")}
+                      className="flex-1"
+                    >
+                      Off
+                    </Button>
+                  </div>
+                </div>
+                </>)}
+
               {/* === Collapsible Customize section === */}
               <Collapsible>
                 <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-2 border-t pt-4">
@@ -732,25 +769,6 @@ const HomeSettingsView = () => {
                     />
                   </div>
 
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold">Background drone note</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={droneType === "root" ? "default" : "outline"}
-                        onClick={() => setDroneType("root")}
-                        className="flex-1"
-                      >
-                        Root note (do)
-                      </Button>
-                      <Button
-                        variant={droneType === "none" ? "default" : "outline"}
-                        onClick={() => setDroneType("none")}
-                        className="flex-1"
-                      >
-                        Off
-                      </Button>
-                    </div>
-                  </div>
                   </>)}
 
                   {/* Interval customize settings */}
@@ -791,6 +809,7 @@ const HomeSettingsView = () => {
                     </div>
                   </div>
 
+                  {exerciseType !== ExerciseType.IntervalComparison && (<>
                   <div className="space-y-4">
                     <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
                     <Slider
@@ -801,6 +820,7 @@ const HomeSettingsView = () => {
                       step={CONSTRAINTS.tempo.step}
                     />
                   </div>
+                  </>)}
 
                 </CollapsibleContent>
               </Collapsible>
