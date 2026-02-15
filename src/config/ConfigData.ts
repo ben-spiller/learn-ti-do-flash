@@ -139,7 +139,7 @@ export class ConfigData {
   droneType: "none" | "root" = "none";
   rootNotePitch: MidiNoteName = "C4";
   /** The instrument to use for this session. May be picked by the home/settings page, or when directly entering a practice page */
-  instrument?: string = "acoustic_grand_piano";
+  instrument?: string;
   instrumentMode: "single" | "random" = "random";
 
   /** Pick the instrument to use for this session based on the instrument mode */
