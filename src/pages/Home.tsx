@@ -5,11 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
-import { Plus, Trash2, History, MoreVertical, HelpCircle, Music, Shuffle, Settings as SettingsIcon, ChevronDown } from "lucide-react";
+import { History, MoreVertical, HelpCircle, Settings as SettingsIcon, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
@@ -20,13 +18,9 @@ import {
   preloadInstrumentWithGesture,
   SemitoneOffset,
   semitonesToInterval,
-  playSequence,
-  noteNameToMidi,
-  stopSounds,
   MAJOR_SCALE_PITCH_CLASSES,
   semitonesToSolfege,
   semitonesToOneOctave,
-  formatInstrumentName,
   MINOR_SCALE_PITCH_CLASSES,
 } from "@/utils/audio";
 import {
@@ -34,18 +28,12 @@ import {
   CONSTRAINTS,
   ExerciseType,
 } from "@/config/ConfigData";
-import { getFavouriteInstruments, saveFavouriteInstruments } from "@/utils/instrumentStorage";
 import {
-  getSavedConfigurations,
-  saveConfiguration,
-  deleteConfiguration,
-  loadConfiguration,
   getCurrentConfiguration,
   saveCurrentConfiguration,
-  SavedConfiguration,
   getLastExerciseType,
 } from "@/utils/settingsStorage";
-import { InstrumentSelector } from "@/components/InstrumentSelector";
+import { getGlobalSettings } from "@/utils/globalSettingsStorage";
 
 const HomeSettingsView = () => {
   const navigate = useNavigate();
@@ -74,8 +62,6 @@ const HomeSettingsView = () => {
     setRhythm(configToUse.rhythm);
     setDroneType(configToUse.droneType);
     setRootNotePitch(configToUse.rootNotePitch);
-    setSelectedInstrument(configToUse.instrument);
-    setInstrumentMode(configToUse.instrumentMode);
   }, [exerciseType]);
   const [selectedNotes, setSelectedNotes] = useState<number[]>(defaults.selectedNotes);
   const [numberOfNotes, setNumberOfNotes] = useState(defaults.numberOfNotes);
@@ -89,26 +75,10 @@ const HomeSettingsView = () => {
   const [rhythm, setRhythm] = useState(defaults.rhythm);
   const [droneType, setDroneType] = useState(defaults.droneType);
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
-  const [selectedInstrument, setSelectedInstrument] = useState<string>(defaults.instrument);
-  const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(defaults.instrumentMode);
-  const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(getFavouriteInstruments());
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
-  const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
-  const [isPreviewingInstrument, setIsPreviewingInstrument] = useState(false);
 
   const [isAudioLoading, setAudioLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  
-  // Saved configurations state
-  const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>([]);
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [configName, setConfigName] = useState("");
-  const [selectedConfigId, setSelectedConfigId] = useState<string>("");
-
-  // Load saved configurations on mount
-  useEffect(() => {
-    setSavedConfigs(getSavedConfigurations());
-  }, []);
 
   const getCurrentSettings = (): ConfigData => {
     return new ConfigData({
@@ -125,8 +95,6 @@ const HomeSettingsView = () => {
       rhythm,
       droneType,
       rootNotePitch,
-      instrument: selectedInstrument,
-      instrumentMode,
     });
   };
 
@@ -219,7 +187,10 @@ const HomeSettingsView = () => {
     
     try {
       const currentSettings = getCurrentSettings();
-      const instrumentToPreload = currentSettings.pickInstrument(favouriteInstruments);
+      const globalSettings = getGlobalSettings();
+      currentSettings.instrumentMode = globalSettings.instrumentMode;
+      currentSettings.instrument = globalSettings.selectedInstrument;
+      const instrumentToPreload = currentSettings.pickInstrument(globalSettings.favouriteInstruments);
       
       // Preload with user gesture from button click
       await preloadInstrumentWithGesture(instrumentToPreload);
@@ -433,13 +404,7 @@ const HomeSettingsView = () => {
               </p>
             )}
           </div> */}
-          <Tabs defaultValue="practice" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="practice">Practice</TabsTrigger>
-              <TabsTrigger value="audio">Audio</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="practice" className="space-y-6">
+           <div className="space-y-6">
               {/* Exercise Type - always visible */}
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Practice</Label>
@@ -840,84 +805,7 @@ const HomeSettingsView = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-            </TabsContent>
-
-            <TabsContent value="audio" className="space-y-6">
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Instrument</Label>
-                <Button
-                  variant="outline"
-                  onClick={() => setInstrumentDialogOpen(true)}
-                  className="w-full justify-start h-auto py-3 px-4"
-                >
-                  <div className="flex items-start gap-3 w-full">
-                    {instrumentMode === "single" ? (
-                      <Music className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <Shuffle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="flex flex-col items-start text-left">
-                      <span className="font-semibold">
-                        {instrumentMode === "single" ? "Single Instrument" : "Random from Favourites"}
-                      </span>
-                      <span className="text-sm text-muted-foreground font-normal">
-                        {instrumentMode === "single" 
-                          ? formatInstrumentName(selectedInstrument)
-                          : `${favouriteInstruments.length} favourite${favouriteInstruments.length !== 1 ? 's' : ''}`
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </Button>
-
-                <InstrumentSelector
-                  open={instrumentDialogOpen}
-                  onOpenChange={setInstrumentDialogOpen}
-                  selectedInstrument={selectedInstrument}
-                  onInstrumentChange={async (instrument) => {
-                    setSelectedInstrument(instrument);
-                    if (instrumentMode === "single") {
-                      setIsPreviewingInstrument(true);
-                      try {
-                        stopSounds();
-                        await preloadInstrumentWithGesture(instrument);
-                        const rootMidi = noteNameToMidi(rootNotePitch);
-                        await playSequence([
-                          { note: rootMidi, duration: 0.3, gapAfter: 0.1 },
-                          { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },
-                          { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },
-                          { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },
-                        ]);
-                      } catch (_) {}
-                      setIsPreviewingInstrument(false);
-                    }
-                  }}
-                  instrumentMode={instrumentMode}
-                  onInstrumentModeChange={setInstrumentMode}
-                  favouriteInstruments={favouriteInstruments}
-                  onFavouriteInstrumentsChange={(favourites) => {
-                    setFavouriteInstruments(favourites);
-                    saveFavouriteInstruments(favourites);
-                  }}
-                />
-              </div>
-
-              {/* <div className="space-y-4">
-                <Label className="text-base font-semibold">Root Note Pitch</Label>
-                <select
-                  value={rootNotePitch}
-                  onChange={(e) => setRootNotePitch(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  {ROOT_NOTE_OPTIONS.map(pitch => (
-                    <option key={pitch} value={pitch}>{pitch}</option>
-                  ))}
-                </select>
-              </div> */}
-
-
-            </TabsContent>
-          </Tabs>
+           </div>
 
           <div className="h-20" /> {/* spacer for sticky button */}
         </CardContent>

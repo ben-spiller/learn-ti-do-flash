@@ -4,16 +4,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Music, Shuffle } from "lucide-react";
 import { getGlobalSettings, saveGlobalSettings, ReferenceType } from "@/utils/globalSettingsStorage";
+import { InstrumentSelector } from "@/components/InstrumentSelector";
+import { formatInstrumentName, preloadInstrumentWithGesture, noteNameToMidi, playSequence, stopSounds } from "@/utils/audio";
 import { toast } from "sonner";
 
 const GlobalSettings = () => {
   const navigate = useNavigate();
-  const [referenceType, setReferenceType] = useState<ReferenceType>(getGlobalSettings().referenceType);
+  const globalSettings = getGlobalSettings();
+  const [referenceType, setReferenceType] = useState<ReferenceType>(globalSettings.referenceType);
+  const [instrumentMode, setInstrumentMode] = useState<"single" | "random">(globalSettings.instrumentMode);
+  const [selectedInstrument, setSelectedInstrument] = useState<string>(globalSettings.selectedInstrument);
+  const [favouriteInstruments, setFavouriteInstruments] = useState<string[]>(globalSettings.favouriteInstruments);
+  const [instrumentDialogOpen, setInstrumentDialogOpen] = useState(false);
 
   const handleSave = () => {
-    saveGlobalSettings({ referenceType });
+    saveGlobalSettings({ referenceType, instrumentMode, selectedInstrument, favouriteInstruments });
     toast.success("Global settings saved");
     navigate("/");
   };
@@ -57,6 +64,60 @@ const GlobalSettings = () => {
               {referenceType === "root" && "Play root note before each question"}
               {referenceType === "arpeggio" && "Play major arpeggio before each question"}
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Instrument</Label>
+            <Button
+              variant="outline"
+              onClick={() => setInstrumentDialogOpen(true)}
+              className="w-full justify-start h-auto py-3 px-4"
+            >
+              <div className="flex items-start gap-3 w-full">
+                {instrumentMode === "single" ? (
+                  <Music className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <Shuffle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                )}
+                <div className="flex flex-col items-start text-left">
+                  <span className="font-semibold">
+                    {instrumentMode === "single" ? "Single Instrument" : "Random from Favourites"}
+                  </span>
+                  <span className="text-sm text-muted-foreground font-normal">
+                    {instrumentMode === "single" 
+                      ? formatInstrumentName(selectedInstrument)
+                      : `${favouriteInstruments.length} favourite${favouriteInstruments.length !== 1 ? 's' : ''}`
+                    }
+                  </span>
+                </div>
+              </div>
+            </Button>
+
+            <InstrumentSelector
+              open={instrumentDialogOpen}
+              onOpenChange={setInstrumentDialogOpen}
+              selectedInstrument={selectedInstrument}
+              onInstrumentChange={async (instrument) => {
+                setSelectedInstrument(instrument);
+                if (instrumentMode === "single") {
+                  try {
+                    stopSounds();
+                    await preloadInstrumentWithGesture(instrument);
+                    const rootMidi = noteNameToMidi("C4");
+                    await playSequence([
+                      { note: rootMidi, duration: 0.3, gapAfter: 0.1 },
+                      { note: rootMidi + 4, duration: 0.3, gapAfter: 0.1 },
+                      { note: rootMidi + 7, duration: 0.3, gapAfter: 0.1 },
+                      { note: rootMidi + 12, duration: 0.5, gapAfter: 0 },
+                    ]);
+                  } catch (_) {}
+                }
+              }}
+              instrumentMode={instrumentMode}
+              onInstrumentModeChange={setInstrumentMode}
+              favouriteInstruments={favouriteInstruments}
+              onFavouriteInstrumentsChange={setFavouriteInstruments}
+            />
           </div>
 
           <Button onClick={handleSave} className="w-full">
