@@ -147,7 +147,6 @@ export class ConfigData {
     if (!favouriteInstruments) {
       favouriteInstruments = getFavouriteInstruments();
     }
-    if (this.instrument) return this.instrument;
     if (this.instrumentMode === "random" && favouriteInstruments.length > 0) {
       const randomIndex = Math.floor(Math.random() * favouriteInstruments.length);
       this.instrument = favouriteInstruments[randomIndex];
