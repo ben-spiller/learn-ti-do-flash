@@ -778,23 +778,54 @@ const HomeSettingsView = () => {
                 <Label className="text-base font-semibold">Background drone note</Label>
                 <div className="flex gap-2">
                   <Button
-                    variant={droneType === "none" ? "default" : "outline"}
-                    onClick={() => setDroneType("none")}
-                    className="flex-1"
-                  >
-                    Off
-                  </Button>
-                  <Button
                     variant={droneType === "root" ? "default" : "outline"}
                     onClick={() => setDroneType("root")}
                     className="flex-1"
                   >
                     Root note (do)
                   </Button>
+                  <Button
+                    variant={droneType === "none" ? "default" : "outline"}
+                    onClick={() => setDroneType("none")}
+                    className="flex-1"
+                  >
+                    Off
+                  </Button>
                 </div>
               </div>
               </>
               )}
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Rhythm</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={rhythm === "fixed" ? "default" : "outline"}
+                    onClick={() => setRhythm("fixed")}
+                    className="flex-1"
+                  >
+                    Fixed
+                  </Button>
+                  <Button
+                    variant={rhythm === "random" ? "default" : "outline"}
+                    onClick={() => setRhythm("random")}
+                    className="flex-1"
+                  >
+                    Random
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
+                <Slider
+                  value={[tempo]}
+                  onValueChange={(v) => setTempo(v[0])}
+                  min={CONSTRAINTS.tempo.min}
+                  max={CONSTRAINTS.tempo.max}
+                  step={CONSTRAINTS.tempo.step}
+                />
+              </div>
 
             </TabsContent>
 
@@ -855,37 +886,6 @@ const HomeSettingsView = () => {
                     setFavouriteInstruments(favourites);
                     saveFavouriteInstruments(favourites);
                   }}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Rhythm</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={rhythm === "fixed" ? "default" : "outline"}
-                    onClick={() => setRhythm("fixed")}
-                    className="flex-1"
-                  >
-                    Fixed
-                  </Button>
-                  <Button
-                    variant={rhythm === "random" ? "default" : "outline"}
-                    onClick={() => setRhythm("random")}
-                    className="flex-1"
-                  >
-                    Random
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Tempo: {tempo} BPM</Label>
-                <Slider
-                  value={[tempo]}
-                  onValueChange={(v) => setTempo(v[0])}
-                  min={CONSTRAINTS.tempo.min}
-                  max={CONSTRAINTS.tempo.max}
-                  step={CONSTRAINTS.tempo.step}
                 />
               </div>
 
