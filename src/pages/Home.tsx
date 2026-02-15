@@ -440,28 +440,29 @@ const HomeSettingsView = () => {
 
             <TabsContent value="practice" className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Exercise</Label>
+                <Label className="text-base font-semibold">Practice</Label>
                 <div className="flex gap-2 flex-wrap">
                   <Button
                     variant={exerciseType === ExerciseType.SingleNoteRecognition ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.SingleNoteRecognition)}
                     className="flex-1"
                   >
-                    {ExerciseType.SingleNoteRecognition}
+                    Single Notes
+                    {/* {ExerciseType.SingleNoteRecognition} */}
                   </Button>
                   <Button
                     variant={exerciseType === ExerciseType.MelodyRecognition ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.MelodyRecognition)}
                     className="flex-1"
                   >
-                    {ExerciseType.MelodyRecognition}
+                    Melodies
                   </Button>
                   <Button
                     variant={exerciseType === ExerciseType.IntervalComparison ? "default" : "outline"}
                     onClick={() => setExerciseType(ExerciseType.IntervalComparison)}
                     className="flex-1"
                   >
-                    {ExerciseType.IntervalComparison}
+                    Intervals
                   </Button>
                 </div>
               </div>
