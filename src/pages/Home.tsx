@@ -305,7 +305,7 @@ const HomeSettingsView = () => {
                 <SettingsIcon className="h-4 w-4 mr-2" />
                 Global Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {location.href='https://github.com/ben-spiller/learn-ti-do-flash/blob/main/README.md';}}>
+              <DropdownMenuItem onClick={() => {location.href='https://github.com/ben-spiller/me-do-solfege/blob/main/README.md';}}>
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Help / GitHub
               </DropdownMenuItem>
