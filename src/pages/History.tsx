@@ -284,7 +284,7 @@ const PracticeHistory = () => {
                 💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
                 Focus on the specific intervals and note pairs that you find most challenging,
                 {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType === "none" ? 
-                  " add a drone note to build a tonal mental model for hearing the notes, or try single note practice for a while." : " or reduce the tempo."}
+                  " add a background helper note to build a tonal mental model for hearing the notes, or try single note practice for a while." : " or reduce the tempo."}
               </p>
             </div>
           )}
@@ -293,7 +293,7 @@ const PracticeHistory = () => {
               <p className="text-base font-medium text-foreground text-center">
                 🎉 Excellent work! This exercise seems too easy for you. 
                 Try {exerciseIsTonal(recentSession.settings.exerciseType) && recentSession.settings.droneType !== "none" ? 
-                " removing the drone, increasing the number of notes, or expanding the note range." : " increasing the tempo or adding more notes."}
+                " removing the background helper, increasing the number of notes, or expanding the note range." : " increasing the tempo or adding more notes."}
               </p>
             </div>
           )}

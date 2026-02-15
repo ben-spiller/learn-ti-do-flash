@@ -114,7 +114,7 @@ export const PracticeHeader = ({
                   </PopoverTrigger>
                   <PopoverContent className="w-48">
                     <div className="space-y-2">
-                      <div className="text-sm font-medium">Drone Volume</div>
+                      <div className="text-sm font-medium">Background Helper Volume</div>
                       <Slider
                         value={[droneVolume]}
                         onValueChange={onDroneVolumeChange}
