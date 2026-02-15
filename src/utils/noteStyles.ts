@@ -3,16 +3,16 @@
 export const SOLFEGE_COLOR_CLASSES: Record<string, string> = {
   do: "bg-solfege-do hover:bg-solfege-do/90",
   re: "bg-solfege-re hover:bg-solfege-re/90",
-  ra: "bg-solfege-re hover:bg-solfege-re/90",
+  ra: "bg-solfege-ra hover:bg-solfege-ra/90",
   mi: "bg-solfege-mi hover:bg-solfege-mi/90",
-  me: "bg-solfege-mi hover:bg-solfege-mi/90",
+  me: "bg-solfege-me hover:bg-solfege-me/90",
   fa: "bg-solfege-fa hover:bg-solfege-fa/90",
   sol:"bg-solfege-sol hover:bg-solfege-sol/90",
-  se: "bg-solfege-sol hover:bg-solfege-sol/90",
+  se: "bg-solfege-se hover:bg-solfege-se/90",
   la: "bg-solfege-la hover:bg-solfege-la/90",
-  le: "bg-solfege-la hover:bg-solfege-la/90",
+  le: "bg-solfege-le hover:bg-solfege-le/90",
   ti: "bg-solfege-ti hover:bg-solfege-ti/90",
-  te: "bg-solfege-ti hover:bg-solfege-ti/90",
+  te: "bg-solfege-te hover:bg-solfege-te/90",
   semitone: "bg-solfege-semitone hover:bg-solfege-semitone/90",
 };
 

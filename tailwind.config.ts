@@ -60,12 +60,17 @@ export default {
         solfege: {
           do: "hsl(var(--solfege-do))",
           re: "hsl(var(--solfege-re))",
+          ra: "hsl(var(--solfege-ra))",
           mi: "hsl(var(--solfege-mi))",
+          me: "hsl(var(--solfege-me))",
           fa: "hsl(var(--solfege-fa))",
           sol: "hsl(var(--solfege-sol))",
+          se: "hsl(var(--solfege-se))",
           semitone: "hsl(var(--solfege-semitone))",
           la: "hsl(var(--solfege-la))",
+          le: "hsl(var(--solfege-le))",
           ti: "hsl(var(--solfege-ti))",
+          te: "hsl(var(--solfege-te))",
         },
       },
       borderRadius: {

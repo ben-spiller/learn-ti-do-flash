@@ -79,16 +79,21 @@ All colors MUST be HSL.
   /* TONIC (I) — distinct greens: do (deep), mi (yellow-green, brighter), sol (distinctive, bright but still related to green) */
   --solfege-do: 140 60% 30%;   /* deep, stable green (most consonant) */
   --solfege-mi: 100 55% 52%;   /* brighter yellow-green (distinct, more active) */
+  --solfege-me: 100 55% 42%;   
   --solfege-sol: 50 100% 50%;  
+  --solfege-se: 50 100% 40%;  
 
   /* SUBDOMINANT (IV) — shifted to warm orange family per request
     fa = orangey (clear distinction), la = similar but darker/more stable */
   --solfege-fa: 30 75% 50%;   /* orange, on the way towards sol (for harmonic) */
   --solfege-la: 185 55% 42%;  /* teal / blue-green (clearly distinct from do/mi, but kindof related) */
+  --solfege-le: 185 55% 32%;
 
   /* DOMINANT (V & neighbors) — red family for stronger tension / attention */
   --solfege-re: 12 50% 40%;    /* warm red-orange — draws attention */
+  --solfege-ra: 12 50% 25%;    
   --solfege-ti: 330 68% 52%;   /* leading-tone tension */
+  --solfege-te: 330 68% 42%;   
 
   /* Semitone / accidentals — contrasting violet so they stand apart from primary families */
   --solfege-semitone: 275 60% 50%;
