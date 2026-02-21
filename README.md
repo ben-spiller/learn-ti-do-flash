@@ -44,10 +44,4 @@ This project is built with:
 Me-Do-Solfege is made available under the [MIT](https://mit-license.org/) license.  
 Copyright (C) Ben Spiller 2025-present. 
 
-
-### Third party licenses and attributions
-Thanks and credit to some great third party tools and libraries that helped make this possible.
-
-This project makes use of pre-rendered audio assets provided by [gleitz/midi-js-soundfonts](https://github.com/gleitz/midi-js-soundfonts).License is [MIT](https://mit-license.org/). Copyright (C) 2012 Benjamin Gleitzman (gleitz@mit.edu).
-
-The sound assets in midi-js-soundfonts are derived, pre-rendered assets created from the **FluidR3_GM.sf2** General MIDI soundfont. Changes were made by midi-js-soundfonts to convert the original SF2 format into WebAudio/JSON soundfont assets for use in browser-based MIDI playback. FluidR3_GM.sf2 is licensed under the [Creative Commons Attribution 3.0 (CC BY 3.0)](https://creativecommons.org/licenses/by/3.0/). Original source for that was packaged by Ubuntu in the `fluid-soundfont-gm` package, maintained by Toby Smithe `<tsmithe@ubuntu.com>`. 
+Thanks and credit to some great third party tools and libraries that helped make this possible. See `LICENSE` file for details. 
