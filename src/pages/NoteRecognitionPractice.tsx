@@ -75,6 +75,10 @@ const PracticeView = () => {
     const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_PAIRS+settings.exerciseType);
     return stored ? new Map(JSON.parse(stored)) : new Map();
   })());
+  /** Snapshot of needsPractice at session start for history tracking */
+  const needsPracticeInitialSnapshot = useRef<Record<string, number>>(
+    Object.fromEntries(needsPractice.current.entries())
+  );
   /** Initial needsPracticeTotal at session start (undefined if no prior data) */
   const initialNeedsPracticeTotal = useRef<number | undefined>((() => {
     const stored = localStorage.getItem(STORED_NEEDS_PRACTICE_PAIRS+settings.exerciseType);
@@ -390,7 +394,10 @@ const PracticeView = () => {
         needsPracticeTotalSeverity: Array.from(needsPractice.current.values()).reduce((a, b) => a + b, 0),
 
         exerciseName: settings.exerciseType,
-        settings: settings // don't need to copy this because we won't be mutating it anyway
+        settings: settings, // don't need to copy this because we won't be mutating it anyway
+        
+        needsPracticeInitialMap: needsPracticeInitialSnapshot.current,
+        needsPracticeFinalMap: Object.fromEntries(needsPractice.current.entries()),
       } satisfies SessionHistory;
       
       // Append to sessions array

@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { getNoteButtonColor, getScoreColor, getOctaveIndicator, getNeedsPracticeTotalColor } from "@/utils/noteStyles";
 import { ConfigData, exerciseIsTonal, ExerciseType } from "@/config/ConfigData";
 import { startOfWeek, endOfWeek, format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 
 export const STORED_FREQUENTLY_WRONG_PAIRS = "wrong2NoteSequences"
 /** Notes that are confused for each other (in either direction) */
@@ -38,6 +38,11 @@ export interface SessionHistory {
   
   /** Per-interval scores for IntervalComparison exercises: Map<interval, {correct, total}> */
   intervalScores?: Record<number, { correct: number; total: number }>;
+  
+  /** Snapshot of needs-practice severities at session start (pairKey -> severity) */
+  needsPracticeInitialMap?: Record<string, number>;
+  /** Snapshot of needs-practice severities at session end (pairKey -> severity) */
+  needsPracticeFinalMap?: Record<string, number>;
 }
 
 const PracticeHistory = () => {
@@ -575,6 +580,15 @@ const PracticeHistory = () => {
                       {needsPracticePairs.map((pair, index) => {
                         const widthPercent = (pair.count / maxCount) * 100;
                         
+                        // Get initial and final severity from most recent session for this exercise
+                        const latestSession = exerciseSessions[exerciseSessions.length - 1];
+                        const initialSeverity = latestSession?.needsPracticeInitialMap?.[pair.pairKey] ?? null;
+                        const finalSeverity = latestSession?.needsPracticeFinalMap?.[pair.pairKey] ?? pair.count;
+                        const hasRange = initialSeverity !== null && initialSeverity !== finalSeverity;
+                        const minSeverity = hasRange ? Math.min(initialSeverity, finalSeverity) : null;
+                        const maxSeverityVal = hasRange ? Math.max(initialSeverity, finalSeverity) : null;
+                        const improved = hasRange && finalSeverity < initialSeverity;
+                        
                         return (
                           <div key={pair.pairKey} className="flex items-center gap-3">
                             <div className="flex items-center gap-1 flex-shrink-0">
@@ -602,13 +616,32 @@ const PracticeHistory = () => {
                                 )}
                               </div>
                             </div>
-                            <div className="flex-1 h-8 bg-muted/30 rounded-lg overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-amber-500/70 to-amber-600/70 transition-all duration-500 flex items-center justify-end pr-3"
-                                style={{ width: `${widthPercent}%` }}
-                              >
+                            <div className="flex-1 flex flex-col gap-0.5">
+                              {/* Main severity bar (final value) */}
+                              <div className="h-8 bg-muted/30 rounded-lg overflow-hidden relative">
+                                {/* Range indicator (faint) showing min-max during session */}
+                                {hasRange && maxSeverityVal !== null && minSeverity !== null && (
+                                  <div 
+                                    className="absolute h-full bg-amber-400/20 rounded-lg"
+                                    style={{ 
+                                      left: `${(minSeverity / maxCount) * 100}%`,
+                                      width: `${((maxSeverityVal - minSeverity) / maxCount) * 100}%`
+                                    }}
+                                  />
+                                )}
+                                <div 
+                                  className="h-full bg-gradient-to-r from-amber-500/70 to-amber-600/70 transition-all duration-500 flex items-center justify-end pr-3 relative z-10"
+                                  style={{ width: `${widthPercent}%` }}
+                                >
                                   <span className="text-xs font-bold text-white">{pair.count}{widthPercent>30 && index == 0 && ' severity'}</span>
+                                </div>
                               </div>
+                              {/* Range annotation */}
+                              {hasRange && (
+                                <div className={`text-[10px] ${improved ? 'text-green-500' : 'text-red-500'}`}>
+                                  {improved ? '↓' : '↑'} {initialSeverity} → {finalSeverity} this session
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -622,6 +655,41 @@ const PracticeHistory = () => {
                 </CardContent>
               </Card>
               </>)}
+
+              {/* Sessions Per Week Chart */}
+              {exerciseSessions.length > 1 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sessions per week</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        {(() => {
+                          // Group sessions by week
+                          const weekMap = new Map<string, number>();
+                          exerciseSessions.forEach(session => {
+                            const weekStart = startOfWeek(new Date(session.sessionDate), { weekStartsOn: 1 });
+                            const weekKey = format(weekStart, 'dd/MM');
+                            weekMap.set(weekKey, (weekMap.get(weekKey) || 0) + 1);
+                          });
+                          const chartData = Array.from(weekMap.entries()).map(([week, count]) => ({ week, count }));
+                          
+                          return (
+                            <BarChart data={chartData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                              <XAxis dataKey="week" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                              <YAxis allowDecimals={false} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
+                              <Bar dataKey="count" name="Sessions" fill="hsl(262, 52%, 57%)" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          );
+                        })()}
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Progress Charts */}
               {exerciseSessions.length > 1 && exerciseKey === ExerciseType.IntervalComparison && (

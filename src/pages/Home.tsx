@@ -288,6 +288,39 @@ const HomeSettingsView = () => {
           </div>
           <CardTitle className="text-3xl font-bold" title={`Copyright (C) Ben Spiller 2025-present\n\nBuild date: ${__BUILD_TIMESTAMP__}`}>Me-Do-Solfege Ear Trainer</CardTitle>
           <CardDescription>Tonal ear trainer with solfege keyboard</CardDescription>
+          {/* Practice Summary */}
+          {(() => {
+            try {
+              const sessionsStr = localStorage.getItem('practiceSessions');
+              if (!sessionsStr) return null;
+              const sessions = JSON.parse(sessionsStr);
+              if (!sessions.length) return null;
+              
+              const now = Date.now();
+              const msPerDay = 86400000;
+              const lastSessionDate = sessions[sessions.length - 1].sessionDate;
+              const daysSinceLast = Math.floor((now - lastSessionDate) / msPerDay);
+              
+              const sevenDaysAgo = now - 7 * msPerDay;
+              const fourteenDaysAgo = now - 14 * msPerDay;
+              const sessionsLast7 = sessions.filter((s: any) => s.sessionDate >= sevenDaysAgo).length;
+              const sessionsPrev7 = sessions.filter((s: any) => s.sessionDate >= fourteenDaysAgo && s.sessionDate < sevenDaysAgo).length;
+              const delta = sessionsLast7 - sessionsPrev7;
+              
+              return (
+                <div className="text-sm text-muted-foreground mt-2">
+                  {daysSinceLast === 0 ? 'Practiced today' : `${daysSinceLast} day${daysSinceLast !== 1 ? 's' : ''} since last practice`}
+                  {' · '}
+                  {sessionsLast7} session{sessionsLast7 !== 1 ? 's' : ''} this week
+                  {delta !== 0 && (
+                    <span className={`ml-1 ${delta > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      ({delta > 0 ? '+' : ''}{delta})
+                    </span>
+                  )}
+                </div>
+              );
+            } catch { return null; }
+          })()}
         </CardHeader>
         <CardContent>
         {/* 
