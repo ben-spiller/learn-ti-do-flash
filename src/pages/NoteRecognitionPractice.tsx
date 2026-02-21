@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones, isAudioInitialized, mustWaitForGestureBeforeAudioInit, startAudio } from "@/utils/audio";
+import { stopSounds, MidiNoteNumber, SemitoneOffset, playNote, playSequence, semitonesToSolfege, midiToNoteName, noteNameToMidi, preloadInstrumentWithGesture, startDrone, stopDrone, setDroneVolume, semitonesToOneOctave, keypressToSemitones, isAudioInitialized, mustWaitForGestureBeforeAudioInit, startAudio, handleSemitoneModifierUp, handleSemitoneModifierDown } from "@/utils/audio";
 import { ConfigData, ExerciseType } from "@/config/ConfigData";
 import { saveCurrentConfiguration } from "@/utils/settingsStorage";
 import { getGlobalSettings } from "@/utils/globalSettingsStorage";
@@ -136,7 +136,11 @@ const PracticeView = () => {
   }, []);
 
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      handleSemitoneModifierUp(e);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
       // Next button shortcuts
       if ((e.key === 'n' || e.key === 'Enter') && isQuestionComplete(currentPosition)) {
         e.preventDefault();
@@ -157,6 +161,9 @@ const PracticeView = () => {
         handlePlayReference();
         return;
       }
+      // Track semitone modifier keys (+/=/-) 
+      handleSemitoneModifierDown(e);
+
 
       let note = keypressToSemitones(e);
       if (note !== null) {
@@ -164,8 +171,12 @@ const PracticeView = () => {
         handleNotePress(note);
       }
     };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    }
   }, [currentPosition, settings.numberOfNotes, rootMidi, sequence, isAudioLoaded, isPlaying, isPlayingReference]);
 
   const startNewRound = () => {
