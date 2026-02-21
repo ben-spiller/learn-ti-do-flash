@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { History, MoreVertical, HelpCircle, Settings as SettingsIcon, ChevronDown } from "lucide-react";
+import { History, MoreVertical, HelpCircle, Settings as SettingsIcon, ChevronDown, Info } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import appIcon from "@/assets/app-icon.png";
 import keyboardIcon from "@/assets/solfege-keyboard.png";
+import AboutDialog from "@/components/AboutDialog";
 import SolfegeKeyboard from "@/components/SolfegeKeyboard";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -76,6 +77,7 @@ const HomeSettingsView = () => {
   const [droneType, setDroneType] = useState(defaults.droneType);
   const [rootNotePitch, setRootNotePitch] = useState(defaults.rootNotePitch);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   const [isAudioLoading, setAudioLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
@@ -281,8 +283,13 @@ const HomeSettingsView = () => {
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Help / GitHub
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAboutOpen(true)}>
+                <Info className="h-4 w-4 mr-2" />
+                About
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
           <div className="flex justify-center mb-4">
             <img src={appIcon} alt="Me-Do-Solfege" className="w-16 h-16" />
           </div>
