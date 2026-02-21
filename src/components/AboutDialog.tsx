@@ -17,7 +17,7 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
         </DialogHeader>
         <Tabs defaultValue="readme" className="flex-1 min-h-0 flex flex-col">
           <TabsList className="w-full">
-            <TabsTrigger value="readme" className="flex-1">README</TabsTrigger>
+            <TabsTrigger value="readme" className="flex-1">About</TabsTrigger>
             <TabsTrigger value="license" className="flex-1">License</TabsTrigger>
           </TabsList>
           <TabsContent value="readme" className="flex-1 min-h-0">
