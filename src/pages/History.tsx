@@ -283,7 +283,7 @@ const PracticeHistory = () => {
           <div className="mt-4 text-sm text-muted-foreground text-center">
             {recentSession.correctAttempts} correct out of {recentSession.totalAttempts} attempts
           </div>
-          {recentSession.score < 70 && (
+          {recentSession.score < 65 && (
             <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-base font-medium text-foreground text-center">
                 💡 Based on this score you might make faster progress with a simpler or more focused exercise. 
@@ -622,7 +622,7 @@ const PracticeHistory = () => {
                                 {/* Range indicator (faint) showing min-max during session */}
                                 {hasRange && maxSeverityVal !== null && minSeverity !== null && (
                                   <div 
-                                    className="absolute h-full bg-amber-400/20 rounded-lg"
+                                    className="absolute h-full bg-amber rounded-lg"
                                     style={{ 
                                       left: `${(minSeverity / maxCount) * 100}%`,
                                       width: `${((maxSeverityVal - minSeverity) / maxCount) * 100}%`
@@ -655,41 +655,6 @@ const PracticeHistory = () => {
                 </CardContent>
               </Card>
               </>)}
-
-              {/* Sessions Per Week Chart */}
-              {exerciseSessions.length > 1 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Sessions per week</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        {(() => {
-                          // Group sessions by week
-                          const weekMap = new Map<string, number>();
-                          exerciseSessions.forEach(session => {
-                            const weekStart = startOfWeek(new Date(session.sessionDate), { weekStartsOn: 1 });
-                            const weekKey = format(weekStart, 'dd/MM');
-                            weekMap.set(weekKey, (weekMap.get(weekKey) || 0) + 1);
-                          });
-                          const chartData = Array.from(weekMap.entries()).map(([week, count]) => ({ week, count }));
-                          
-                          return (
-                            <BarChart data={chartData}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
-                              <XAxis dataKey="week" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                              <YAxis allowDecimals={false} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
-                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
-                              <Bar dataKey="count" name="Sessions" fill="hsl(262, 52%, 57%)" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                          );
-                        })()}
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Progress Charts */}
               {exerciseSessions.length > 1 && exerciseKey === ExerciseType.IntervalComparison && (
@@ -850,6 +815,41 @@ const PracticeHistory = () => {
                   </Card>
 
                 </>
+              )}
+
+              {/* Sessions Per Week Chart */}
+              {exerciseSessions.length > 1 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sessions per week</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        {(() => {
+                          // Group sessions by week
+                          const weekMap = new Map<string, number>();
+                          exerciseSessions.forEach(session => {
+                            const weekStart = startOfWeek(new Date(session.sessionDate), { weekStartsOn: 1 });
+                            const weekKey = format(weekStart, 'dd/MM');
+                            weekMap.set(weekKey, (weekMap.get(weekKey) || 0) + 1);
+                          });
+                          const chartData = Array.from(weekMap.entries()).map(([week, count]) => ({ week, count }));
+                          
+                          return (
+                            <BarChart data={chartData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 65%)" />
+                              <XAxis dataKey="week" tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                              <YAxis allowDecimals={false} tick={{ fill: 'hsl(240, 5%, 65%)' }} />
+                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(240, 10%, 13%)', border: '1px solid hsl(240, 4%, 16%)', color: 'hsl(0, 0%, 98%)' }} />
+                              <Bar dataKey="count" name="Sessions" fill="hsl(262, 52%, 57%)" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          );
+                        })()}
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* All Sessions for this Exercise */}

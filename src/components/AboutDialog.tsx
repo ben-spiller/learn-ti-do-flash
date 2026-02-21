@@ -22,9 +22,9 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
           </TabsList>
           <TabsContent value="readme" className="flex-1 min-h-0">
             <ScrollArea className="h-[55vh]">
-              <pre className="whitespace-pre-wrap text-sm text-muted-foreground font-mono p-4">
+              <p className="text-sm text-muted-foreground font-mono p-4">
                 {__README_MD__}
-              </pre>
+              </p>
             </ScrollArea>
           </TabsContent>
           <TabsContent value="license" className="flex-1 min-h-0">
@@ -35,6 +35,8 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
             </ScrollArea>
           </TabsContent>
         </Tabs>
+        <p>Built on ${__BUILD_TIMESTAMP__}</p>
+        <p>See <a href='https://github.com/ben-spiller/me-do-solfege/blob/main/README.md'>GitHub</a> for source code</p>        
       </DialogContent>
     </Dialog>
   );

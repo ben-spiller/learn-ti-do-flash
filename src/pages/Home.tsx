@@ -279,13 +279,9 @@ const HomeSettingsView = () => {
                 <SettingsIcon className="h-4 w-4 mr-2" />
                 Global Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {location.href='https://github.com/ben-spiller/me-do-solfege/blob/main/README.md';}}>
-                <HelpCircle className="h-4 w-4 mr-2" />
-                Help / GitHub
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                 <Info className="h-4 w-4 mr-2" />
-                About
+                Help
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -316,13 +312,15 @@ const HomeSettingsView = () => {
               
               return (
                 <div className="text-sm text-muted-foreground mt-2">
-                  {daysSinceLast === 0 ? 'Practiced today' : `${daysSinceLast} day${daysSinceLast !== 1 ? 's' : ''} since last practice`}
+                  {daysSinceLast === 0 ? 'Last practice was today' : `${daysSinceLast} day${daysSinceLast !== 1 ? 's' : ''} since last practice`}
                   {' · '}
-                  {sessionsLast7} session{sessionsLast7 !== 1 ? 's' : ''} this week
-                  {delta !== 0 && (
-                    <span className={`ml-1 ${delta > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      ({delta > 0 ? '+' : ''}{delta})
+                  <span style={{ fontWeight: 'bold' }}>
+                  {sessionsLast7} session{sessionsLast7 !== 1 ? 's' : ''}</span> this week
+                  {delta !== 0 && (<>
+                    &nbsp;(<span className={`${delta >= 0 ? 'text-green-500' : 'text-red-500'}`}>{delta > 0 ? '+' : ''}{delta}
                     </span>
+                    &nbsp;from last week)
+                    </>
                   )}
                 </div>
               );
