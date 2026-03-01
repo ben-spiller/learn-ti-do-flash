@@ -40,6 +40,9 @@ const PracticeView = () => {
   /** The previous question sequence, to avoid duplication */
   const prevSequence = useRef<SemitoneOffset[]>([]);
   const totalSequencesAnswered = useRef(0);
+  // Track mistakes in the current round and whether the previous round was perfect (no mistakes)
+  const roundMistakesRef = useRef<number>(0);
+  const previousRoundWasPerfectRef = useRef<boolean | null>(null);
 
   const [isAudioLoading, setAudioLoading] = useState(false);
   const [isAudioLoaded, setAudioLoaded] = useState(false);
@@ -186,6 +189,10 @@ const PracticeView = () => {
     //console.log("Previous sequence saved: "+JSON.stringify(prevSequence.current.map(n => semitonesToSolfege(n))));
     const newSequence = generateNextNoteSequence();
     setSequence(newSequence as number[]);
+  // After generating the new sequence, reset the previous-round flag so it only applies to the next round
+  previousRoundWasPerfectRef.current = null;
+  // Reset mistakes counter for the upcoming round
+  roundMistakesRef.current = 0;
     
     // Generate durations for this sequence
     const durations = generateSequenceDurations(newSequence.length + settings.playExtraNotes);
@@ -314,6 +321,8 @@ const PracticeView = () => {
         } else {
           setElapsedSeconds(elapsedSeconds + (Math.floor((Date.now() - questionStartTime) / 1000)));
         }
+        // Record whether this round finished with zero mistakes
+        previousRoundWasPerfectRef.current = (roundMistakesRef.current === 0);
       }
     } else {
       // Play the wrong note that was pressed
@@ -329,7 +338,10 @@ const PracticeView = () => {
       const confusedPairKey = `${note1},${note2}`;
       confusedPairs.current.set(confusedPairKey, (confusedPairs.current.get(confusedPairKey) || 0) + 1);
 
-      // Add to needsPractice for the CORRECT note (+3 if first wrong answer or in the danger zone, +1 otherwise)
+      // Track that this round had a mistake
+      roundMistakesRef.current = (roundMistakesRef.current || 0) + 1;
+
+    // Add to needsPractice for the CORRECT note (+3 if first wrong answer or in the danger zone, +1 otherwise)
       const oldNeedsPracticeCount = (needsPractice.current.get(pairKey) || 0);
       const newNeedsPracticeCount = Math.min(maxNeedsPractice, oldNeedsPracticeCount + (
         (oldNeedsPracticeCount <3) ? +3 : +1));
@@ -476,18 +488,32 @@ const PracticeView = () => {
 
       console.debug("Next note pool after filtering: "+JSON.stringify(pool));
 
-      // Pick a needs practice combination where possible
-      // (but reduce the probability if there are only a few entries to avoid too much repetition)
-      if (Math.random() < (needsPractice.current.size > 2 ? 0.7 : 0.4)) {
+      // Selection logic based on previous round performance:
+      // - If the previous round was perfect (no mistakes), usually prefer picking a challenging note from needsPractice
+      if (previousRoundWasPerfectRef.current === true && Math.random() < 0.9) {
         const practiceNote = pickFromNeedsPractice(pool, prevNote);
         if (practiceNote !== null) {
-          console.debug("  picked from needs-practice: "+ semitonesToSolfege(practiceNote));
-          return [practiceNote, "needs-practice"];
+          console.debug("  picked from needs-practice due to prior perfect round: "+ semitonesToSolfege(practiceNote));
+          return [practiceNote, "needs-practice-prior-success"];
         }
+        // fall through to random if no suitable practice note available
       }
-      // Pick randomly if not
-      return [pool[randomInt(pool.length)], "random"];      
-  }
+
+      // - If the previous round was not perfect, pick a random note (give the user an easier / varied follow-up)
+      // Since brain learns better with reinforcement of known items no constant failure
+      return [pool[randomInt(pool.length)], "random-due-to-prior-mistakes"];
+ 
+      // Default behavior (no prior-round preference): probabilistically pick from needsPractice when available
+  //     if (Math.random() < (needsPractice.current.size > 2 ? 0.7 : 0.4)) {
+  //       const practiceNote = pickFromNeedsPractice(pool, prevNote);
+  //       if (practiceNote !== null) {
+  //         console.debug("  picked from needs-practice: "+ semitonesToSolfege(practiceNote));
+  //         return [practiceNote, "needs-practice"];
+  //       }
+  //     }
+  //     // Pick randomly if not
+  //     return [pool[randomInt(pool.length)], "random"];      
+  // }
 
   /** Weighted random selection from needsPractice, biased towards higher counts. Returns null if there's no suitable needsPractice note */
   function pickFromNeedsPractice(pool: SemitoneOffset[], prevNote: SemitoneOffset | null): SemitoneOffset | null {
